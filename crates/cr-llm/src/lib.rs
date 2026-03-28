@@ -325,3 +325,90 @@ impl LlmClient for OpenAiClient {
         retry_complete(|| self.do_complete(&req)).await
     }
 }
+
+/// Mock LLM client for testing — returns deterministic structured responses
+/// so the full pipeline (graph → agents → artifacts) can be tested without
+/// any external calls or subprocess spawning.
+pub struct MockLlmClient;
+
+impl MockLlmClient {
+    pub fn new() -> Self { Self }
+}
+
+#[async_trait]
+impl LlmClient for MockLlmClient {
+    async fn complete(&self, req: CompletionRequest) -> Result<CompletionResponse, LlmError> {
+        // Detect which agent is calling by inspecting the system prompt
+        let system = req.system.to_lowercase();
+        let content = if system.contains("analyst") && !system.contains("executor") {
+            // Udgatr — must check before executor branch since its prompt contains "experiment"
+            r#"{
+  "novelty": 0.78,
+  "empirical_gain": 0.82,
+  "reproducibility": 0.71,
+  "cost_efficiency": 0.90,
+  "transfer_potential": 0.65,
+  "calibration_improvement": 0.55,
+  "verdict": "confirmed",
+  "confidence_update": 0.81,
+  "claims": ["Ancient ARGs show lower GC content (p=0.003)", "75% of ARG clades are sister to soil references"]
+}"#.to_string()
+        } else if system.contains("hypothesis") || system.contains("hotr") {
+            r#"[
+  {
+    "statement": "Ancient permafrost ARGs (>10kya) show lower GC content than modern variants due to cold-adaptation pressure",
+    "prior_confidence": 0.65,
+    "experiment_plan": {
+      "description": "Extract ARG sequences from CARD-matched aDNA reads and compare GC content across age strata",
+      "steps": ["Align reads to CARD with minimap2", "Filter by >80% identity", "Compute GC content per contig", "Mann-Whitney U test across strata"]
+    }
+  },
+  {
+    "statement": "Permafrost ARGs cluster phylogenetically with soil ARGs rather than clinical isolates, suggesting pre-antibiotic-era origins",
+    "prior_confidence": 0.72,
+    "experiment_plan": {
+      "description": "Build phylogenetic tree of ARG protein sequences from permafrost and CARD reference panel",
+      "steps": ["Extract ARG protein sequences", "Align with MUSCLE", "Build ML tree with IQ-TREE2", "Measure clade distances to clinical vs environmental references"]
+    }
+  }
+]"#.to_string()
+        } else if system.contains("executor") || system.contains("adhvaryu") || system.contains("experiment") {
+            r#"{
+  "outcome": "succeeded",
+  "observations": [
+    "Identified 47 ARG sequences matching CARD with >80% identity across 3 permafrost strata",
+    "GC content: 10kya stratum mean=47.2%, modern control mean=52.8% (p=0.003)",
+    "ARGs cluster in 4 distinct clades, 3 of which are sister to soil metagenome references"
+  ],
+  "metrics": {
+    "n_args_found": 47,
+    "gc_content_ancient": 47.2,
+    "gc_content_modern": 52.8,
+    "p_value": 0.003,
+    "soil_cluster_fraction": 0.75
+  },
+  "summary": "Found 47 ARGs with significantly lower GC content in ancient permafrost strata (p=0.003), supporting the cold-adaptation hypothesis. 75% of ARG clades are sister to soil references."
+}"#.to_string()
+        } else if system.contains("udgatr") || system.contains("fitness") {
+            // Fallback for other analyst-like prompts
+            r#"{
+  "novelty": 0.70,
+  "empirical_gain": 0.75,
+  "reproducibility": 0.65,
+  "cost_efficiency": 0.85,
+  "transfer_potential": 0.60,
+  "calibration_improvement": 0.50,
+  "verdict": "confirmed",
+  "confidence_update": 0.75,
+  "claims": []
+}"#.to_string()
+        } else {
+            "Mock response: task acknowledged.".to_string()
+        };
+
+        Ok(CompletionResponse {
+            content,
+            usage: TokenUsage { input: 100, output: 50 },
+        })
+    }
+}

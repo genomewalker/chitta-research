@@ -14,7 +14,7 @@ use cr_agents::udgatr::Udgatr;
 use cr_artifacts::ArtifactStore;
 use cr_chitta::ChittaClient;
 
-use cr_llm::{AnthropicClient, ClaudeCliClient, CodexClient, LlmClient, OpenAiClient};
+use cr_llm::{AnthropicClient, ClaudeCliClient, CodexClient, LlmClient, MockLlmClient, OpenAiClient};
 use cr_resources::ResourceManager;
 
 #[derive(Parser)]
@@ -28,6 +28,9 @@ struct Cli {
     graph_output: PathBuf,
     #[arg(long, default_value = "100")]
     max_cycles: u64,
+    /// Use mock LLM — no external calls, for testing the full pipeline
+    #[arg(long)]
+    mock: bool,
 }
 
 fn build_llm_client(config: &cr_agenda::LlmConfig) -> Arc<dyn LlmClient> {
@@ -118,7 +121,12 @@ async fn main() -> anyhow::Result<()> {
     info!(agenda = %cli.agenda.display(), "loading agenda");
     let config = AgendaConfig::from_file(&cli.agenda)?;
 
-    let llm = build_llm_client(&config.llm);
+    let llm: Arc<dyn LlmClient> = if cli.mock {
+        info!("using mock LLM (--mock flag)");
+        Arc::new(MockLlmClient::new())
+    } else {
+        build_llm_client(&config.llm)
+    };
     let mind_path = config.chitta.mind_path.clone();
     let gpu_slots = config.budget.gpu_slots as usize;
     let cpu_workers = config.budget.cpu_workers as usize;
@@ -175,6 +183,7 @@ async fn main() -> anyhow::Result<()> {
     let udgatr_handle = tokio::spawn(agent_loop(Box::new(Udgatr), ctx.clone(), shutdown.clone()));
 
     drop(event_tx);
+    drop(ctx); // main must not hold a Sender — agents own the only clones
 
     let mut noop_counts: std::collections::HashMap<String, u64> = std::collections::HashMap::new();
     let mut action_count = 0u64;
@@ -200,6 +209,15 @@ async fn main() -> anyhow::Result<()> {
             }
             AgentEvent::Error { agent, error } => {
                 error!(agent = %agent, error = %error, "agent error");
+                // Errors count toward idle detection — an agent that only errors
+                // is not making progress.
+                *noop_counts.entry(agent).or_insert(0) += 1;
+                let all_idle = noop_counts.len() >= 3
+                    && noop_counts.values().all(|&c| c >= max_cycles);
+                if all_idle {
+                    info!("all agents idle/erroring for {} cycles, shutting down", max_cycles);
+                    shutdown.store(true, Ordering::Relaxed);
+                }
             }
             AgentEvent::CycleComplete { cycle } => {
                 info!(cycle, "cycle complete");
