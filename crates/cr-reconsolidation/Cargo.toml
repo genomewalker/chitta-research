@@ -1,0 +1,11 @@
+[package]
+name = "cr-reconsolidation"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+cr-types = { path = "../cr-types" }
+cr-graph = { path = "../cr-graph" }
+cr-chitta = { path = "../cr-chitta" }
+anyhow = { workspace = true }
+tracing = "0.1"

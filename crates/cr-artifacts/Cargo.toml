@@ -1,0 +1,9 @@
+[package]
+name = "cr-artifacts"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+git2 = { workspace = true }
+thiserror = { workspace = true }
+tracing = { workspace = true }

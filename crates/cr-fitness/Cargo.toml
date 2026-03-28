@@ -1,0 +1,7 @@
+[package]
+name = "cr-fitness"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+cr-types = { path = "../cr-types" }

@@ -1,0 +1,24 @@
+[package]
+name = "cr-daemon"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+cr-types = { path = "../cr-types" }
+cr-graph = { path = "../cr-graph" }
+cr-agents = { path = "../cr-agents" }
+cr-llm = { path = "../cr-llm" }
+cr-chitta = { path = "../cr-chitta" }
+cr-artifacts = { path = "../cr-artifacts" }
+cr-resources = { path = "../cr-resources" }
+cr-agenda = { path = "../cr-agenda" }
+cr-reconsolidation = { path = "../cr-reconsolidation" }
+tokio = { workspace = true }
+serde = { workspace = true }
+serde_json = { workspace = true }
+anyhow = { workspace = true }
+chrono = { workspace = true }
+tracing = "0.1"
+tracing-subscriber = { version = "0.3", features = ["env-filter"] }
+clap = { version = "4", features = ["derive"] }
+ctrlc = { version = "3", features = ["termination"] }

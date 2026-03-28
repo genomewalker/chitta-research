@@ -1,0 +1,35 @@
+programs:
+  - title: "ARG prevalence in ancient permafrost"
+    domain: metagenomics
+    questions:
+      - "Do antibiotic resistance genes increase with permafrost depth?"
+      - "Are ancient ARGs phylogenetically distinct from modern variants?"
+      - "What is the functional potential of recovered ARGs?"
+    methods:
+      - "BLASTp against CARD"
+      - "Short-read assembly with MEGAHIT"
+      - "HMM profiling with ResFams"
+    priority: 1.0
+    max_budget_usd: 5.0
+
+  - title: "Viral diversity in Greenlandic ice cores"
+    domain: metagenomics
+    questions:
+      - "What viral families dominate ancient ice core metagenomes?"
+    methods:
+      - "VirSorter2 viral detection"
+      - "vConTACT2 clustering"
+    priority: 0.8
+    max_budget_usd: 3.0
+
+budget:
+  total_usd: 10.0
+  gpu_slots: 0
+  cpu_workers: 4
+
+llm:
+  provider: claude-cli   # uses `claude -p` — no API key needed
+  model: claude-sonnet-4-6
+
+chitta:
+  mind_path: ~/.claude/mind

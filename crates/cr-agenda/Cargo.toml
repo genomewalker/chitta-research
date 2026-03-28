@@ -1,0 +1,13 @@
+[package]
+name = "cr-agenda"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+cr-types = { path = "../cr-types" }
+cr-graph = { path = "../cr-graph" }
+serde = { workspace = true }
+serde_yaml = { workspace = true }
+chrono = { workspace = true }
+uuid = { workspace = true }
+anyhow = { workspace = true }

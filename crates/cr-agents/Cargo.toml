@@ -1,0 +1,19 @@
+[package]
+name = "cr-agents"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+cr-types = { path = "../cr-types" }
+cr-graph = { path = "../cr-graph" }
+cr-llm = { path = "../cr-llm" }
+cr-chitta = { path = "../cr-chitta" }
+cr-artifacts = { path = "../cr-artifacts" }
+cr-resources = { path = "../cr-resources" }
+async-trait = "0.1"
+tokio = { workspace = true }
+serde = { workspace = true }
+serde_json = { workspace = true }
+anyhow = { workspace = true }
+chrono = { workspace = true }
+tracing = "0.1"
