@@ -93,7 +93,13 @@ impl Agent for Udgatr {
         drop(graph);
 
         let user_msg = format!(
-            "Hypothesis: {}\n\nExperiment Plan: {}\n\nObservations:\n{}\n\nArtifact commit: {}",
+            "Hypothesis: {}\n\nExperiment Plan: {}\n\nObservations:\n{}\n\nArtifact commit: {}\n\n\
+             REQUIRED OUTPUT FORMAT — respond with ONLY this JSON object:\n\
+             {{\n  \"novelty\": 0.0-1.0,\n  \"empirical_gain\": 0.0-1.0,\n\
+             \"reproducibility\": 0.0-1.0,\n  \"cost_efficiency\": 0.0-1.0,\n\
+             \"transfer_potential\": 0.0-1.0,\n  \"calibration_improvement\": 0.0-1.0,\n\
+             \"verdict\": \"confirmed\" or \"refuted\",\n\
+             \"confidence_update\": 0.0-1.0,\n  \"claims\": [\"claim1\"]\n}}",
             hypothesis_text,
             plan_text,
             observations.iter().enumerate().map(|(i, o)| format!("{}. {}", i + 1, o)).collect::<Vec<_>>().join("\n"),

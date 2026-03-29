@@ -298,7 +298,11 @@ async fn execute_via_llm(
 ) -> Result<ExecutionResult, anyhow::Error> {
     use cr_llm::CompletionRequest;
     let user_msg = format!(
-        "Hypothesis: {}\n\nExperiment Plan:\nSteps:\n{}\n\nSimulate executing this experiment and report results.",
+        "Hypothesis: {}\n\nExperiment Plan:\nSteps:\n{}\n\nSimulate executing this experiment and report results.\n\n\
+         REQUIRED OUTPUT FORMAT — respond with ONLY this JSON object, no other text:\n\
+         {{\n  \"outcome\": \"succeeded\" or \"failed\",\n\
+         \"observations\": [\"observation1\", \"observation2\"],\n\
+         \"metrics\": {{}},\n  \"summary\": \"one sentence summary\"\n}}",
         hypothesis_text,
         steps.iter().enumerate().map(|(i, s)| format!("{}. {}", i + 1, s)).collect::<Vec<_>>().join("\n")
     );
