@@ -4,6 +4,50 @@ use cr_types::*;
 
 use crate::{Agent, AgentAction, AgentContext};
 
+#[derive(Debug, Clone, Copy)]
+pub enum OutputType {
+    TestResults,
+    BuildOutput,
+    LogOutput,
+    JsonOutput,
+    Generic,
+}
+
+pub fn classify_output(stdout: &str, stderr: &str) -> OutputType {
+    let combined = format!("{stdout}\n{stderr}");
+    if combined.contains("test result:") || combined.contains("FAILED") && combined.contains("PASSED")
+        || combined.contains("not ok ") || combined.contains("ok 1 ")
+        || combined.contains("pytest") && combined.contains("failed") {
+        return OutputType::TestResults;
+    }
+    if combined.contains("error[E") || combined.contains("undefined reference")
+        || combined.contains("ld: ") || combined.contains("make[")
+        || combined.contains("CMake Error") || combined.contains("cargo build") {
+        return OutputType::BuildOutput;
+    }
+    if combined.lines().take(3).any(|l| {
+        let t = l.trim();
+        t.len() > 10 && t.chars().take(4).all(|c| c.is_ascii_digit()) && t.chars().nth(4) == Some('-')
+    }) || combined.contains("[INFO]") || combined.contains("[ERROR]") || combined.contains("[WARN]") {
+        return OutputType::LogOutput;
+    }
+    let trimmed = stdout.trim();
+    if trimmed.starts_with('{') || trimmed.starts_with('[') {
+        return OutputType::JsonOutput;
+    }
+    OutputType::Generic
+}
+
+fn type_prefix(t: OutputType) -> &'static str {
+    match t {
+        OutputType::TestResults => "[TestResults]",
+        OutputType::BuildOutput => "[BuildOutput]",
+        OutputType::LogOutput   => "[LogOutput]",
+        OutputType::JsonOutput  => "[JsonOutput]",
+        OutputType::Generic     => "",
+    }
+}
+
 pub struct Adhvaryu;
 
 const SYSTEM_PROMPT: &str = r#"You are a scientific experiment executor. Given an experiment plan, simulate running it and return structured results.
@@ -275,13 +319,19 @@ async fn execute_subprocess_steps(steps: &[String]) -> Result<ExecutionResult, a
                 let stderr = String::from_utf8_lossy(&out.stderr).trim().to_string();
 
                 if !stdout.is_empty() {
-                    // Cap observation length — long outputs are truncated
-                    let obs = if stdout.len() > 2000 {
+                    let obs_content = if stdout.len() > 2000 {
                         format!("{}\n[... truncated {} bytes]", &stdout[..2000], stdout.len() - 2000)
                     } else {
-                        stdout
+                        stdout.clone()
                     };
-                    observations.push(format!("$ {}\n{}", cmd, obs));
+                    let otype = classify_output(&stdout, &stderr);
+                    let prefix = type_prefix(otype);
+                    let obs = if prefix.is_empty() {
+                        format!("$ {}\n{}", cmd, obs_content)
+                    } else {
+                        format!("{} $ {}\n{}", prefix, cmd, obs_content)
+                    };
+                    observations.push(obs);
                 }
 
                 if !out.status.success() {

@@ -84,6 +84,7 @@ pub struct Brahman {
     self_improvement_depth: std::sync::atomic::AtomicU32,
     /// Novelty score from previous activation (for hard-stop detection)
     prev_novelty: std::sync::Mutex<f32>,
+    processed_offsets: std::sync::Mutex<std::collections::HashMap<std::path::PathBuf, u64>>,
 }
 
 impl Brahman {
@@ -95,6 +96,7 @@ impl Brahman {
             ),
             self_improvement_depth: std::sync::atomic::AtomicU32::new(0),
             prev_novelty: std::sync::Mutex::new(1.0),
+            processed_offsets: std::sync::Mutex::new(HashMap::new()),
         }
     }
 }
@@ -162,6 +164,73 @@ fn build_graph_summary(nodes: &[&TypedNode]) -> String {
         top_claims.join("\n"),
         open_qs.join("\n"),
     )
+}
+
+fn jaccard(a: &str, b: &str) -> f32 {
+    let sa: std::collections::HashSet<&str> = a.split_whitespace().collect();
+    let sb: std::collections::HashSet<&str> = b.split_whitespace().collect();
+    let i = sa.intersection(&sb).count();
+    let u = sa.union(&sb).count();
+    if u == 0 { 0.0 } else { i as f32 / u as f32 }
+}
+
+fn mine_correction_pairs(
+    processed: &mut std::collections::HashMap<std::path::PathBuf, u64>,
+) -> Vec<(String, String)> {
+    let projects_dir = std::path::PathBuf::from(
+        std::env::var("HOME").unwrap_or_default()
+    ).join(".claude/projects");
+
+    let mut pairs = Vec::new();
+    let Ok(entries) = std::fs::read_dir(&projects_dir) else { return pairs };
+
+    for entry in entries.flatten() {
+        let path = entry.path();
+        if path.extension().and_then(|e| e.to_str()) != Some("jsonl") { continue; }
+
+        let offset = *processed.get(&path).unwrap_or(&0);
+        let Ok(mut f) = std::fs::File::open(&path) else { continue };
+        use std::io::{BufRead, BufReader, Seek, SeekFrom};
+        let _ = f.seek(SeekFrom::Start(offset));
+        let mut reader = BufReader::new(f);
+
+        let mut window: Vec<String> = Vec::new();
+        let mut new_offset = offset;
+        let mut line = String::new();
+
+        while { line.clear(); reader.read_line(&mut line).unwrap_or(0) > 0 } {
+            new_offset += line.len() as u64;
+            let Ok(val) = serde_json::from_str::<serde_json::Value>(&line) else { continue };
+
+            let text = val["message"]["content"].as_array()
+                .and_then(|arr| arr.iter().find(|b| b["type"] == "text"))
+                .and_then(|b| b["text"].as_str())
+                .unwrap_or("")
+                .to_string();
+
+            if text.is_empty() { continue; }
+
+            let lower = text.to_lowercase();
+            let is_correction = lower.contains("i was wrong") || lower.contains("actually,")
+                || lower.contains("let me correct") || lower.contains("the correct")
+                || lower.contains("i made a mistake") || lower.contains("turns out");
+
+            window.push(text.clone());
+            if window.len() > 4 { window.remove(0); }
+
+            if is_correction && window.len() >= 2 {
+                let prev = &window[window.len() - 2];
+                let score = jaccard(prev, &text);
+                if score >= 0.15 && score < 0.9 {
+                    let summary_len = prev.len().min(200);
+                    let corr_len = text.len().min(300);
+                    pairs.push((prev[..summary_len].to_string(), text[..corr_len].to_string()));
+                }
+            }
+        }
+        processed.insert(path, new_offset);
+    }
+    pairs
 }
 
 #[async_trait]
@@ -237,6 +306,27 @@ impl Agent for Brahman {
                 ).await;
             }
             return Ok(AgentAction::Noop);
+        }
+
+        // Mine transcripts for correction pairs -> store as Method nodes
+        let pairs = {
+            let mut offsets = self.processed_offsets.lock().unwrap();
+            mine_correction_pairs(&mut offsets)
+        };
+        if !pairs.is_empty() {
+            tracing::info!(count = pairs.len(), "brahman: mined correction pairs from transcripts");
+            let mut graph = ctx.graph.write().await;
+            for (error_ctx, correction) in &pairs {
+                let method_id = NodeId::new();
+                let method_node = TypedNode::new(
+                    method_id,
+                    NodeKind::Method(Method {
+                        name: format!("correction:{}", &error_ctx[..error_ctx.len().min(50)]),
+                        description: format!("When encountering:\n{error_ctx}\n\nCorrect approach:\n{correction}"),
+                    }),
+                );
+                let _ = graph.add_node(method_node);
+            }
         }
 
         // Recall relevant memories from chitta for context
