@@ -3,7 +3,7 @@ BINDIR  = $(PREFIX)/bin
 REPO    = $(shell pwd)
 
 # Build target dir on local disk to avoid NFS rlib truncation
-export CARGO_TARGET_DIR ?= /tmp/cr-target
+export CARGO_TARGET_DIR ?= /var/tmp/cr-target
 export PATH := /usr/bin:$(HOME)/.rustup/toolchains/1.92.0-x86_64-unknown-linux-gnu/bin:$(PATH)
 
 .PHONY: build install uninstall clean release
