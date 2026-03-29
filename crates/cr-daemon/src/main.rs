@@ -144,7 +144,10 @@ async fn main() -> anyhow::Result<()> {
     } else {
         build_llm_client(&config.llm)
     };
-    let mind_path = config.chitta.mind_path.clone();
+    let mind_path = config.chitta.mind_path.clone().replace(
+        "~",
+        &std::env::var("HOME").unwrap_or_default(),
+    );
     let gpu_slots = config.budget.gpu_slots as usize;
     let cpu_workers = config.budget.cpu_workers as usize;
     let total_budget = config.budget.total_usd;
