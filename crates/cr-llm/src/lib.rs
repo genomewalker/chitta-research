@@ -1,5 +1,5 @@
 pub mod room;
-pub use room::{DiscussionRoom, DiscussionRoomBuilder, Participant, standard_room};
+pub use room::{DiscussionRoom, DiscussionRoomBuilder, Participant, mock_room, standard_room};
 
 use async_trait::async_trait;
 use serde::{Deserialize, Serialize};
@@ -342,8 +342,50 @@ impl MockLlmClient {
 impl LlmClient for MockLlmClient {
     async fn complete(&self, req: CompletionRequest) -> Result<CompletionResponse, LlmError> {
         // Detect which agent is calling by inspecting the system prompt
+        // and the user message content (used for room synthesizer context).
         let system = req.system.to_lowercase();
-        let content = if system.contains("analyst") && !system.contains("executor") {
+        let user_content = req.messages.iter()
+            .filter(|m| m.role == "user")
+            .map(|m| m.content.to_lowercase())
+            .collect::<Vec<_>>()
+            .join(" ");
+        let content = if system.contains("synthesize") || system.contains("synthesizer") {
+            // Room synthesizer: infer context from thread content
+            if user_content.contains("fitness") || user_content.contains("empirical_gain") || user_content.contains("analyst") || user_content.contains("observations:") || user_content.contains("artifact commit") {
+                // Synthesizing for Udgatr
+                r#"{
+  "novelty": 0.78,
+  "empirical_gain": 0.82,
+  "reproducibility": 0.71,
+  "cost_efficiency": 0.90,
+  "transfer_potential": 0.65,
+  "calibration_improvement": 0.55,
+  "verdict": "confirmed",
+  "confidence_update": 0.81,
+  "claims": ["Ancient ARGs show lower GC content (p=0.003)", "75% of ARG clades are sister to soil references"]
+}"#.to_string()
+            } else if user_content.contains("outcome") || user_content.contains("observations") || user_content.contains("executor") || user_content.contains("experiment plan") || user_content.contains("simulate") {
+                // Synthesizing for Adhvaryu
+                r#"{
+  "outcome": "succeeded",
+  "observations": ["Identified 47 ARG sequences with >80% identity to CARD", "GC content: ancient 47.2%, modern 52.8% (p=0.003)"],
+  "metrics": {"n_args_found": 47, "gc_content_ancient": 47.2, "gc_content_modern": 52.8, "p_value": 0.003, "soil_cluster_fraction": 0.75},
+  "summary": "Strong support for GC-content hypothesis. Critic concern about sample size is valid but does not invalidate the trend."
+}"#.to_string()
+            } else {
+                // Synthesizing for Hotr — return hypothesis array
+                r#"[
+  {
+    "statement": "Ancient permafrost ARGs (>10kya) show lower GC content than modern variants due to cold-adaptation pressure",
+    "prior_confidence": 0.65,
+    "experiment_plan": {
+      "description": "Compare GC content of ARG sequences across permafrost age strata vs modern controls",
+      "steps": ["Align reads to CARD with minimap2", "Filter by >80% identity", "Compute GC content per contig", "Mann-Whitney U test across strata"]
+    }
+  }
+]"#.to_string()
+            }
+        } else if system.contains("analyst") && !system.contains("executor") {
             // Udgatr — must check before executor branch since its prompt contains "experiment"
             r#"{
   "novelty": 0.78,

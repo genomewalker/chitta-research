@@ -14,7 +14,7 @@ use cr_agents::udgatr::Udgatr;
 use cr_artifacts::ArtifactStore;
 use cr_chitta::ChittaClient;
 
-use cr_llm::{AnthropicClient, ClaudeCliClient, CodexClient, LlmClient, MockLlmClient, OpenAiClient, standard_room};
+use cr_llm::{AnthropicClient, ClaudeCliClient, CodexClient, LlmClient, MockLlmClient, OpenAiClient, mock_room, standard_room};
 use cr_resources::ResourceManager;
 
 #[derive(Parser)]
@@ -127,7 +127,10 @@ async fn main() -> anyhow::Result<()> {
     info!(agenda = %cli.agenda.display(), "loading agenda");
     let config = AgendaConfig::from_file(&cli.agenda)?;
 
-    let llm: Arc<dyn LlmClient> = if cli.mock {
+    let llm: Arc<dyn LlmClient> = if cli.mock && config.llm.provider == "room" {
+        info!("using mock discussion room (--mock + provider=room)");
+        Arc::new(mock_room(config.llm.model.clone()).build())
+    } else if cli.mock {
         info!("using mock LLM (--mock flag)");
         Arc::new(MockLlmClient::new())
     } else {

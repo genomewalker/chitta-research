@@ -111,6 +111,21 @@ impl DiscussionRoomBuilder {
     }
 }
 
+/// Mock room: uses MockLlmClient for all participants.
+/// Exercises the full debate loop (thread building, parallel rounds, synthesis)
+/// without any external calls. Pass `--mock` to cr-daemon to activate.
+pub fn mock_room(topic: impl Into<String>) -> DiscussionRoomBuilder {
+    use crate::MockLlmClient;
+    DiscussionRoom::builder(topic)
+        .add("Critic",     "Find every flaw in the hypothesis.",   Arc::new(MockLlmClient::new()))
+        .add("Empiricist", "Focus on testability.",                Arc::new(MockLlmClient::new()))
+        .rounds(2)
+        .synthesizer(
+            "Synthesize the debate into final structured JSON output.",
+            Arc::new(MockLlmClient::new()),
+        )
+}
+
 /// Preset: build a room with the standard claude-cli / codex participants.
 /// Each gets a distinct analytical role so the debate is genuinely divergent.
 pub fn standard_room(topic: impl Into<String>) -> DiscussionRoomBuilder {

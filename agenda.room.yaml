@@ -1,0 +1,23 @@
+programs:
+  - title: "ARG prevalence in ancient permafrost"
+    domain: metagenomics
+    questions:
+      - "Do antibiotic resistance genes increase with permafrost depth?"
+      - "Are ancient ARGs phylogenetically distinct from modern variants?"
+    methods:
+      - "BLASTp against CARD database"
+      - "Short-read assembly with MEGAHIT"
+    priority: 1.0
+    max_budget_usd: 5.0
+
+budget:
+  total_usd: 10.0
+  gpu_slots: 0
+  cpu_workers: 2
+
+llm:
+  provider: room     # DiscussionRoom: Critic + Empiricist debate, then synthesize
+  model: "Metagenomics hypothesis evaluation"
+
+chitta:
+  mind_path: ~/.claude/mind
