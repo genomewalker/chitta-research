@@ -11,6 +11,8 @@ use cr_agents::{Agent, AgentContext, AgentEvent, ResearchAgenda};
 use cr_agents::hotr::Hotr;
 use cr_agents::adhvaryu::Adhvaryu;
 use cr_agents::udgatr::Udgatr;
+use cr_agents::researcher::Researcher;
+use cr_agents::scout::Scout;
 use cr_artifacts::ArtifactStore;
 use cr_chitta::ChittaClient;
 
@@ -233,9 +235,14 @@ async fn main() -> anyhow::Result<()> {
         shutdown_flag.store(true, Ordering::Relaxed);
     })?;
 
-    let hotr_handle = tokio::spawn(agent_loop(Box::new(Hotr), ctx.clone(), shutdown.clone()));
-    let adhvaryu_handle = tokio::spawn(agent_loop(Box::new(Adhvaryu), ctx.clone(), shutdown.clone()));
-    let udgatr_handle = tokio::spawn(agent_loop(Box::new(Udgatr), ctx.clone(), shutdown.clone()));
+    let hotr_handle       = tokio::spawn(agent_loop(Box::new(Hotr),       ctx.clone(), shutdown.clone()));
+    let adhvaryu_handle   = tokio::spawn(agent_loop(Box::new(Adhvaryu),   ctx.clone(), shutdown.clone()));
+    let udgatr_handle     = tokio::spawn(agent_loop(Box::new(Udgatr),     ctx.clone(), shutdown.clone()));
+    // Researcher runs in parallel — fetches web findings and stores in chitta
+    // before Hotr generates hypotheses for each question.
+    let researcher_handle = tokio::spawn(agent_loop(Box::new(Researcher::new()), ctx.clone(), shutdown.clone()));
+    // Scout runs once at startup — discovers local/Slurm/SSH compute and stores topology in chitta.
+    let scout_handle      = tokio::spawn(agent_loop(Box::new(Scout::new()),      ctx.clone(), shutdown.clone()));
 
     drop(event_tx);
     drop(ctx); // main must not hold a Sender — agents own the only clones
@@ -256,7 +263,8 @@ async fn main() -> anyhow::Result<()> {
 
                 if action_summary == "noop" {
                     *noop_counts.entry(agent).or_insert(0) += 1;
-                    let all_idle = noop_counts.len() >= 3
+                    // Need 4 agents idle now (Hotr, Adhvaryu, Udgatr, Researcher)
+                    let all_idle = noop_counts.len() >= 5
                         && noop_counts.values().all(|&c| c >= max_cycles);
                     if all_idle {
                         info!("all agents idle for {} cycles, shutting down", max_cycles);
@@ -292,6 +300,8 @@ async fn main() -> anyhow::Result<()> {
     let _ = hotr_handle.await;
     let _ = adhvaryu_handle.await;
     let _ = udgatr_handle.await;
+    let _ = researcher_handle.await;
+    let _ = scout_handle.await;
 
     // Save graph snapshot
     let graph_guard = graph.read().await;

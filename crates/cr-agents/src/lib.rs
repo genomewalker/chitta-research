@@ -1,6 +1,8 @@
 pub mod hotr;
 pub mod adhvaryu;
 pub mod udgatr;
+pub mod researcher;
+pub mod scout;
 
 use std::sync::Arc;
 
