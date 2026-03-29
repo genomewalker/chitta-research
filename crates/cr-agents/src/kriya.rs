@@ -42,6 +42,21 @@ fn applied_marker(claim_id: &NodeId) -> String {
     format!(".applied-{}", claim_id)
 }
 
+/// Extract a file path hint from a claim if it references a specific file.
+fn extract_file_hint(claim: &str) -> Option<String> {
+    // Look for patterns like "crates/cr-agents/src/hotr.rs:66" or "crates/cr-llm/src/room.rs"
+    if let Some(start) = claim.find("crates/") {
+        let rest = &claim[start..];
+        let end = rest.find(|c: char| !c.is_alphanumeric() && c != '/' && c != '_' && c != '-' && c != '.')
+            .unwrap_or(rest.len());
+        let candidate = &rest[..end];
+        if candidate.ends_with(".rs") {
+            return Some(candidate.to_string());
+        }
+    }
+    None
+}
+
 fn is_applied(claim_id: &NodeId) -> bool {
     std::path::Path::new(&applied_marker(claim_id)).exists()
 }
@@ -103,19 +118,47 @@ impl Agent for Kriya {
             "kriya: applying claim"
         );
 
-        // Get baseline verifier score before applying fix
-        let baseline_cmd = "cargo clippy --quiet 2>&1 | grep -c '^warning' || echo 0";
-        let (_, baseline_out) = run_cmd(&format!("run: {baseline_cmd}"), 60).await;
-        let baseline_count: i64 = baseline_out.lines()
-            .last().and_then(|l| l.trim().parse().ok()).unwrap_or(999);
+        // Choose verifier based on claim content — clippy only measures lints,
+        // not runtime correctness or test coverage.
+        let claim_lower = claim_text.to_lowercase();
+        let (baseline_cmd, verifier_desc) = if claim_lower.contains("test") || claim_lower.contains("panic") || claim_lower.contains("error") {
+            ("cd /maps/projects/fernandezguerra/apps/repos/chitta-research && CARGO_TARGET_DIR=/tmp/cr-target ./build.sh test 2>&1 | grep -E '^test result' | grep -o '[0-9]* failed' | awk '{print $1}' || echo 0",
+             "cargo test failures (lower=better)")
+        } else if claim_lower.contains("warning") || claim_lower.contains("lint") || claim_lower.contains("unused") {
+            ("cd /maps/projects/fernandezguerra/apps/repos/chitta-research && CARGO_TARGET_DIR=/tmp/cr-target ./build.sh build 2>&1 | grep -c '^warning' || echo 0",
+             "compiler warnings (lower=better)")
+        } else {
+            // For architecture/design claims: measure lines of code in affected file as complexity proxy
+            ("wc -l /maps/projects/fernandezguerra/apps/repos/chitta-research/crates/cr-agents/src/*.rs | grep total | awk '{print $1}'",
+             "total LOC in cr-agents (lower or unchanged=ok)")
+        };
 
-        // Ask LLM to generate a fix
+        let (_, baseline_out) = run_cmd(&format!("run: {baseline_cmd}"), 120).await;
+        let baseline_count: i64 = baseline_out.lines()
+            .last().and_then(|l| l.trim().parse().ok()).unwrap_or(0);
+
+        tracing::info!(baseline = baseline_count, verifier = verifier_desc, "kriya: baseline measured");
+
+        // Include relevant file content for precise fix generation
+        let file_context = if let Some(file_hint) = extract_file_hint(&claim_text) {
+            let path = format!("/maps/projects/fernandezguerra/apps/repos/chitta-research/{file_hint}");
+            std::fs::read_to_string(&path)
+                .map(|s| format!("\nRelevant file ({file_hint}):\n```rust\n{}\n```", &s[..s.len().min(2000)]))
+                .unwrap_or_default()
+        } else {
+            String::new()
+        };
+
+        // Ask LLM to generate a fix with full context
         let user_msg = format!(
             "Codebase: /maps/projects/fernandezguerra/apps/repos/chitta-research\n\
-             Confirmed claim (confidence {claim_conf:.2}):\n{claim_text}\n\n\
-             Generate a concrete automated fix command.\n\n\
+             Confirmed claim (confidence {claim_conf:.2}):\n{claim_text}\
+             {file_context}\n\n\
+             Verifier: {verifier_desc} (baseline={baseline_count})\n\
+             Generate a concrete automated fix. The fix must measurably improve the verifier score.\n\
+             If no safe automated fix exists, output fix_command as 'run: echo skip'.\n\n\
              REQUIRED OUTPUT FORMAT — ONLY JSON, no other text:\n\
-             {{\"fix_command\": \"run: <cmd>\", \"verifier\": \"run: <cmd>\", \"explanation\": \"...\"}}",
+             {{\"fix_command\": \"run: <cmd>\", \"verifier\": \"run: {baseline_cmd}\", \"explanation\": \"...\"}}",
         );
 
         let resp = ctx.llm.complete(CompletionRequest {
@@ -154,7 +197,15 @@ impl Agent for Kriya {
         let after_count: i64 = after_out.lines()
             .last().and_then(|l| l.trim().parse().ok()).unwrap_or(999);
 
-        let improved = fix_ok && after_count < baseline_count;
+        // For LOC-based verifier: neutral (<=) counts as ok since architecture claims
+        // don't always reduce line count. For test/lint: strictly lower is better.
+        let is_loc_verifier = verifier_desc.contains("LOC");
+        let improved = fix_ok && (
+            (is_loc_verifier && after_count <= baseline_count) ||
+            (!is_loc_verifier && after_count < baseline_count) ||
+            // If baseline was 0 (no failures), success of the fix command itself is enough
+            (baseline_count == 0 && fix_ok)
+        );
 
         if improved {
             tracing::info!(
