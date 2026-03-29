@@ -1,0 +1,60 @@
+programs:
+  - title: "Lossless MCAF Compression to 4.5 GB"
+    domain: genomics / software_engineering
+    questions:
+      - "What is the compressed size of FRAME_CORE fields individually (POS, MAPQ, FLAG, TLEN, RNEXT, PNEXT) and which fields benefit most from delta/zig-zag coding before zstd?"
+      - "Can sparse blocks (<32 reads) be reorganized into a separate pooled ZSTD frame instead of per-block compression to improve ratio — how much does pooling 100 sparse blocks together save vs individual blocks?"
+      - "What is the compressed size of AUX tag data (FRAME_AUX) per tag type (NM, MD, AS, XS, RG, etc.) and which tags are largest — can tag-type demixing improve zstd ratio?"
+      - "Does BLOCK_LAYOUT_GROUPED (all FRAME_CORE in one stream) compress better than BLOCK_LAYOUT_COLUMN (per-field streams) for the LV7008867351.sorted.bam dataset, and by how much?"
+      - "What zstd compression level (1–22) gives the best size/time tradeoff for each frame type (FRAME_CORE, FRAME_CIGAR, FRAME_SEQ, FRAME_MD, FRAME_AUX) on this dataset?"
+      - "Can READ names (QNAME) be delta-encoded or prefix-compressed before zstd to reduce READS table size significantly beyond its current 0.053 GB?"
+      - "Does interleaving FRAME_SEQ + FRAME_MD into a single compressed stream improve ratio vs separate streams (joint entropy of nucleotide and mismatch positions)?"
+      - "What is the theoretical information content of FRAME_CORE fields given the reference genome coordinates — is there significant redundancy from nearby reads having similar FLAG/MAPQ?"
+    methods:
+      - "Read /maps/projects/fernandezguerra/apps/repos/mcaf/mcaf.hpp to understand all encoding types (ENC_*) and frame layout structs (LegacyFrameDesc, FieldSlice, BlockLayout)"
+      - "Read /maps/projects/fernandezguerra/apps/repos/mcaf/bam2mcaf.cpp to understand serialize() and how each frame type is built and compressed"
+      - "Use chitta symbol search to find encode_aux_smart, serialize, flush_sparse_batch functions and understand their data flow"
+      - "Analyze the existing MCAF file /maps/projects/kaiku-test/LV7008867351.sorted.mcaf using the Python Trailer2 parser to get per-block frame size breakdown"
+      - "Benchmark zstd levels 1/6/9/15/19/22 on 10 MB samples of FRAME_CORE, FRAME_CIGAR, FRAME_SEQ, FRAME_MD, FRAME_AUX data extracted from the BAM"
+      - "Prototype GROUPED layout change in bam2mcaf.cpp: write one compressed block for all FRAME_CORE fields instead of per-field blocks, measure size delta"
+      - "Prototype sparse block pooling: accumulate N sparse blocks before compressing as one zstd frame, benchmark N=50/100/500"
+      - "Prototype delta encoding for POS field (store diffs between consecutive read positions) and zig-zag encode TLEN before zstd compression"
+      - "Measure total size of each tag type in FRAME_AUX by tag-type demixing: separate NM/MD/AS/XS/RG into own buffers before compressing"
+    priority: 1.0
+    max_budget_usd: 15.0
+
+  - title: "Kaiku FilterBAM Column Matching"
+    domain: genomics / software_engineering
+    questions:
+      - "Which kaiku StatCol columns currently output 0 or stub values — specifically ref_gc_content, d_i, complexity_penalized_coverage — and what is the filterBAM formula for each?"
+      - "Does kaiku breadth_of_coverage computation at tier T0 overcount overlapping reads, and does the T2 fix (CIGAR-based FRAME_CIGAR) match filterBAM exactly?"
+      - "Does kaiku TAD (trimmed average depth) match filterBAM's exact algorithm: histogram of integer depths, 10th/90th percentile trim by position count, then mean of positions in range?"
+      - "Does kaiku spatial_entropy use natural log (ln) matching filterBAM, and is the adaptive n_bins (Freedman-Diaconis vs Sturges) implementation correct?"
+      - "What is the filterBAM formula for d_i (damage index) and can it be computed from the existing damage profile data already in kaiku (kct_5p, nc_5p, kga_3p arrays)?"
+      - "Does kaiku cov_evenness match filterBAM's exact formula: 1 - (count_le - sum_le/mean_depth) / ref_len where count_le includes uncovered positions?"
+      - "Does kaiku coeff_var use population std / global mean (filterBAM) vs sample std / covered mean — which is it and does it match?"
+      - "Are kaiku damage profile output columns (kct_5p_1..10, nc_5p_1..10, kga_3p_1..10) normalized correctly to match filterBAM's per-position proportions?"
+    methods:
+      - "Read /maps/projects/fernandezguerra/apps/repos/kaiku/include/kaiku/ref_stats.hpp for the full StatCol enum and RefStats struct"
+      - "Read /maps/projects/fernandezguerra/apps/repos/kaiku/src/filter/coverage.cpp for compute_coverage implementation (TAD, entropy, Gini, evenness, coeff_var)"
+      - "Read /maps/projects/fernandezguerra/apps/repos/kaiku/src/filter/damage_profile.cpp for accumulate_damage and normalize_damage implementations"
+      - "Read /maps/projects/fernandezguerra/apps/repos/kaiku/src/filter/output.cpp for the column-writing code that maps StatCol to output values"
+      - "Use chitta symbol search for compute_coverage, accumulate_damage, normalize_damage, write_filter_mcafo to trace the full stats pipeline"
+      - "Read filterBAM source or documentation to extract exact formulas for d_i, ref_gc_content, complexity_penalized_coverage"
+      - "Run kaiku and filterBAM on the same small BAM (500 refs) and compare TSV output column-by-column to identify numerical discrepancies"
+      - "For each discrepant column: identify exact line in kaiku source causing the mismatch and propose a fix"
+      - "Check breadth_of_coverage at T0 (read-level) vs T2 (CIGAR-level): do overlapping reads inflate T0 breadth vs filterBAM?"
+    priority: 0.9
+    max_budget_usd: 10.0
+
+budget:
+  total_usd: 25.0
+  gpu_slots: 0
+  cpu_workers: 4
+
+llm:
+  provider: claude-cli
+  model: claude-sonnet-4-6
+
+chitta:
+  mind_path: ~/.claude/mind
