@@ -26,6 +26,8 @@ struct ExecutionResult {
     observations: Vec<String>,
     metrics: serde_json::Value,
     summary: String,
+    #[serde(skip)]
+    token_usage: (u64, u64),
 }
 
 #[async_trait]
@@ -77,32 +79,56 @@ impl Agent for Adhvaryu {
         // Acquire resources
         let _slot = ctx.resources.acquire(false).await?;
 
-        let user_msg = format!(
-            "Hypothesis: {}\n\nExperiment Plan:\nSteps:\n{}\n\nSimulate executing this experiment and report results.",
-            hypothesis_text,
-            plan.steps.iter().enumerate().map(|(i, s)| format!("{}. {}", i + 1, s)).collect::<Vec<_>>().join("\n")
-        );
+        // Detect code-analysis plans — route through chitta tree-sitter instead of LLM.
+        let is_code_analysis = plan.steps.iter().any(|s| {
+            let s = s.to_lowercase();
+            s.contains("read") || s.contains("search") || s.contains("symbol") ||
+            s.contains("analyze") || s.contains("source") || s.contains("codebase") ||
+            s.contains("function") || s.contains("struct") || s.contains("trait")
+        });
 
-        let resp = ctx.llm.complete(CompletionRequest {
-            model: String::new(),
-            system: SYSTEM_PROMPT.to_string(),
-            messages: vec![Message { role: "user".into(), content: user_msg }],
-            max_tokens: 2048,
-            temperature: 0.3,
-        }).await?;
-
-        let content = resp.content.trim();
-        let json_str = if let Some(start) = content.find('{') {
-            if let Some(end) = content.rfind('}') {
-                &content[start..=end]
+        let exec_result: ExecutionResult = if is_code_analysis {
+            let mut chitta = ctx.chitta.lock().await;
+            let connected = chitta.connect().await.is_ok();
+            if connected {
+                let mut observations = Vec::new();
+                for step in &plan.steps {
+                    let sl = step.to_lowercase();
+                    let obs = if sl.contains("search") || sl.contains("symbol") {
+                        let query = step.split_once(':').map(|(_, q)| q.trim()).unwrap_or(step);
+                        chitta.search_symbols(query, 5).await.unwrap_or_else(|e| e.to_string())
+                    } else if sl.contains("read") || sl.contains("function") {
+                        let name = step.split_once(':').map(|(_, q)| q.trim()).unwrap_or(step);
+                        chitta.read_function(name, None).await.unwrap_or_else(|e| e.to_string())
+                    } else if sl.contains("codebase") || sl.contains("index") {
+                        let path = step.split_once(':').map(|(_, q)| q.trim())
+                            .unwrap_or(".");
+                        chitta.learn_codebase(path).await.unwrap_or_else(|e| e.to_string())
+                    } else {
+                        chitta.code_context(step).await.unwrap_or_else(|e| e.to_string())
+                    };
+                    if !obs.is_empty() && obs.len() < 2000 {
+                        observations.push(obs);
+                    }
+                }
+                ExecutionResult {
+                    outcome: "succeeded".into(),
+                    observations: if observations.is_empty() {
+                        vec!["Code analysis completed via tree-sitter.".into()]
+                    } else {
+                        observations
+                    },
+                    metrics: serde_json::json!({}),
+                    summary: format!("Code analysis via chitta tree-sitter: {} steps executed.", plan.steps.len()),
+                    token_usage: (0, 0),
+                }
             } else {
-                content
+                // chitta not connected — fall through to LLM simulation
+                execute_via_llm(&ctx, &hypothesis_text, &plan.steps).await?
             }
         } else {
-            content
+            execute_via_llm(&ctx, &hypothesis_text, &plan.steps).await?
         };
-
-        let exec_result: ExecutionResult = serde_json::from_str(json_str)?;
 
         let status = if exec_result.outcome == "succeeded" {
             RunStatus::Succeeded
@@ -110,7 +136,8 @@ impl Agent for Adhvaryu {
             RunStatus::Failed
         };
 
-        let cost_usd = (resp.usage.input + resp.usage.output) as f64 * 0.000003;
+        let (tokens_in, tokens_out) = exec_result.token_usage;
+        let cost_usd = (tokens_in + tokens_out) as f64 * 0.000003;
         ctx.resources.charge(cost_usd);
 
         // Commit artifacts
@@ -144,8 +171,8 @@ impl Agent for Adhvaryu {
                 resource_usage: ResourceUsage {
                     gpu_seconds: 0.0,
                     cpu_seconds: 1.0,
-                    llm_tokens_in: resp.usage.input,
-                    llm_tokens_out: resp.usage.output,
+                    llm_tokens_in: tokens_in,
+                    llm_tokens_out: tokens_out,
                     cost_usd,
                 },
             }),
@@ -188,4 +215,40 @@ impl Agent for Adhvaryu {
 
         Ok(AgentAction::RequestRun { plan_id })
     }
+}
+
+async fn execute_via_llm(
+    ctx: &crate::AgentContext,
+    hypothesis_text: &str,
+    steps: &[String],
+) -> Result<ExecutionResult, anyhow::Error> {
+    use cr_llm::CompletionRequest;
+    let user_msg = format!(
+        "Hypothesis: {}\n\nExperiment Plan:\nSteps:\n{}\n\nSimulate executing this experiment and report results.",
+        hypothesis_text,
+        steps.iter().enumerate().map(|(i, s)| format!("{}. {}", i + 1, s)).collect::<Vec<_>>().join("\n")
+    );
+
+    let resp = ctx.llm.complete(CompletionRequest {
+        model: String::new(),
+        system: SYSTEM_PROMPT.to_string(),
+        messages: vec![cr_llm::Message { role: "user".into(), content: user_msg }],
+        max_tokens: 2048,
+        temperature: 0.3,
+    }).await?;
+
+    let content = resp.content.trim();
+    let json_str = if let Some(start) = content.find('{') {
+        if let Some(end) = content.rfind('}') {
+            &content[start..=end]
+        } else {
+            content
+        }
+    } else {
+        content
+    };
+
+    let mut result: ExecutionResult = serde_json::from_str(json_str)?;
+    result.token_usage = (resp.usage.input, resp.usage.output);
+    Ok(result)
 }

@@ -252,4 +252,63 @@ impl ChittaClient {
         self.call("observe", args).await?;
         Ok(())
     }
+
+    // ── Code intelligence (tree-sitter via cc-soul) ─────────────────────────
+
+    /// Index a codebase directory with tree-sitter symbol extraction.
+    /// Must be called before search_symbols/find_symbol work for that path.
+    pub async fn learn_codebase(&mut self, path: &str) -> Result<String, ChittaError> {
+        let args = serde_json::json!({ "path": path });
+        let result = self.call("learn_codebase", args).await?;
+        Ok(result["content"][0]["text"].as_str().unwrap_or("").to_string())
+    }
+
+    /// Semantic search over indexed symbols.
+    pub async fn search_symbols(
+        &mut self,
+        query: &str,
+        limit: usize,
+    ) -> Result<String, ChittaError> {
+        let args = serde_json::json!({ "query": query, "limit": limit });
+        let result = self.call("search_symbols", args).await?;
+        Ok(result["content"][0]["text"].as_str().unwrap_or("").to_string())
+    }
+
+    /// Find a specific symbol by name and optional kind.
+    pub async fn find_symbol(
+        &mut self,
+        name: &str,
+        kind: Option<&str>,
+    ) -> Result<String, ChittaError> {
+        let mut args = serde_json::json!({ "name": name });
+        if let Some(k) = kind {
+            args["kind"] = serde_json::Value::String(k.to_string());
+        }
+        let result = self.call("find_symbol", args).await?;
+        Ok(result["content"][0]["text"].as_str().unwrap_or("").to_string())
+    }
+
+    /// Read a function's source code by name.
+    pub async fn read_function(
+        &mut self,
+        name: &str,
+        file: Option<&str>,
+    ) -> Result<String, ChittaError> {
+        let mut args = serde_json::json!({ "name": name });
+        if let Some(f) = file {
+            args["file"] = serde_json::Value::String(f.to_string());
+        }
+        let result = self.call("read_function", args).await?;
+        Ok(result["content"][0]["text"].as_str().unwrap_or("").to_string())
+    }
+
+    /// Get code context around a query — symbols + callers + callees.
+    pub async fn code_context(
+        &mut self,
+        query: &str,
+    ) -> Result<String, ChittaError> {
+        let args = serde_json::json!({ "query": query });
+        let result = self.call("code_context", args).await?;
+        Ok(result["content"][0]["text"].as_str().unwrap_or("").to_string())
+    }
 }
