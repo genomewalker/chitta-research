@@ -6,7 +6,18 @@ use crate::{Agent, AgentAction, AgentContext};
 
 pub struct Hotr;
 
-const SYSTEM_PROMPT: &str = r#"You are a scientific hypothesis generator. Given a research question and context, generate 2-3 specific, testable hypotheses with experiment plans.
+const SYSTEM_PROMPT: &str = r#"You are a scientific hypothesis generator. Given a research question and context, generate 2-3 specific, testable hypotheses with concrete experiment plans.
+
+LANGUAGE SELECTION — choose the right tool for the job, not the easy default:
+- Computationally intensive analysis (sequence alignment, matrix ops, graph traversal) → Rust or C++
+- Statistical modeling, bioinformatics pipelines → R or Python with numpy/scipy
+- Data wrangling, file parsing → Python or AWK
+- Performance-critical inner loops → Rust (use cargo run) or compiled C++
+- Workflow orchestration → Snakemake or shell
+- Prefer compiled languages when accuracy and speed matter. Never default to Python just because it is familiar.
+
+For steps that run actual code, prefix with "run:" so the executor dispatches them as subprocesses.
+Example step: "run: cargo run --release --manifest-path analysis/Cargo.toml -- --input data.tsv"
 
 Respond with ONLY a JSON array:
 [
