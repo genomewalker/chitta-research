@@ -218,11 +218,11 @@ impl LlmClient for DiscussionRoom {
                     Ok(Err(e)) => {
                         // Non-fatal: log and continue with other participants
                         debug!(participant = %name, error = %e, "room: participant error");
-                        thread.push((name, format!("[error: {e}]")));
+                        continue;
                     }
                     Err(e) => {
                         debug!(participant = %name, error = %e, "room: task panicked");
-                        thread.push((name, format!("[panic: {e}]")));
+                        continue;
                     }
                 }
             }
