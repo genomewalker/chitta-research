@@ -100,8 +100,13 @@ impl Agent for Hotr {
         };
 
         let user_msg = format!(
-            "Research program: {}\nDomain: {}\n\nQuestion: {}",
-            prog_title, prog_domain, q_text
+            "Research program: {prog_title}\nDomain: {prog_domain}\n\nQuestion: {q_text}\n\n\
+             REQUIRED OUTPUT FORMAT — respond with ONLY this JSON array structure, \
+             no other text before or after:\n\
+             [\n  {{\n    \"statement\": \"specific testable hypothesis\",\n\
+             \"prior_confidence\": 0.65,\n    \"experiment_plan\": {{\n\
+             \"description\": \"how to test\",\n      \"steps\": [\"step1\", \"step2\"]\n\
+             }}\n  }}\n]"
         );
 
         let resp = ctx.llm.complete(CompletionRequest {
