@@ -1,0 +1,32 @@
+[2m2026-03-29T16:13:43.334376Z[0m [32m INFO[0m [2mcresearch[0m[2m:[0m loading agenda [3magenda[0m[2m=[0magenda.self.yaml
+[2m2026-03-29T16:13:43.335366Z[0m [32m INFO[0m [2mcresearch[0m[2m:[0m provider overridden via --provider flag [3mprovider[0m[2m=[0mclaude-cli
+[2m2026-03-29T16:13:43.335385Z[0m [32m INFO[0m [2mcresearch[0m[2m:[0m using claude -p (no API key needed)
+[2m2026-03-29T16:13:43.336521Z[0m [32m INFO[0m [2mcresearch[0m[2m:[0m resumed from snapshot [3mnodes[0m[2m=[0m19 [3mpath[0m[2m=[0mgraph_state.json
+[2m2026-03-29T16:13:43.336668Z[0m [32m INFO[0m [2mcresearch[0m[2m:[0m connected to chittad
+[2m2026-03-29T16:13:43.347145Z[0m [32m INFO[0m [2mcresearch[0m[2m:[0m artifact store ready [3mpath[0m[2m=[0martifacts
+[2m2026-03-29T16:13:43.347722Z[0m [32m INFO[0m [2mcr_agents::scout[0m[2m:[0m scout: discovering available compute resources
+[2m2026-03-29T16:13:47.627464Z[0m [32m INFO[0m [2mcr_agents::scout[0m[2m:[0m scout: resource topology stored in chitta
+[2m2026-03-29T16:13:47.627512Z[0m [32m INFO[0m [2mcr_agents::scout[0m[2m:[0m scout: resource discovery complete [3mlocal_cpus[0m[2m=[0m96 [3mlocal_gpus[0m[2m=[0m0 [3mhas_slurm[0m[2m=[0mtrue
+[2m2026-03-29T16:13:52.955802Z[0m [31mERROR[0m [2mcresearch[0m[2m:[0m step failed [3magent[0m[2m=[0mhotr [3merror[0m[2m=[0mprocess error: claude -p failed: 
+[2m2026-03-29T16:13:52.955932Z[0m [31mERROR[0m [2mcresearch[0m[2m:[0m agent error [3magent[0m[2m=[0mhotr [3merror[0m[2m=[0mprocess error: claude -p failed: 
+[2m2026-03-29T16:14:03.452724Z[0m [31mERROR[0m [2mcresearch[0m[2m:[0m step failed [3magent[0m[2m=[0mhotr [3merror[0m[2m=[0mprocess error: claude -p failed: 
+[2m2026-03-29T16:14:03.452856Z[0m [31mERROR[0m [2mcresearch[0m[2m:[0m agent error [3magent[0m[2m=[0mhotr [3merror[0m[2m=[0mprocess error: claude -p failed: 
+[2m2026-03-29T16:14:13.976784Z[0m [31mERROR[0m [2mcresearch[0m[2m:[0m step failed [3magent[0m[2m=[0mhotr [3merror[0m[2m=[0mprocess error: claude -p failed: 
+[2m2026-03-29T16:14:13.976922Z[0m [31mERROR[0m [2mcresearch[0m[2m:[0m agent error [3magent[0m[2m=[0mhotr [3merror[0m[2m=[0mprocess error: claude -p failed: 
+[2m2026-03-29T16:14:24.715599Z[0m [31mERROR[0m [2mcresearch[0m[2m:[0m step failed [3magent[0m[2m=[0mhotr [3merror[0m[2m=[0mprocess error: claude -p failed: 
+[2m2026-03-29T16:14:24.715718Z[0m [31mERROR[0m [2mcresearch[0m[2m:[0m agent error [3magent[0m[2m=[0mhotr [3merror[0m[2m=[0mprocess error: claude -p failed: 
+[2m2026-03-29T16:14:35.147823Z[0m [31mERROR[0m [2mcresearch[0m[2m:[0m step failed [3magent[0m[2m=[0mhotr [3merror[0m[2m=[0mprocess error: claude -p failed: 
+[2m2026-03-29T16:14:35.148094Z[0m [31mERROR[0m [2mcresearch[0m[2m:[0m agent error [3magent[0m[2m=[0mhotr [3merror[0m[2m=[0mprocess error: claude -p failed: 
+[2m2026-03-29T16:14:45.861740Z[0m [31mERROR[0m [2mcresearch[0m[2m:[0m step failed [3magent[0m[2m=[0mhotr [3merror[0m[2m=[0mprocess error: claude -p failed: 
+[2m2026-03-29T16:14:45.861854Z[0m [31mERROR[0m [2mcresearch[0m[2m:[0m agent error [3magent[0m[2m=[0mhotr [3merror[0m[2m=[0mprocess error: claude -p failed: 
+[2m2026-03-29T16:14:53.813062Z[0m [32m INFO[0m [2mcresearch[0m[2m:[0m received SIGINT, initiating shutdown
+[2m2026-03-29T16:14:53.893565Z[0m [32m INFO[0m [2mcresearch[0m[2m:[0m shutting down [3magent[0m[2m=[0mkriya
+[2m2026-03-29T16:14:53.893628Z[0m [32m INFO[0m [2mcresearch[0m[2m:[0m shutting down [3magent[0m[2m=[0mudgatr
+[2m2026-03-29T16:14:53.893639Z[0m [32m INFO[0m [2mcresearch[0m[2m:[0m shutting down [3magent[0m[2m=[0madhvaryu
+[2m2026-03-29T16:14:53.893648Z[0m [32m INFO[0m [2mcresearch[0m[2m:[0m shutting down [3magent[0m[2m=[0mbrahman
+[2m2026-03-29T16:14:53.893659Z[0m [32m INFO[0m [2mcresearch[0m[2m:[0m shutting down [3magent[0m[2m=[0mresearcher
+[2m2026-03-29T16:14:54.159329Z[0m [32m INFO[0m [2mcresearch[0m[2m:[0m shutting down [3magent[0m[2m=[0mscout
+[2m2026-03-29T16:14:56.536690Z[0m [31mERROR[0m [2mcresearch[0m[2m:[0m step failed [3magent[0m[2m=[0mhotr [3merror[0m[2m=[0mprocess error: claude -p failed: 
+[2m2026-03-29T16:14:56.536823Z[0m [31mERROR[0m [2mcresearch[0m[2m:[0m agent error [3magent[0m[2m=[0mhotr [3merror[0m[2m=[0mprocess error: claude -p failed: 
+[2m2026-03-29T16:14:57.337911Z[0m [32m INFO[0m [2mcresearch[0m[2m:[0m shutting down [3magent[0m[2m=[0mhotr
+[2m2026-03-29T16:14:57.341639Z[0m [32m INFO[0m [2mcresearch[0m[2m:[0m graph snapshot saved [3mpath[0m[2m=[0mgraph_state.json [3mnodes[0m[2m=[0m19 [3medges[0m[2m=[0m17 [3mactions[0m[2m=[0m523

@@ -1,0 +1,3178 @@
+{
+  "nodes": [
+    {
+      "id": "019d3a4f-40ec-74a1-87b2-b0692eb49b31",
+      "kind": {
+        "ResearchProgram": {
+          "title": "chitta-research self-improvement",
+          "domain": "software_engineering",
+          "priority": 1.0,
+          "max_budget_usd": 10.0
+        }
+      },
+      "created_at": "2026-03-29T15:56:05.740028631Z",
+      "fitness": null,
+      "chitta_memory_id": null
+    },
+    {
+      "id": "019d3a4f-40ec-74a1-87b2-b07c8558052a",
+      "kind": {
+        "Question": {
+          "text": "What are the weakest points in the DiscussionRoom synthesis quality?",
+          "program_id": "019d3a4f-40ec-74a1-87b2-b0692eb49b31"
+        }
+      },
+      "created_at": "2026-03-29T15:56:05.740055118Z",
+      "fitness": null,
+      "chitta_memory_id": null
+    },
+    {
+      "id": "019d3a4f-40ec-74a1-87b2-b087cb54ab9b",
+      "kind": {
+        "Question": {
+          "text": "How should the belief graph handle duplicate hypotheses across sessions?",
+          "program_id": "019d3a4f-40ec-74a1-87b2-b0692eb49b31"
+        }
+      },
+      "created_at": "2026-03-29T15:56:05.740064001Z",
+      "fitness": null,
+      "chitta_memory_id": null
+    },
+    {
+      "id": "019d3a4f-40ec-74a1-87b2-b095cec917b8",
+      "kind": {
+        "Question": {
+          "text": "What is the optimal rounds-per-query tradeoff for DiscussionRoom vs single-model LLM calls?",
+          "program_id": "019d3a4f-40ec-74a1-87b2-b0692eb49b31"
+        }
+      },
+      "created_at": "2026-03-29T15:56:05.740067651Z",
+      "fitness": null,
+      "chitta_memory_id": null
+    },
+    {
+      "id": "019d3a4f-40ec-74a1-87b2-b0adecd07ec2",
+      "kind": {
+        "Question": {
+          "text": "How should chitta-field integration surface past experiment failures to Hotr?",
+          "program_id": "019d3a4f-40ec-74a1-87b2-b0692eb49b31"
+        }
+      },
+      "created_at": "2026-03-29T15:56:05.740074061Z",
+      "fitness": null,
+      "chitta_memory_id": null
+    },
+    {
+      "id": "019d3a4f-40ec-74a1-87b2-b0b1e89d36bd",
+      "kind": {
+        "Question": {
+          "text": "Which crates have the highest complexity and most potential for bugs?",
+          "program_id": "019d3a4f-40ec-74a1-87b2-b0692eb49b31"
+        }
+      },
+      "created_at": "2026-03-29T15:56:05.740080218Z",
+      "fitness": null,
+      "chitta_memory_id": null
+    },
+    {
+      "id": "019d3a4f-40ec-74a1-87b2-b0c06384d6d6",
+      "kind": {
+        "Method": {
+          "name": "search symbols: DiscussionRoom complete step",
+          "description": ""
+        }
+      },
+      "created_at": "2026-03-29T15:56:05.740084046Z",
+      "fitness": null,
+      "chitta_memory_id": null
+    },
+    {
+      "id": "019d3a4f-40ec-74a1-87b2-b0dd521775b6",
+      "kind": {
+        "Method": {
+          "name": "search symbols: execute_subprocess_steps execute_via_llm",
+          "description": ""
+        }
+      },
+      "created_at": "2026-03-29T15:56:05.740087805Z",
+      "fitness": null,
+      "chitta_memory_id": null
+    },
+    {
+      "id": "019d3a4f-40ec-74a1-87b2-b0ed0783c537",
+      "kind": {
+        "Method": {
+          "name": "search symbols: BeliefGraph add_node add_edge",
+          "description": ""
+        }
+      },
+      "created_at": "2026-03-29T15:56:05.740094839Z",
+      "fitness": null,
+      "chitta_memory_id": null
+    },
+    {
+      "id": "019d3a4f-40ec-74a1-87b2-b0f2b8ae8e5e",
+      "kind": {
+        "Method": {
+          "name": "run: cargo clippy --manifest-path /maps/projects/fernandezguerra/apps/repos/chitta-research/Cargo.toml --package cr-agents --package cr-llm --package cr-graph 2>&1 | head -40",
+          "description": ""
+        }
+      },
+      "created_at": "2026-03-29T15:56:05.740159083Z",
+      "fitness": null,
+      "chitta_memory_id": null
+    },
+    {
+      "id": "019d3a4f-40ec-74a1-87b2-b10d261e0c9b",
+      "kind": {
+        "Method": {
+          "name": "run: cargo test --manifest-path /maps/projects/fernandezguerra/apps/repos/chitta-research/Cargo.toml --package cr-llm 2>&1 | tail -15",
+          "description": ""
+        }
+      },
+      "created_at": "2026-03-29T15:56:05.740163252Z",
+      "fitness": null,
+      "chitta_memory_id": null
+    },
+    {
+      "id": "019d3a4f-40ec-74a1-87b2-b11b2c906da2",
+      "kind": {
+        "Method": {
+          "name": "run: wc -l /maps/projects/fernandezguerra/apps/repos/chitta-research/crates/*/src/*.rs | sort -rn | head -15",
+          "description": ""
+        }
+      },
+      "created_at": "2026-03-29T15:56:05.740166850Z",
+      "fitness": null,
+      "chitta_memory_id": null
+    },
+    {
+      "id": "019d3a4f-40ec-74a1-87b2-b122cca438ee",
+      "kind": {
+        "Method": {
+          "name": "run: cargo clippy --manifest-path /maps/projects/fernandezguerra/apps/repos/chitta-research/Cargo.toml 2>&1 | grep 'warning\\|error' | grep -v '^warning: unused' | head -20",
+          "description": ""
+        }
+      },
+      "created_at": "2026-03-29T15:56:05.740170465Z",
+      "fitness": null,
+      "chitta_memory_id": null
+    },
+    {
+      "id": "019d3a4f-40ec-74a1-87b2-b13c3c87e8f6",
+      "kind": {
+        "ResearchProgram": {
+          "title": "DiscussionRoom quality analysis",
+          "domain": "software_engineering",
+          "priority": 0.8,
+          "max_budget_usd": 5.0
+        }
+      },
+      "created_at": "2026-03-29T15:56:05.740174079Z",
+      "fitness": null,
+      "chitta_memory_id": null
+    },
+    {
+      "id": "019d3a4f-40ec-74a1-87b2-b14e965ba90a",
+      "kind": {
+        "Question": {
+          "text": "Does the current Synthesizer prompt reliably produce structured JSON output?",
+          "program_id": "019d3a4f-40ec-74a1-87b2-b13c3c87e8f6"
+        }
+      },
+      "created_at": "2026-03-29T15:56:05.740176639Z",
+      "fitness": null,
+      "chitta_memory_id": null
+    },
+    {
+      "id": "019d3a4f-40ec-74a1-87b2-b15e0f4e1db9",
+      "kind": {
+        "Question": {
+          "text": "Is 2 rounds of debate sufficient or should it be configurable per agent?",
+          "program_id": "019d3a4f-40ec-74a1-87b2-b13c3c87e8f6"
+        }
+      },
+      "created_at": "2026-03-29T15:56:05.740187302Z",
+      "fitness": null,
+      "chitta_memory_id": null
+    },
+    {
+      "id": "019d3a4f-40ec-74a1-87b2-b16b7a7b748c",
+      "kind": {
+        "Method": {
+          "name": "search symbols: mock_room standard_room Synthesizer",
+          "description": ""
+        }
+      },
+      "created_at": "2026-03-29T15:56:05.740190972Z",
+      "fitness": null,
+      "chitta_memory_id": null
+    },
+    {
+      "id": "019d3a4f-40ec-74a1-87b2-b176ca370ea9",
+      "kind": {
+        "Method": {
+          "name": "run: grep -rn 'rounds' /maps/projects/fernandezguerra/apps/repos/chitta-research/crates/cr-llm/src/room.rs",
+          "description": ""
+        }
+      },
+      "created_at": "2026-03-29T15:56:05.740195072Z",
+      "fitness": null,
+      "chitta_memory_id": null
+    },
+    {
+      "id": "019d3a4f-40ec-74a1-87b2-b18ec56e537b",
+      "kind": {
+        "Method": {
+          "name": "run: grep -c 'pub fn' /maps/projects/fernandezguerra/apps/repos/chitta-research/crates/cr-llm/src/room.rs",
+          "description": ""
+        }
+      },
+      "created_at": "2026-03-29T15:56:05.740198501Z",
+      "fitness": null,
+      "chitta_memory_id": null
+    },
+    {
+      "id": "019d3a62-025b-7613-b692-6d7da5dd6038",
+      "kind": {
+        "Hypothesis": {
+          "statement": "DiscussionRoom synthesis loses minority viewpoints when participant count exceeds 3, because the aggregation step uses majority-vote-style merging rather than explicit conflict tracking",
+          "prior_confidence": 0.72,
+          "posterior_confidence": null,
+          "generating_model": "llm",
+          "tier": 1
+        }
+      },
+      "created_at": "2026-03-29T16:16:34.907688681Z",
+      "fitness": null,
+      "chitta_memory_id": null
+    },
+    {
+      "id": "019d3a62-025b-7613-b692-6d84bdeda4fd",
+      "kind": {
+        "ExperimentPlan": {
+          "hypothesis_id": "019d3a62-025b-7613-b692-6d7da5dd6038",
+          "steps": [
+            "run: grep -r 'synthesis\\|aggregate\\|merge\\|combine' crates/cr-llm/src/ --include='*.rs' -n > /tmp/synthesis_sites.txt",
+            "Read synthesis_sites.txt to identify the merge algorithm",
+            "Construct 5 test rooms: 1 participant, 2, 3, 4, 5 — each with one injected contrarian-but-correct claim",
+            "run: cargo test --manifest-path Cargo.toml -p cr-llm -- synthesis 2>&1 | tee /tmp/synthesis_test.log",
+            "Score each output: does the contrarian claim appear verbatim, paraphrased, or disappear entirely",
+            "Plot survival rate vs participant count; fit logistic regression"
+          ],
+          "estimated_cost_usd": 0.5
+        }
+      },
+      "created_at": "2026-03-29T16:16:34.907704043Z",
+      "fitness": null,
+      "chitta_memory_id": null
+    },
+    {
+      "id": "019d3a62-025b-7613-b692-6d9afbc8d7b8",
+      "kind": {
+        "Hypothesis": {
+          "statement": "Synthesis prompt templates instruct the LLM to 'summarize discussion' rather than 'resolve disagreements', causing the synthesizer to produce vague consensus statements that omit actionable conclusions",
+          "prior_confidence": 0.68,
+          "posterior_confidence": null,
+          "generating_model": "llm",
+          "tier": 1
+        }
+      },
+      "created_at": "2026-03-29T16:16:34.907808048Z",
+      "fitness": null,
+      "chitta_memory_id": null
+    },
+    {
+      "id": "019d3a62-025b-7613-b692-6da9e98aa5e8",
+      "kind": {
+        "ExperimentPlan": {
+          "hypothesis_id": "019d3a62-025b-7613-b692-6d9afbc8d7b8",
+          "steps": [
+            "run: grep -r 'synthesis_prompt\\|SYNTHESIS\\|synthesize\\|final_answer' crates/ --include='*.rs' -rn > /tmp/prompts.txt",
+            "Extract the literal prompt strings from the source",
+            "Collect 20 recent DiscussionRoom transcripts from cresearch-*.log files",
+            "run: python3 -c \"import re, json, sys; [print(json.dumps({'len': len(re.findall(r'\\\\b(should|must|recommend|action|implement)\\\\b', open(f).read(), re.I))})) for f in sys.argv[1:]]\" cresearch-self*.log",
+            "Score each synthesis output: count imperative/actionable tokens vs hedging tokens (ratio as specificity metric)",
+            "Rewrite synthesis prompt to explicitly request 'list disagreements, resolve each, output concrete next steps'",
+            "Re-run same 20 transcripts with new prompt, compare specificity scores with Wilcoxon signed-rank test"
+          ],
+          "estimated_cost_usd": 0.5
+        }
+      },
+      "created_at": "2026-03-29T16:16:34.907811905Z",
+      "fitness": null,
+      "chitta_memory_id": null
+    },
+    {
+      "id": "019d3a62-025b-7613-b692-6db38dba679b",
+      "kind": {
+        "Hypothesis": {
+          "statement": "Cross-participant context truncation degrades synthesis quality in long rooms: later participants receive truncated earlier turns and produce locally coherent but globally inconsistent contributions that the synthesizer cannot reconcile",
+          "prior_confidence": 0.61,
+          "posterior_confidence": null,
+          "generating_model": "llm",
+          "tier": 1
+        }
+      },
+      "created_at": "2026-03-29T16:16:34.907825258Z",
+      "fitness": null,
+      "chitta_memory_id": null
+    },
+    {
+      "id": "019d3a62-025b-7613-b692-6dc4947ed494",
+      "kind": {
+        "ExperimentPlan": {
+          "hypothesis_id": "019d3a62-025b-7613-b692-6db38dba679b",
+          "steps": [
+            "run: grep -r 'max_tokens\\|context_len\\|truncat' crates/ --include='*.rs' -n > /tmp/context_budget.txt",
+            "Identify per-participant token allocation in the room dispatch logic",
+            "run: awk '/PARTICIPANT|tokens_used|context/ {print NR\": \"$0}' cresearch-self*.log > /tmp/token_trace.txt",
+            "Parse token_trace.txt to extract (participant_index, tokens_available, tokens_used) triples",
+            "run: Rscript -e \"d <- read.csv('/tmp/token_trace.csv'); cor.test(d$participant_index, d$tokens_available, method='spearman')\"",
+            "For rooms where participant N>=3 had <25% of participant 1's token budget, manually rate synthesis coherence 1-5",
+            "Fit linear model: coherence ~ min_token_ratio; p<0.05 confirms hypothesis"
+          ],
+          "estimated_cost_usd": 0.5
+        }
+      },
+      "created_at": "2026-03-29T16:16:34.907827878Z",
+      "fitness": null,
+      "chitta_memory_id": null
+    },
+    {
+      "id": "019d3a62-0570-7f81-8c79-a55075af7010",
+      "kind": {
+        "Run": {
+          "plan_id": "019d3a62-025b-7613-b692-6d84bdeda4fd",
+          "status": "Failed",
+          "started_at": "2026-03-29T16:16:35.696087171Z",
+          "finished_at": "2026-03-29T16:16:35.696090457Z",
+          "artifact_commit": "ff19302783d7df2ba554f27d9e9e4b4a22259379",
+          "resource_usage": {
+            "gpu_seconds": 0.0,
+            "cpu_seconds": 1.0,
+            "llm_tokens_in": 0,
+            "llm_tokens_out": 0,
+            "cost_usd": 0.0
+          }
+        }
+      },
+      "created_at": "2026-03-29T16:16:35.696090700Z",
+      "fitness": {
+        "novelty": 0.6,
+        "empirical_gain": 0.05,
+        "reproducibility": 0.2,
+        "cost_efficiency": 0.1,
+        "transfer_potential": 0.4,
+        "calibration_improvement": 0.05
+      },
+      "chitta_memory_id": null
+    },
+    {
+      "id": "019d3a62-0570-7f81-8c79-a56e8cc80211",
+      "kind": {
+        "Observation": {
+          "run_id": "019d3a62-0570-7f81-8c79-a55075af7010",
+          "summary": "Function/method 'Read synthesis_sites.txt to identify the merge algorithm' not found",
+          "data_ref": null
+        }
+      },
+      "created_at": "2026-03-29T16:16:35.696111359Z",
+      "fitness": null,
+      "chitta_memory_id": null
+    },
+    {
+      "id": "019d3a62-0570-7f81-8c79-a57b90f66ee6",
+      "kind": {
+        "Observation": {
+          "run_id": "019d3a62-0570-7f81-8c79-a55075af7010",
+          "summary": "$ cargo test --manifest-path Cargo.toml -p cr-llm -- synthesis 2>&1 | tee /tmp/synthesis_test.log\nerror: failed to parse lock file at: /maps/projects/fernandezguerra/apps/repos/chitta-research/Cargo.lock\n\nCaused by:\n  lock file version `4` was found, but this version of Cargo does not understand this lock file, perhaps Cargo needs to be updated?",
+          "data_ref": null
+        }
+      },
+      "created_at": "2026-03-29T16:16:35.696114649Z",
+      "fitness": null,
+      "chitta_memory_id": null
+    },
+    {
+      "id": "019d3a62-06e7-70a2-94a2-450011093692",
+      "kind": {
+        "Run": {
+          "plan_id": "019d3a62-025b-7613-b692-6da9e98aa5e8",
+          "status": "Failed",
+          "started_at": "2026-03-29T16:16:36.071200122Z",
+          "finished_at": "2026-03-29T16:16:36.071203440Z",
+          "artifact_commit": "5917f5654806716c3e78600be71e8faba6d03976",
+          "resource_usage": {
+            "gpu_seconds": 0.0,
+            "cpu_seconds": 1.0,
+            "llm_tokens_in": 0,
+            "llm_tokens_out": 0,
+            "cost_usd": 0.0
+          }
+        }
+      },
+      "created_at": "2026-03-29T16:16:36.071203841Z",
+      "fitness": {
+        "novelty": 0.55,
+        "empirical_gain": 0.15,
+        "reproducibility": 0.35,
+        "cost_efficiency": 0.4,
+        "transfer_potential": 0.5,
+        "calibration_improvement": 0.1
+      },
+      "chitta_memory_id": null
+    },
+    {
+      "id": "019d3a62-06e7-70a2-94a2-451f4b8d922d",
+      "kind": {
+        "Observation": {
+          "run_id": "019d3a62-06e7-70a2-94a2-450011093692",
+          "summary": "No symbols found for query: Collect 20 recent DiscussionRoom transcripts from cresearch-*.log files",
+          "data_ref": null
+        }
+      },
+      "created_at": "2026-03-29T16:16:36.071245994Z",
+      "fitness": null,
+      "chitta_memory_id": null
+    },
+    {
+      "id": "019d3a62-06e7-70a2-94a2-452d4ff05644",
+      "kind": {
+        "Observation": {
+          "run_id": "019d3a62-06e7-70a2-94a2-450011093692",
+          "summary": "[JsonOutput] $ python3 -c \"import re, json, sys; [print(json.dumps({'len': len(re.findall(r'\\\\b(should|must|recommend|action|implement)\\\\b', open(f).read(), re.I))})) for f in sys.argv[1:]]\" cresearch-self*.log\n{\"len\": 0}\n{\"len\": 0}\n{\"len\": 0}\n{\"len\": 0}\n{\"len\": 0}\n{\"len\": 0}\n{\"len\": 2}\n{\"len\": 0}",
+          "data_ref": null
+        }
+      },
+      "created_at": "2026-03-29T16:16:36.071250766Z",
+      "fitness": null,
+      "chitta_memory_id": null
+    },
+    {
+      "id": "019d3a62-7c6a-7243-8729-8b967bf01e96",
+      "kind": {
+        "Hypothesis": {
+          "statement": "Semantic deduplication using cosine similarity ≥0.85 on hypothesis embeddings reduces redundant belief nodes by >40% without losing distinct hypotheses, as measured on a synthetic corpus of 200 hypothesis pairs with known duplicate/distinct labels",
+          "prior_confidence": 0.72,
+          "posterior_confidence": null,
+          "generating_model": "llm",
+          "tier": 1
+        }
+      },
+      "created_at": "2026-03-29T16:17:06.155007262Z",
+      "fitness": null,
+      "chitta_memory_id": null
+    },
+    {
+      "id": "019d3a62-7c6b-72b0-983f-bb3d21da7b5b",
+      "kind": {
+        "ExperimentPlan": {
+          "hypothesis_id": "019d3a62-7c6a-7243-8729-8b967bf01e96",
+          "steps": [
+            "run: python3 scripts/gen_hypothesis_pairs.py --n-duplicates 80 --n-near 60 --n-distinct 60 --out data/hyp_pairs.jsonl",
+            "run: cargo run --release --manifest-path chitta-field/Cargo.toml --bin embed_pairs -- --input data/hyp_pairs.jsonl --out data/hyp_embeddings.npy",
+            "run: python3 scripts/sweep_cosine_threshold.py --embeddings data/hyp_embeddings.npy --labels data/hyp_pairs.jsonl --thresholds 0.75,0.80,0.85,0.90,0.95 --out results/dedup_threshold_sweep.csv",
+            "Inspect precision/recall curve; select threshold maximizing F1 while keeping recall ≥0.95 for distinct hypotheses",
+            "Report: reduction rate at optimal threshold vs. baseline (no dedup)"
+          ],
+          "estimated_cost_usd": 0.5
+        }
+      },
+      "created_at": "2026-03-29T16:17:06.155023341Z",
+      "fitness": null,
+      "chitta_memory_id": null
+    },
+    {
+      "id": "019d3a62-7c6b-72b0-983f-bb4d81a0af8e",
+      "kind": {
+        "Hypothesis": {
+          "statement": "Merging duplicate hypotheses by averaging their evidence scores (rather than keeping max or first-seen) produces better-calibrated confidence estimates, measurable via Brier score on held-out experiment outcomes",
+          "prior_confidence": 0.58,
+          "posterior_confidence": null,
+          "generating_model": "llm",
+          "tier": 1
+        }
+      },
+      "created_at": "2026-03-29T16:17:06.155121192Z",
+      "fitness": null,
+      "chitta_memory_id": null
+    },
+    {
+      "id": "019d3a62-7c6b-72b0-983f-bb552b2a0644",
+      "kind": {
+        "ExperimentPlan": {
+          "hypothesis_id": "019d3a62-7c6b-72b0-983f-bb4d81a0af8e",
+          "steps": [
+            "run: python3 scripts/extract_dup_hypotheses.py --sessions cresearch-self*.log --similarity-threshold 0.85 --out data/dup_groups.jsonl",
+            "run: python3 scripts/simulate_merge_strategies.py --dup-groups data/dup_groups.jsonl --strategies max,first,mean --outcomes data/experiment_outcomes.jsonl --out results/merge_calibration.csv",
+            "run: Rscript scripts/calibration_analysis.R --input results/merge_calibration.csv --out results/brier_scores.png",
+            "Accept mean-merge if its Brier score is ≥5% lower than both alternatives; otherwise keep max as conservative default"
+          ],
+          "estimated_cost_usd": 0.5
+        }
+      },
+      "created_at": "2026-03-29T16:17:06.155126018Z",
+      "fitness": null,
+      "chitta_memory_id": null
+    },
+    {
+      "id": "019d3a62-7c6b-72b0-983f-bb68de150412",
+      "kind": {
+        "Hypothesis": {
+          "statement": "Cross-session duplicate detection with a persistent bloom filter indexed by hypothesis embedding quantiles is faster than full pairwise cosine search (O(1) vs O(n)) while maintaining <2% false-negative rate at n=10,000 hypotheses",
+          "prior_confidence": 0.64,
+          "posterior_confidence": null,
+          "generating_model": "llm",
+          "tier": 1
+        }
+      },
+      "created_at": "2026-03-29T16:17:06.155140217Z",
+      "fitness": null,
+      "chitta_memory_id": null
+    },
+    {
+      "id": "019d3a62-7c6b-72b0-983f-bb73ee73a2ac",
+      "kind": {
+        "ExperimentPlan": {
+          "hypothesis_id": "019d3a62-7c6b-72b0-983f-bb68de150412",
+          "steps": [
+            "Implement BloomHypothesisIndex in chitta-field/src/bloom_dedup.rs using 4-bit quantized embedding hashes as keys, capacity=20000, error_rate=0.01",
+            "run: cargo test --manifest-path chitta-field/Cargo.toml bloom_dedup -- --nocapture",
+            "run: cargo bench --manifest-path chitta-field/Cargo.toml --bench dedup_bench -- --sample-size 50 2>&1 | tee results/bloom_bench.txt",
+            "run: python3 scripts/plot_dedup_scaling.py --bench results/bloom_bench.txt --out results/dedup_scaling.png",
+            "Accept bloom approach if p99 lookup <1ms at n=10,000 and false-negative rate <2% on the hyp_pairs.jsonl benchmark corpus"
+          ],
+          "estimated_cost_usd": 0.5
+        }
+      },
+      "created_at": "2026-03-29T16:17:06.155142699Z",
+      "fitness": null,
+      "chitta_memory_id": null
+    },
+    {
+      "id": "019d3a63-04f3-7811-b326-1fa26985e106",
+      "kind": {
+        "Hypothesis": {
+          "statement": "DiscussionRoom with 2 rounds achieves 90%+ of the quality ceiling of 5+ rounds while reducing token cost by 60%, making 2 rounds the optimal tradeoff for code review and debugging tasks",
+          "prior_confidence": 0.65,
+          "posterior_confidence": null,
+          "generating_model": "llm",
+          "tier": 1
+        }
+      },
+      "created_at": "2026-03-29T16:17:41.107161464Z",
+      "fitness": null,
+      "chitta_memory_id": null
+    },
+    {
+      "id": "019d3a63-04f3-7811-b326-1fb9c06ab7d3",
+      "kind": {
+        "ExperimentPlan": {
+          "hypothesis_id": "019d3a63-04f3-7811-b326-1fa26985e106",
+          "steps": [
+            "Curate 50 representative SE tasks from chitta-research logs: 10 bug diagnoses, 10 code reviews, 10 architecture decisions, 10 refactors, 10 test generation tasks",
+            "Define a quality rubric: correctness (0-3), completeness (0-3), actionability (0-2), novelty-over-single-model (0-2) — total 10 points, scored by blind LLM judge (opus-4.6)",
+            "run: python3 .scripts/benchmark_discussion_rounds.py --tasks tasks.jsonl --rounds 1 2 3 5 --baseline single --model claude-sonnet-4-6 --output results/rounds_tradeoff.jsonl",
+            "run: Rscript .scripts/analyze_rounds_tradeoff.R results/rounds_tradeoff.jsonl --plot results/quality_vs_cost_curve.png",
+            "Fit a diminishing-returns curve (quality ~ a*(1 - exp(-b*rounds))) and find the knee point; compare token cost at knee vs. single-model baseline"
+          ],
+          "estimated_cost_usd": 0.5
+        }
+      },
+      "created_at": "2026-03-29T16:17:41.107177709Z",
+      "fitness": null,
+      "chitta_memory_id": null
+    },
+    {
+      "id": "019d3a63-04f3-7811-b326-1fcbc67b786a",
+      "kind": {
+        "Hypothesis": {
+          "statement": "Task complexity is the dominant moderator of round-count benefit: simple tasks (single-file bugs, syntax errors) show no quality gain beyond 1 round, while complex tasks (multi-module architecture, cross-cutting refactors) require 3+ rounds to surpass single-model quality",
+          "prior_confidence": 0.72,
+          "posterior_confidence": null,
+          "generating_model": "llm",
+          "tier": 1
+        }
+      },
+      "created_at": "2026-03-29T16:17:41.107249012Z",
+      "fitness": null,
+      "chitta_memory_id": null
+    },
+    {
+      "id": "019d3a63-04f3-7811-b326-1fddbdd14f32",
+      "kind": {
+        "ExperimentPlan": {
+          "hypothesis_id": "019d3a63-04f3-7811-b326-1fcbc67b786a",
+          "steps": [
+            "Label each benchmark task with complexity score: LOC of relevant context, number of distinct modules, dependency depth (from AST/LSP data)",
+            "run: python3 .scripts/complexity_scorer.py --tasks tasks.jsonl --repo /maps/projects/fernandezguerra/apps/repos/chitta-research --output tasks_with_complexity.jsonl",
+            "Run DiscussionRoom at rounds={1,2,3,5} for each task, recording per-task quality delta vs. single-model",
+            "run: Rscript .scripts/complexity_moderation.R tasks_with_complexity.jsonl results/rounds_tradeoff.jsonl --output results/moderation_analysis.png",
+            "Fit interaction model: quality_delta ~ rounds * complexity_bin (low/medium/high); identify the complexity threshold above which 3+ rounds yield statistically significant improvement (p<0.05, Wilcoxon)"
+          ],
+          "estimated_cost_usd": 0.5
+        }
+      },
+      "created_at": "2026-03-29T16:17:41.107251798Z",
+      "fitness": null,
+      "chitta_memory_id": null
+    },
+    {
+      "id": "019d3a63-04f3-7811-b326-1fe862c292e0",
+      "kind": {
+        "Hypothesis": {
+          "statement": "A dynamic routing policy — 1 round for tasks with entropy(initial_response) < threshold, 3 rounds otherwise — matches fixed 3-round quality while consuming 40% fewer tokens on average",
+          "prior_confidence": 0.48,
+          "posterior_confidence": null,
+          "generating_model": "llm",
+          "tier": 1
+        }
+      },
+      "created_at": "2026-03-29T16:17:41.107263645Z",
+      "fitness": null,
+      "chitta_memory_id": null
+    },
+    {
+      "id": "019d3a63-04f3-7811-b326-1ffc1c23bd32",
+      "kind": {
+        "ExperimentPlan": {
+          "hypothesis_id": "019d3a63-04f3-7811-b326-1fe862c292e0",
+          "steps": [
+            "Define response entropy as token-probability entropy of the first model's answer (use logprobs) or, if unavailable, semantic disagreement between two independent single-model draws measured by 1 - cosine_similarity(embed(r1), embed(r2))",
+            "run: python3 .scripts/entropy_early_exit.py --tasks tasks_with_complexity.jsonl --threshold-search 0.1 0.2 0.3 0.4 --max-rounds 5 --output results/entropy_routing.jsonl",
+            "For each threshold candidate, compute (mean_quality, mean_tokens_used) across all 50 tasks; plot Pareto frontier against fixed-round baselines",
+            "run: Rscript .scripts/pareto_analysis.R results/entropy_routing.jsonl results/rounds_tradeoff.jsonl --output results/pareto_frontier.png",
+            "Select threshold maximizing quality/token ratio; validate on a held-out 20-task set; report 95% CI on token savings and quality delta vs. fixed-3-round baseline using bootstrap resampling"
+          ],
+          "estimated_cost_usd": 0.5
+        }
+      },
+      "created_at": "2026-03-29T16:17:41.107267085Z",
+      "fitness": null,
+      "chitta_memory_id": null
+    },
+    {
+      "id": "019d3a63-b2f2-7553-9c8c-628d002d23a2",
+      "kind": {
+        "Hypothesis": {
+          "statement": "Storing experiment failures as negated causal triplets (hypothesis→FAILED_WITH→error_pattern) in chitta-field and querying them at Hotr planning time will reduce duplicate failed hypotheses by ≥40% compared to flat text recall of failure notes.",
+          "prior_confidence": 0.68,
+          "posterior_confidence": null,
+          "generating_model": "llm",
+          "tier": 1
+        }
+      },
+      "created_at": "2026-03-29T16:18:25.650688812Z",
+      "fitness": null,
+      "chitta_memory_id": null
+    },
+    {
+      "id": "019d3a63-b2f2-7553-9c8c-629485c63578",
+      "kind": {
+        "ExperimentPlan": {
+          "hypothesis_id": "019d3a63-b2f2-7553-9c8c-628d002d23a2",
+          "steps": [
+            "run: grep -E 'hypothesis|experiment|failed' cresearch-self*.log | python3 .scripts/extract_hypothesis_outcomes.py > /tmp/hypothesis_outcomes.tsv",
+            "Audit chitta for existing failure memories: call mcp__chitta__recall with query='experiment failed error' and tag filter evidence_type=failure",
+            "Define triplet schema: (hypothesis_id, FAILED_WITH, failure_mode) and (failure_mode, ROOT_CAUSE, cause_tag); store 10 representative past failures via mcp__chitta__remember with these triplets",
+            "run: python3 .scripts/simulate_hotr_recall.py --strategy keyword --cycles 25 --output /tmp/keyword_recall_dedup.json",
+            "run: python3 .scripts/simulate_hotr_recall.py --strategy triplet --cycles 25 --output /tmp/triplet_recall_dedup.json",
+            "run: Rscript .scripts/compare_dedup_rates.R /tmp/keyword_recall_dedup.json /tmp/triplet_recall_dedup.json --alpha 0.05"
+          ],
+          "estimated_cost_usd": 0.5
+        }
+      },
+      "created_at": "2026-03-29T16:18:25.650706847Z",
+      "fitness": null,
+      "chitta_memory_id": null
+    },
+    {
+      "id": "019d3a63-b2f2-7553-9c8c-62a2678cf8ae",
+      "kind": {
+        "Hypothesis": {
+          "statement": "Injecting a compact failure digest (top-5 failures by semantic similarity to current research question) into Hotr's context window via smart_context, rather than relying on passive recall, will reduce wasted experiment cycles by surfacing actionable failure signals that passive recall misses due to embedding drift.",
+          "prior_confidence": 0.72,
+          "posterior_confidence": null,
+          "generating_model": "llm",
+          "tier": 1
+        }
+      },
+      "created_at": "2026-03-29T16:18:25.650781234Z",
+      "fitness": null,
+      "chitta_memory_id": null
+    },
+    {
+      "id": "019d3a63-b2f2-7553-9c8c-62bc216c46bf",
+      "kind": {
+        "ExperimentPlan": {
+          "hypothesis_id": "019d3a63-b2f2-7553-9c8c-62a2678cf8ae",
+          "steps": [
+            "Extend chitta MCP schema to support evidence_type filter in smart_context; verify via mcp__chitta__get_evidence_type that 'failure' type is registered",
+            "run: grep -c 'FAILED\\|error\\|aborted' cresearch-self*.log | awk -F: '{sum+=$2} END{print \"total failures:\", sum}'",
+            "Tag all existing failure-outcome memories with set_evidence_type=failure using mcp__chitta__set_evidence_type in a batch script: run: python3 .scripts/tag_failure_memories.py",
+            "Implement active-injection wrapper in skills/yajña/hotr_dispatch.sh: call chitta smart_context, prepend top-5 failure digest to Hotr's system prompt",
+            "Run 15 passive turns and 15 active-injection turns with same research question seed; record which hypotheses Hotr selects",
+            "run: python3 .scripts/measure_failure_overlap.py --passive-log /tmp/passive_turns.json --active-log /tmp/active_turns.json --metric jaccard,success_rate"
+          ],
+          "estimated_cost_usd": 0.5
+        }
+      },
+      "created_at": "2026-03-29T16:18:25.650784264Z",
+      "fitness": null,
+      "chitta_memory_id": null
+    },
+    {
+      "id": "019d3a63-b2f2-7553-9c8c-62c208ff4904",
+      "kind": {
+        "Hypothesis": {
+          "statement": "A UCB1-weighted failure memory recall (using mcp__chitta__recall_ucb1 with failure memories receiving a penalty bonus) will outperform recency-sorted recall for preventing Hotr from re-entering known failure basins, because failure relevance decays slower than general research relevance.",
+          "prior_confidence": 0.55,
+          "posterior_confidence": null,
+          "generating_model": "llm",
+          "tier": 1
+        }
+      },
+      "created_at": "2026-03-29T16:18:25.650798956Z",
+      "fitness": null,
+      "chitta_memory_id": null
+    },
+    {
+      "id": "019d3a63-b2f2-7553-9c8c-62def4ef35f2",
+      "kind": {
+        "ExperimentPlan": {
+          "hypothesis_id": "019d3a63-b2f2-7553-9c8c-62c208ff4904",
+          "steps": [
+            "Verify UCB1 recall respects priority_tier: call mcp__chitta__recall_ucb1 and inspect whether tier=critical memories rank higher",
+            "Set a sample of 20 known failure memories to priority_tier=critical via mcp__chitta__set_priority_tier; leave 20 equivalent failure memories at default tier",
+            "run: cargo run --release --manifest-path chitta-field/Cargo.toml --example ucb1_priority_sim -- --failure-boost 2.0 --trials 20 --output /tmp/ucb1_boosted.json",
+            "run: cargo run --release --manifest-path chitta-field/Cargo.toml --example ucb1_priority_sim -- --failure-boost 1.0 --trials 20 --output /tmp/ucb1_baseline.json",
+            "run: Rscript .scripts/basin_reentry_test.R /tmp/ucb1_boosted.json /tmp/ucb1_baseline.json --metric reentry_rate,recall_precision --test wilcoxon"
+          ],
+          "estimated_cost_usd": 0.5
+        }
+      },
+      "created_at": "2026-03-29T16:18:25.650801728Z",
+      "fitness": null,
+      "chitta_memory_id": null
+    },
+    {
+      "id": "019d3a64-3341-7742-b7bc-6259153973b4",
+      "kind": {
+        "Hypothesis": {
+          "statement": "The chitta-field Rust crate has the highest cyclomatic complexity per module due to its concurrent data structures (HNSW, BM25, OpLog) and unsafe memory-mapped I/O, making it the primary source of latency bugs and race conditions.",
+          "prior_confidence": 0.72,
+          "posterior_confidence": null,
+          "generating_model": "llm",
+          "tier": 1
+        }
+      },
+      "created_at": "2026-03-29T16:18:58.497657350Z",
+      "fitness": null,
+      "chitta_memory_id": null
+    },
+    {
+      "id": "019d3a64-3341-7742-b7bc-626d0d36b413",
+      "kind": {
+        "ExperimentPlan": {
+          "hypothesis_id": "019d3a64-3341-7742-b7bc-6259153973b4",
+          "steps": [
+            "run: cargo install cargo-geiger tokei 2>/dev/null; cd /maps/projects/fernandezguerra/apps/repos/chitta-research && for crate in chitta-field chitta chitta-mcp; do echo \"=== $crate ===\"; tokei $crate/src --output json 2>/dev/null | python3 -c \"import sys,json; d=json.load(sys.stdin); [print(k, v['stats']['complexity'] if 'complexity' in v.get('stats',{}) else 'N/A') for k,v in d.items()]\"; done",
+            "run: cd /maps/projects/fernandezguerra/apps/repos/chitta-research && cargo geiger 2>&1 | grep -E '(crate|unsafe)' | head -60",
+            "run: cd /maps/projects/fernandezguerra/apps/repos/chitta-research && git log --oneline --all -- 'chitta-field/**' | grep -iE '(fix|bug|race|deadlock|panic|overflow)' | wc -l && git log --oneline --all -- 'chitta/**' | grep -iE '(fix|bug|race|deadlock|panic|overflow)' | wc -l",
+            "run: cd /maps/projects/fernandezguerra/apps/repos/chitta-research/chitta-field && grep -rn 'unsafe' src/ | wc -l && grep -rn 'Arc\\|Mutex\\|RwLock\\|AtomicU' src/ | wc -l"
+          ],
+          "estimated_cost_usd": 0.5
+        }
+      },
+      "created_at": "2026-03-29T16:18:58.497672807Z",
+      "fitness": null,
+      "chitta_memory_id": null
+    },
+    {
+      "id": "019d3a64-3341-7742-b7bc-62716ee8146e",
+      "kind": {
+        "Hypothesis": {
+          "statement": "The RPC handler layer (chitta/include/chitta/rpc/field_handler.hpp) has disproportionate complexity relative to its line count because it multiplexes 175+ tools with ad-hoc dispatch logic, leading to unhandled edge cases in error paths.",
+          "prior_confidence": 0.68,
+          "posterior_confidence": null,
+          "generating_model": "llm",
+          "tier": 1
+        }
+      },
+      "created_at": "2026-03-29T16:18:58.497741784Z",
+      "fitness": null,
+      "chitta_memory_id": null
+    },
+    {
+      "id": "019d3a64-3341-7742-b7bc-628b5bde9393",
+      "kind": {
+        "ExperimentPlan": {
+          "hypothesis_id": "019d3a64-3341-7742-b7bc-62716ee8146e",
+          "steps": [
+            "run: pip install lizard -q && lizard /maps/projects/fernandezguerra/apps/repos/chitta-research/chitta/include/chitta/rpc/field_handler.hpp --CCN 10 --length 50 2>&1 | head -80",
+            "run: cd /maps/projects/fernandezguerra/apps/repos/chitta-research && grep -c 'case\\|\"method\"\\|dispatch\\|handle_' chitta/include/chitta/rpc/field_handler.hpp",
+            "run: cd /maps/projects/fernandezguerra/apps/repos/chitta-research && grep -n 'TODO\\|FIXME\\|HACK\\|XXX\\|WARN\\|assert' chitta/include/chitta/rpc/field_handler.hpp chitta/src/simple_cli.cpp 2>/dev/null | wc -l",
+            "run: cd /maps/projects/fernandezguerra/apps/repos/chitta-research && git log --oneline -- 'chitta/include/chitta/rpc/' | grep -iE '(fix|crash|null|undefined|error)' | head -20"
+          ],
+          "estimated_cost_usd": 0.5
+        }
+      },
+      "created_at": "2026-03-29T16:18:58.497744573Z",
+      "fitness": null,
+      "chitta_memory_id": null
+    },
+    {
+      "id": "019d3a64-3341-7742-b7bc-629b1e8c7895",
+      "kind": {
+        "Hypothesis": {
+          "statement": "The VakYantra ONNX embedder (chitta/include/chitta/vak.hpp) is the highest-risk component for silent correctness bugs because floating-point truncation in embedding normalization is never validated, causing subtle semantic drift in recall quality over time.",
+          "prior_confidence": 0.55,
+          "posterior_confidence": null,
+          "generating_model": "llm",
+          "tier": 1
+        }
+      },
+      "created_at": "2026-03-29T16:18:58.497756531Z",
+      "fitness": null,
+      "chitta_memory_id": null
+    },
+    {
+      "id": "019d3a64-3341-7742-b7bc-62ac281dd27a",
+      "kind": {
+        "ExperimentPlan": {
+          "hypothesis_id": "019d3a64-3341-7742-b7bc-629b1e8c7895",
+          "steps": [
+            "run: grep -n 'norm\\|sqrt\\|dot\\|float\\|f32\\|f64\\|epsilon\\|assert' /maps/projects/fernandezguerra/apps/repos/chitta-research/chitta/include/chitta/vak.hpp | head -40",
+            "run: grep -n 'norm\\|normalize\\|dot_product\\|cosine' /maps/projects/fernandezguerra/apps/repos/chitta-research/chitta-field/src/*.rs 2>/dev/null | head -40",
+            "run: cd /maps/projects/fernandezguerra/apps/repos/chitta-research && python3 -c \"\nimport subprocess, json\n# embed two near-identical strings and check cosine similarity via chitta CLI\npairs = [('memory retrieval', 'recall from memory'), ('bug fix', 'software defect correction')]\nfor a, b in pairs:\n    print(f'pair: {a!r} vs {b!r}')\n\"",
+            "run: cd /maps/projects/fernandezguerra/apps/repos/chitta-research && grep -rn 'f32\\|f64' chitta-field/src/store.rs | grep -E '(cast|as f|into\\(\\))' | head -20"
+          ],
+          "estimated_cost_usd": 0.5
+        }
+      },
+      "created_at": "2026-03-29T16:18:58.497759106Z",
+      "fitness": null,
+      "chitta_memory_id": null
+    },
+    {
+      "id": "019d3a73-c7bb-7760-9d63-d5be2ec183d3",
+      "kind": {
+        "Run": {
+          "plan_id": "019d3a62-025b-7613-b692-6dc4947ed494",
+          "status": "Failed",
+          "started_at": "2026-03-29T16:35:59.547182500Z",
+          "finished_at": "2026-03-29T16:35:59.547187092Z",
+          "artifact_commit": "abbc1f06a8316519114ea030d946ff58a31c742a",
+          "resource_usage": {
+            "gpu_seconds": 0.0,
+            "cpu_seconds": 1.0,
+            "llm_tokens_in": 0,
+            "llm_tokens_out": 0,
+            "cost_usd": 0.0
+          }
+        }
+      },
+      "created_at": "2026-03-29T16:35:59.547187397Z",
+      "fitness": null,
+      "chitta_memory_id": null
+    },
+    {
+      "id": "019d3a73-c7bb-7760-9d63-d5c3e260a011",
+      "kind": {
+        "Observation": {
+          "run_id": "019d3a73-c7bb-7760-9d63-d5be2ec183d3",
+          "summary": "Learned codebase: .\n  Path: .\n  Symbols: 10132\n  Symbols embedded: 10132\n  Callsites: 24941\n  Symbol breakdown:\n    trait: 44\n    struct: 754\n    impl: 1703\n    method: 4551\n    class: 64\n    function: 3016\n",
+          "data_ref": null
+        }
+      },
+      "created_at": "2026-03-29T16:35:59.547225052Z",
+      "fitness": null,
+      "chitta_memory_id": null
+    },
+    {
+      "id": "019d3a73-c7bb-7760-9d63-d5dd27824f2b",
+      "kind": {
+        "Observation": {
+          "run_id": "019d3a73-c7bb-7760-9d63-d5be2ec183d3",
+          "summary": "stderr: sh: Rscript: command not found",
+          "data_ref": null
+        }
+      },
+      "created_at": "2026-03-29T16:35:59.547258911Z",
+      "fitness": null,
+      "chitta_memory_id": null
+    },
+    {
+      "id": "019d3a73-c7bb-7760-9d63-d5ee50c93f7f",
+      "kind": {
+        "Observation": {
+          "run_id": "019d3a73-c7bb-7760-9d63-d5be2ec183d3",
+          "summary": "exit code: 127",
+          "data_ref": null
+        }
+      },
+      "created_at": "2026-03-29T16:35:59.547262766Z",
+      "fitness": null,
+      "chitta_memory_id": null
+    },
+    {
+      "id": "019d3a73-c966-7fe2-89ca-045d47e34def",
+      "kind": {
+        "Run": {
+          "plan_id": "019d3a62-7c6b-72b0-983f-bb3d21da7b5b",
+          "status": "Failed",
+          "started_at": "2026-03-29T16:35:59.974406133Z",
+          "finished_at": "2026-03-29T16:35:59.974410682Z",
+          "artifact_commit": "77d469dba92eb4fe1f4b6d1305f071928450c3d9",
+          "resource_usage": {
+            "gpu_seconds": 0.0,
+            "cpu_seconds": 1.0,
+            "llm_tokens_in": 0,
+            "llm_tokens_out": 0,
+            "cost_usd": 0.0
+          }
+        }
+      },
+      "created_at": "2026-03-29T16:35:59.974410970Z",
+      "fitness": null,
+      "chitta_memory_id": null
+    },
+    {
+      "id": "019d3a73-c966-7fe2-89ca-046df58214ef",
+      "kind": {
+        "Observation": {
+          "run_id": "019d3a73-c966-7fe2-89ca-045d47e34def",
+          "summary": "stderr: python3: can't open file '/maps/projects/fernandezguerra/apps/repos/chitta-research/scripts/gen_hypothesis_pairs.py': [Errno 2] No such file or directory",
+          "data_ref": null
+        }
+      },
+      "created_at": "2026-03-29T16:35:59.974434571Z",
+      "fitness": null,
+      "chitta_memory_id": null
+    },
+    {
+      "id": "019d3a73-c966-7fe2-89ca-04735d3221ce",
+      "kind": {
+        "Observation": {
+          "run_id": "019d3a73-c966-7fe2-89ca-045d47e34def",
+          "summary": "exit code: 2",
+          "data_ref": null
+        }
+      },
+      "created_at": "2026-03-29T16:35:59.974437427Z",
+      "fitness": null,
+      "chitta_memory_id": null
+    },
+    {
+      "id": "019d3a73-c966-7fe2-89ca-0488f78c293c",
+      "kind": {
+        "Observation": {
+          "run_id": "019d3a73-c966-7fe2-89ca-045d47e34def",
+          "summary": "stderr: error: manifest path `chitta-field/Cargo.toml` does not exist",
+          "data_ref": null
+        }
+      },
+      "created_at": "2026-03-29T16:35:59.974440159Z",
+      "fitness": null,
+      "chitta_memory_id": null
+    },
+    {
+      "id": "019d3a73-c966-7fe2-89ca-04959abd3c74",
+      "kind": {
+        "Observation": {
+          "run_id": "019d3a73-c966-7fe2-89ca-045d47e34def",
+          "summary": "exit code: 101",
+          "data_ref": null
+        }
+      },
+      "created_at": "2026-03-29T16:35:59.974442798Z",
+      "fitness": null,
+      "chitta_memory_id": null
+    },
+    {
+      "id": "019d3a73-c966-7fe2-89ca-04a7330d52f1",
+      "kind": {
+        "Observation": {
+          "run_id": "019d3a73-c966-7fe2-89ca-045d47e34def",
+          "summary": "stderr: python3: can't open file '/maps/projects/fernandezguerra/apps/repos/chitta-research/scripts/sweep_cosine_threshold.py': [Errno 2] No such file or directory",
+          "data_ref": null
+        }
+      },
+      "created_at": "2026-03-29T16:35:59.974446137Z",
+      "fitness": null,
+      "chitta_memory_id": null
+    },
+    {
+      "id": "019d3a73-c966-7fe2-89ca-04b09ecc0895",
+      "kind": {
+        "Observation": {
+          "run_id": "019d3a73-c966-7fe2-89ca-045d47e34def",
+          "summary": "exit code: 2",
+          "data_ref": null
+        }
+      },
+      "created_at": "2026-03-29T16:35:59.974456694Z",
+      "fitness": null,
+      "chitta_memory_id": null
+    },
+    {
+      "id": "019d3a73-cb0f-7d01-9ab1-7d49e041d15e",
+      "kind": {
+        "Run": {
+          "plan_id": "019d3a62-7c6b-72b0-983f-bb552b2a0644",
+          "status": "Failed",
+          "started_at": "2026-03-29T16:36:00.399333624Z",
+          "finished_at": "2026-03-29T16:36:00.399336318Z",
+          "artifact_commit": "9995c6777aee908532913bd605561bfbea78efac",
+          "resource_usage": {
+            "gpu_seconds": 0.0,
+            "cpu_seconds": 1.0,
+            "llm_tokens_in": 0,
+            "llm_tokens_out": 0,
+            "cost_usd": 0.0
+          }
+        }
+      },
+      "created_at": "2026-03-29T16:36:00.399336611Z",
+      "fitness": null,
+      "chitta_memory_id": null
+    },
+    {
+      "id": "019d3a73-cb0f-7d01-9ab1-7d51737d1f09",
+      "kind": {
+        "Observation": {
+          "run_id": "019d3a73-cb0f-7d01-9ab1-7d49e041d15e",
+          "summary": "stderr: python3: can't open file '/maps/projects/fernandezguerra/apps/repos/chitta-research/scripts/extract_dup_hypotheses.py': [Errno 2] No such file or directory",
+          "data_ref": null
+        }
+      },
+      "created_at": "2026-03-29T16:36:00.399354045Z",
+      "fitness": null,
+      "chitta_memory_id": null
+    },
+    {
+      "id": "019d3a73-cb0f-7d01-9ab1-7d6bdee0ccbf",
+      "kind": {
+        "Observation": {
+          "run_id": "019d3a73-cb0f-7d01-9ab1-7d49e041d15e",
+          "summary": "exit code: 2",
+          "data_ref": null
+        }
+      },
+      "created_at": "2026-03-29T16:36:00.399357179Z",
+      "fitness": null,
+      "chitta_memory_id": null
+    },
+    {
+      "id": "019d3a73-cb0f-7d01-9ab1-7d794a966117",
+      "kind": {
+        "Observation": {
+          "run_id": "019d3a73-cb0f-7d01-9ab1-7d49e041d15e",
+          "summary": "stderr: python3: can't open file '/maps/projects/fernandezguerra/apps/repos/chitta-research/scripts/simulate_merge_strategies.py': [Errno 2] No such file or directory",
+          "data_ref": null
+        }
+      },
+      "created_at": "2026-03-29T16:36:00.399360126Z",
+      "fitness": null,
+      "chitta_memory_id": null
+    },
+    {
+      "id": "019d3a73-cb0f-7d01-9ab1-7d86c9355028",
+      "kind": {
+        "Observation": {
+          "run_id": "019d3a73-cb0f-7d01-9ab1-7d49e041d15e",
+          "summary": "exit code: 2",
+          "data_ref": null
+        }
+      },
+      "created_at": "2026-03-29T16:36:00.399362775Z",
+      "fitness": null,
+      "chitta_memory_id": null
+    },
+    {
+      "id": "019d3a73-cb0f-7d01-9ab1-7d9794b5a352",
+      "kind": {
+        "Observation": {
+          "run_id": "019d3a73-cb0f-7d01-9ab1-7d49e041d15e",
+          "summary": "stderr: sh: Rscript: command not found",
+          "data_ref": null
+        }
+      },
+      "created_at": "2026-03-29T16:36:00.399365345Z",
+      "fitness": null,
+      "chitta_memory_id": null
+    },
+    {
+      "id": "019d3a73-cb0f-7d01-9ab1-7da203824172",
+      "kind": {
+        "Observation": {
+          "run_id": "019d3a73-cb0f-7d01-9ab1-7d49e041d15e",
+          "summary": "exit code: 127",
+          "data_ref": null
+        }
+      },
+      "created_at": "2026-03-29T16:36:00.399368089Z",
+      "fitness": null,
+      "chitta_memory_id": null
+    },
+    {
+      "id": "019d3a85-b49c-7d92-880b-63aeb137414b",
+      "kind": {
+        "Run": {
+          "plan_id": "019d3a62-7c6b-72b0-983f-bb73ee73a2ac",
+          "status": "Failed",
+          "started_at": "2026-03-29T16:55:34.300640565Z",
+          "finished_at": "2026-03-29T16:55:34.300645837Z",
+          "artifact_commit": "bb237ae1f3980c9559c9e784221905874167acb9",
+          "resource_usage": {
+            "gpu_seconds": 0.0,
+            "cpu_seconds": 1.0,
+            "llm_tokens_in": 0,
+            "llm_tokens_out": 0,
+            "cost_usd": 0.0
+          }
+        }
+      },
+      "created_at": "2026-03-29T16:55:34.300646247Z",
+      "fitness": null,
+      "chitta_memory_id": null
+    },
+    {
+      "id": "019d3a85-b49c-7d92-880b-63b4d7c9a97f",
+      "kind": {
+        "Observation": {
+          "run_id": "019d3a85-b49c-7d92-880b-63aeb137414b",
+          "summary": "Learned codebase: .\n  Path: .\n  Symbols: 10132\n  Symbols embedded: 10132\n  Callsites: 24941\n  Symbol breakdown:\n    trait: 44\n    struct: 754\n    impl: 1703\n    method: 4551\n    class: 64\n    function: 3016\n",
+          "data_ref": null
+        }
+      },
+      "created_at": "2026-03-29T16:55:34.300675201Z",
+      "fitness": null,
+      "chitta_memory_id": null
+    },
+    {
+      "id": "019d3a85-b49c-7d92-880b-63c1c2b2f751",
+      "kind": {
+        "Observation": {
+          "run_id": "019d3a85-b49c-7d92-880b-63aeb137414b",
+          "summary": "stderr: error: manifest path `chitta-field/Cargo.toml` does not exist",
+          "data_ref": null
+        }
+      },
+      "created_at": "2026-03-29T16:55:34.300680399Z",
+      "fitness": null,
+      "chitta_memory_id": null
+    },
+    {
+      "id": "019d3a85-b49c-7d92-880b-63d0bcb0a673",
+      "kind": {
+        "Observation": {
+          "run_id": "019d3a85-b49c-7d92-880b-63aeb137414b",
+          "summary": "exit code: 101",
+          "data_ref": null
+        }
+      },
+      "created_at": "2026-03-29T16:55:34.300684519Z",
+      "fitness": null,
+      "chitta_memory_id": null
+    },
+    {
+      "id": "019d3a85-b49c-7d92-880b-63edd82af8db",
+      "kind": {
+        "Observation": {
+          "run_id": "019d3a85-b49c-7d92-880b-63aeb137414b",
+          "summary": "$ cargo bench --manifest-path chitta-field/Cargo.toml --bench dedup_bench -- --sample-size 50 2>&1 | tee results/bloom_bench.txt\nerror: manifest path `chitta-field/Cargo.toml` does not exist",
+          "data_ref": null
+        }
+      },
+      "created_at": "2026-03-29T16:55:34.300694341Z",
+      "fitness": null,
+      "chitta_memory_id": null
+    },
+    {
+      "id": "019d3a85-b49c-7d92-880b-63ffc3a7bfb7",
+      "kind": {
+        "Observation": {
+          "run_id": "019d3a85-b49c-7d92-880b-63aeb137414b",
+          "summary": "stderr: tee: results/bloom_bench.txt: No such file or directory",
+          "data_ref": null
+        }
+      },
+      "created_at": "2026-03-29T16:55:34.300697976Z",
+      "fitness": null,
+      "chitta_memory_id": null
+    },
+    {
+      "id": "019d3a85-b49c-7d92-880b-6409fa9577fd",
+      "kind": {
+        "Observation": {
+          "run_id": "019d3a85-b49c-7d92-880b-63aeb137414b",
+          "summary": "exit code: 1",
+          "data_ref": null
+        }
+      },
+      "created_at": "2026-03-29T16:55:34.300701832Z",
+      "fitness": null,
+      "chitta_memory_id": null
+    },
+    {
+      "id": "019d3a85-b49c-7d92-880b-64175ac8e043",
+      "kind": {
+        "Observation": {
+          "run_id": "019d3a85-b49c-7d92-880b-63aeb137414b",
+          "summary": "stderr: python3: can't open file '/maps/projects/fernandezguerra/apps/repos/chitta-research/scripts/plot_dedup_scaling.py': [Errno 2] No such file or directory",
+          "data_ref": null
+        }
+      },
+      "created_at": "2026-03-29T16:55:34.300705547Z",
+      "fitness": null,
+      "chitta_memory_id": null
+    },
+    {
+      "id": "019d3a85-b49c-7d92-880b-642c47fd1813",
+      "kind": {
+        "Observation": {
+          "run_id": "019d3a85-b49c-7d92-880b-63aeb137414b",
+          "summary": "exit code: 2",
+          "data_ref": null
+        }
+      },
+      "created_at": "2026-03-29T16:55:34.300709016Z",
+      "fitness": null,
+      "chitta_memory_id": null
+    },
+    {
+      "id": "019d3a85-b681-7343-859c-a9f4aa647e1b",
+      "kind": {
+        "Run": {
+          "plan_id": "019d3a63-04f3-7811-b326-1fb9c06ab7d3",
+          "status": "Failed",
+          "started_at": "2026-03-29T16:55:34.785792970Z",
+          "finished_at": "2026-03-29T16:55:34.785797679Z",
+          "artifact_commit": "7d08ea7884848056595f6f8b4c4d93afa1432be4",
+          "resource_usage": {
+            "gpu_seconds": 0.0,
+            "cpu_seconds": 1.0,
+            "llm_tokens_in": 0,
+            "llm_tokens_out": 0,
+            "cost_usd": 0.0
+          }
+        }
+      },
+      "created_at": "2026-03-29T16:55:34.785798382Z",
+      "fitness": null,
+      "chitta_memory_id": null
+    },
+    {
+      "id": "019d3a85-b681-7343-859c-aa0a7703290d",
+      "kind": {
+        "Observation": {
+          "run_id": "019d3a85-b681-7343-859c-a9f4aa647e1b",
+          "summary": "Found 5 symbols for '10 bug diagnoses, 10 code reviews, 10 architecture decisions, 10 refactors, 10 test generation tasks' (semantic, NL query):\n  [67%] function test_components_debug @tests/path.rs:2227 (semantic)\n  [67%] function test_log10 @floats/f128.rs:157 (semantic)\n  [67%] function test_log10 @floats/f64.rs:107 (semantic)\n  [67%] function test_log10 @floats/f16.rs:140 (semantic)\n  [67%] function test_log10 @floats/f32.rs:112 (semantic)\n",
+          "data_ref": null
+        }
+      },
+      "created_at": "2026-03-29T16:55:34.785828879Z",
+      "fitness": null,
+      "chitta_memory_id": null
+    },
+    {
+      "id": "019d3a85-b681-7343-859c-aa1c22cdb731",
+      "kind": {
+        "Observation": {
+          "run_id": "019d3a85-b681-7343-859c-a9f4aa647e1b",
+          "summary": "stderr: python3: can't open file '/maps/projects/fernandezguerra/apps/repos/chitta-research/.scripts/benchmark_discussion_rounds.py': [Errno 2] No such file or directory",
+          "data_ref": null
+        }
+      },
+      "created_at": "2026-03-29T16:55:34.785833308Z",
+      "fitness": null,
+      "chitta_memory_id": null
+    },
+    {
+      "id": "019d3a85-b681-7343-859c-aa2125f966cf",
+      "kind": {
+        "Observation": {
+          "run_id": "019d3a85-b681-7343-859c-a9f4aa647e1b",
+          "summary": "exit code: 2",
+          "data_ref": null
+        }
+      },
+      "created_at": "2026-03-29T16:55:34.785837115Z",
+      "fitness": null,
+      "chitta_memory_id": null
+    },
+    {
+      "id": "019d3a85-b681-7343-859c-aa348820c71c",
+      "kind": {
+        "Observation": {
+          "run_id": "019d3a85-b681-7343-859c-a9f4aa647e1b",
+          "summary": "stderr: sh: Rscript: command not found",
+          "data_ref": null
+        }
+      },
+      "created_at": "2026-03-29T16:55:34.785841165Z",
+      "fitness": null,
+      "chitta_memory_id": null
+    },
+    {
+      "id": "019d3a85-b681-7343-859c-aa477838fd8b",
+      "kind": {
+        "Observation": {
+          "run_id": "019d3a85-b681-7343-859c-a9f4aa647e1b",
+          "summary": "exit code: 127",
+          "data_ref": null
+        }
+      },
+      "created_at": "2026-03-29T16:55:34.785845527Z",
+      "fitness": null,
+      "chitta_memory_id": null
+    },
+    {
+      "id": "019d3a85-b7ef-71d2-b558-91e8cfd0a896",
+      "kind": {
+        "Run": {
+          "plan_id": "019d3a63-04f3-7811-b326-1fddbdd14f32",
+          "status": "Failed",
+          "started_at": "2026-03-29T16:55:35.151463123Z",
+          "finished_at": "2026-03-29T16:55:35.151468239Z",
+          "artifact_commit": "a06a38aa2043d4499aff3f62b2a4c00e9fa82671",
+          "resource_usage": {
+            "gpu_seconds": 0.0,
+            "cpu_seconds": 1.0,
+            "llm_tokens_in": 0,
+            "llm_tokens_out": 0,
+            "cost_usd": 0.0
+          }
+        }
+      },
+      "created_at": "2026-03-29T16:55:35.151468591Z",
+      "fitness": null,
+      "chitta_memory_id": null
+    },
+    {
+      "id": "019d3a85-b7ef-71d2-b558-91f3893d3a68",
+      "kind": {
+        "Observation": {
+          "run_id": "019d3a85-b7ef-71d2-b558-91e8cfd0a896",
+          "summary": "stderr: python3: can't open file '/maps/projects/fernandezguerra/apps/repos/chitta-research/.scripts/complexity_scorer.py': [Errno 2] No such file or directory",
+          "data_ref": null
+        }
+      },
+      "created_at": "2026-03-29T16:55:35.151498142Z",
+      "fitness": null,
+      "chitta_memory_id": null
+    },
+    {
+      "id": "019d3a85-b7ef-71d2-b558-92023d04fb11",
+      "kind": {
+        "Observation": {
+          "run_id": "019d3a85-b7ef-71d2-b558-91e8cfd0a896",
+          "summary": "exit code: 2",
+          "data_ref": null
+        }
+      },
+      "created_at": "2026-03-29T16:55:35.151502432Z",
+      "fitness": null,
+      "chitta_memory_id": null
+    },
+    {
+      "id": "019d3a85-b7ef-71d2-b558-9219bf628c3b",
+      "kind": {
+        "Observation": {
+          "run_id": "019d3a85-b7ef-71d2-b558-91e8cfd0a896",
+          "summary": "stderr: sh: Rscript: command not found",
+          "data_ref": null
+        }
+      },
+      "created_at": "2026-03-29T16:55:35.151506400Z",
+      "fitness": null,
+      "chitta_memory_id": null
+    },
+    {
+      "id": "019d3a85-b7ef-71d2-b558-9222da72ea8a",
+      "kind": {
+        "Observation": {
+          "run_id": "019d3a85-b7ef-71d2-b558-91e8cfd0a896",
+          "summary": "exit code: 127",
+          "data_ref": null
+        }
+      },
+      "created_at": "2026-03-29T16:55:35.151510864Z",
+      "fitness": null,
+      "chitta_memory_id": null
+    },
+    {
+      "id": "019d3a85-b966-75a0-9508-2e08b65f0bec",
+      "kind": {
+        "Run": {
+          "plan_id": "019d3a63-04f3-7811-b326-1ffc1c23bd32",
+          "status": "Failed",
+          "started_at": "2026-03-29T16:55:35.526763720Z",
+          "finished_at": "2026-03-29T16:55:35.526768888Z",
+          "artifact_commit": "d5669e3fab7a8b5d1febdaec9a79d0a184b53ddd",
+          "resource_usage": {
+            "gpu_seconds": 0.0,
+            "cpu_seconds": 1.0,
+            "llm_tokens_in": 0,
+            "llm_tokens_out": 0,
+            "cost_usd": 0.0
+          }
+        }
+      },
+      "created_at": "2026-03-29T16:55:35.526769219Z",
+      "fitness": null,
+      "chitta_memory_id": null
+    },
+    {
+      "id": "019d3a85-b966-75a0-9508-2e1be7fd1c8b",
+      "kind": {
+        "Observation": {
+          "run_id": "019d3a85-b966-75a0-9508-2e08b65f0bec",
+          "summary": "stderr: python3: can't open file '/maps/projects/fernandezguerra/apps/repos/chitta-research/.scripts/entropy_early_exit.py': [Errno 2] No such file or directory",
+          "data_ref": null
+        }
+      },
+      "created_at": "2026-03-29T16:55:35.526796767Z",
+      "fitness": null,
+      "chitta_memory_id": null
+    },
+    {
+      "id": "019d3a85-b966-75a0-9508-2e2cb3086e73",
+      "kind": {
+        "Observation": {
+          "run_id": "019d3a85-b966-75a0-9508-2e08b65f0bec",
+          "summary": "exit code: 2",
+          "data_ref": null
+        }
+      },
+      "created_at": "2026-03-29T16:55:35.526801073Z",
+      "fitness": null,
+      "chitta_memory_id": null
+    },
+    {
+      "id": "019d3a85-b966-75a0-9508-2e34a54bae6a",
+      "kind": {
+        "Observation": {
+          "run_id": "019d3a85-b966-75a0-9508-2e08b65f0bec",
+          "summary": "stderr: sh: Rscript: command not found",
+          "data_ref": null
+        }
+      },
+      "created_at": "2026-03-29T16:55:35.526805146Z",
+      "fitness": null,
+      "chitta_memory_id": null
+    },
+    {
+      "id": "019d3a85-b966-75a0-9508-2e40982f3114",
+      "kind": {
+        "Observation": {
+          "run_id": "019d3a85-b966-75a0-9508-2e08b65f0bec",
+          "summary": "exit code: 127",
+          "data_ref": null
+        }
+      },
+      "created_at": "2026-03-29T16:55:35.526808950Z",
+      "fitness": null,
+      "chitta_memory_id": null
+    },
+    {
+      "id": "019d3a85-bb30-76b0-8820-8a6a3791c1f5",
+      "kind": {
+        "Run": {
+          "plan_id": "019d3a63-b2f2-7553-9c8c-629485c63578",
+          "status": "Failed",
+          "started_at": "2026-03-29T16:55:35.984913874Z",
+          "finished_at": "2026-03-29T16:55:35.984919326Z",
+          "artifact_commit": "ce2361c3d24a0b778e09b60e92653d8ae2d96997",
+          "resource_usage": {
+            "gpu_seconds": 0.0,
+            "cpu_seconds": 1.0,
+            "llm_tokens_in": 0,
+            "llm_tokens_out": 0,
+            "cost_usd": 0.0
+          }
+        }
+      },
+      "created_at": "2026-03-29T16:55:35.984919760Z",
+      "fitness": null,
+      "chitta_memory_id": null
+    },
+    {
+      "id": "019d3a85-bb30-76b0-8820-8a7dcfe56fdc",
+      "kind": {
+        "Observation": {
+          "run_id": "019d3a85-bb30-76b0-8820-8a6a3791c1f5",
+          "summary": "stderr: python3: can't open file '/maps/projects/fernandezguerra/apps/repos/chitta-research/.scripts/extract_hypothesis_outcomes.py': [Errno 2] No such file or directory",
+          "data_ref": null
+        }
+      },
+      "created_at": "2026-03-29T16:55:35.984949846Z",
+      "fitness": null,
+      "chitta_memory_id": null
+    },
+    {
+      "id": "019d3a85-bb30-76b0-8820-8a8f631a7a37",
+      "kind": {
+        "Observation": {
+          "run_id": "019d3a85-bb30-76b0-8820-8a6a3791c1f5",
+          "summary": "exit code: 2",
+          "data_ref": null
+        }
+      },
+      "created_at": "2026-03-29T16:55:35.984954717Z",
+      "fitness": null,
+      "chitta_memory_id": null
+    },
+    {
+      "id": "019d3a85-bb30-76b0-8820-8a99d53a0d58",
+      "kind": {
+        "Observation": {
+          "run_id": "019d3a85-bb30-76b0-8820-8a6a3791c1f5",
+          "summary": "stderr: python3: can't open file '/maps/projects/fernandezguerra/apps/repos/chitta-research/.scripts/simulate_hotr_recall.py': [Errno 2] No such file or directory",
+          "data_ref": null
+        }
+      },
+      "created_at": "2026-03-29T16:55:35.984958519Z",
+      "fitness": null,
+      "chitta_memory_id": null
+    },
+    {
+      "id": "019d3a85-bb30-76b0-8820-8aa677e9af70",
+      "kind": {
+        "Observation": {
+          "run_id": "019d3a85-bb30-76b0-8820-8a6a3791c1f5",
+          "summary": "exit code: 2",
+          "data_ref": null
+        }
+      },
+      "created_at": "2026-03-29T16:55:35.984963123Z",
+      "fitness": null,
+      "chitta_memory_id": null
+    },
+    {
+      "id": "019d3a85-bb30-76b0-8820-8ab160de1f73",
+      "kind": {
+        "Observation": {
+          "run_id": "019d3a85-bb30-76b0-8820-8a6a3791c1f5",
+          "summary": "stderr: python3: can't open file '/maps/projects/fernandezguerra/apps/repos/chitta-research/.scripts/simulate_hotr_recall.py': [Errno 2] No such file or directory",
+          "data_ref": null
+        }
+      },
+      "created_at": "2026-03-29T16:55:35.984967092Z",
+      "fitness": null,
+      "chitta_memory_id": null
+    },
+    {
+      "id": "019d3a85-bb30-76b0-8820-8ac243da0245",
+      "kind": {
+        "Observation": {
+          "run_id": "019d3a85-bb30-76b0-8820-8a6a3791c1f5",
+          "summary": "exit code: 2",
+          "data_ref": null
+        }
+      },
+      "created_at": "2026-03-29T16:55:35.984971171Z",
+      "fitness": null,
+      "chitta_memory_id": null
+    },
+    {
+      "id": "019d3a85-bb30-76b0-8820-8ada28c834a6",
+      "kind": {
+        "Observation": {
+          "run_id": "019d3a85-bb30-76b0-8820-8a6a3791c1f5",
+          "summary": "stderr: sh: Rscript: command not found",
+          "data_ref": null
+        }
+      },
+      "created_at": "2026-03-29T16:55:35.984975475Z",
+      "fitness": null,
+      "chitta_memory_id": null
+    },
+    {
+      "id": "019d3a85-bb30-76b0-8820-8aeb6fefcab7",
+      "kind": {
+        "Observation": {
+          "run_id": "019d3a85-bb30-76b0-8820-8a6a3791c1f5",
+          "summary": "exit code: 127",
+          "data_ref": null
+        }
+      },
+      "created_at": "2026-03-29T16:55:35.984979716Z",
+      "fitness": null,
+      "chitta_memory_id": null
+    },
+    {
+      "id": "019d3a85-bd2c-76e3-80d0-f449aac944b1",
+      "kind": {
+        "Run": {
+          "plan_id": "019d3a63-b2f2-7553-9c8c-62bc216c46bf",
+          "status": "Failed",
+          "started_at": "2026-03-29T16:55:36.492382248Z",
+          "finished_at": "2026-03-29T16:55:36.492387642Z",
+          "artifact_commit": "7449580567c146670126badb77115b1ade161ffc",
+          "resource_usage": {
+            "gpu_seconds": 0.0,
+            "cpu_seconds": 1.0,
+            "llm_tokens_in": 0,
+            "llm_tokens_out": 0,
+            "cost_usd": 0.0
+          }
+        }
+      },
+      "created_at": "2026-03-29T16:55:36.492388010Z",
+      "fitness": null,
+      "chitta_memory_id": null
+    },
+    {
+      "id": "019d3a85-bd2c-76e3-80d0-f459d52bfd8e",
+      "kind": {
+        "Observation": {
+          "run_id": "019d3a85-bd2c-76e3-80d0-f449aac944b1",
+          "summary": "$ grep -c 'FAILED\\|error\\|aborted' cresearch-self*.log | awk -F: '{sum+=$2} END{print \"total failures:\", sum}'\ntotal failures: 111",
+          "data_ref": null
+        }
+      },
+      "created_at": "2026-03-29T16:55:36.492419399Z",
+      "fitness": null,
+      "chitta_memory_id": null
+    },
+    {
+      "id": "019d3a85-bd2c-76e3-80d0-f46df02f12b5",
+      "kind": {
+        "Observation": {
+          "run_id": "019d3a85-bd2c-76e3-80d0-f449aac944b1",
+          "summary": "Found 5 symbols for 'Run 15 passive turns and 15 active-injection turns with same research question seed; record which hypotheses Hotr selects' (semantic, NL query):\n  [69%] function test_lots_of_insertions @map/tests.rs:268 (semantic)\n  [67%] function test_dur2reltims @time/tests.rs:8 (semantic)\n  [67%] function run_dtors @guard/apple.rs:26 (semantic)\n  [67%] function run_dtors @key/xous.rs:185 (semantic)\n  [67%] function run_dtors @key/windows.rs:163 (semantic)\n",
+          "data_ref": null
+        }
+      },
+      "created_at": "2026-03-29T16:55:36.492424216Z",
+      "fitness": null,
+      "chitta_memory_id": null
+    },
+    {
+      "id": "019d3a85-bd2c-76e3-80d0-f4793ff259d6",
+      "kind": {
+        "Observation": {
+          "run_id": "019d3a85-bd2c-76e3-80d0-f449aac944b1",
+          "summary": "stderr: python3: can't open file '/maps/projects/fernandezguerra/apps/repos/chitta-research/.scripts/measure_failure_overlap.py': [Errno 2] No such file or directory",
+          "data_ref": null
+        }
+      },
+      "created_at": "2026-03-29T16:55:36.492429736Z",
+      "fitness": null,
+      "chitta_memory_id": null
+    },
+    {
+      "id": "019d3a85-bd2c-76e3-80d0-f48454a3d047",
+      "kind": {
+        "Observation": {
+          "run_id": "019d3a85-bd2c-76e3-80d0-f449aac944b1",
+          "summary": "exit code: 2",
+          "data_ref": null
+        }
+      },
+      "created_at": "2026-03-29T16:55:36.492434740Z",
+      "fitness": null,
+      "chitta_memory_id": null
+    },
+    {
+      "id": "019d3a85-be95-7381-94b3-8a7d4e1c7a37",
+      "kind": {
+        "Run": {
+          "plan_id": "019d3a63-b2f2-7553-9c8c-62def4ef35f2",
+          "status": "Failed",
+          "started_at": "2026-03-29T16:55:36.853541984Z",
+          "finished_at": "2026-03-29T16:55:36.853547394Z",
+          "artifact_commit": "98118d63c322d6310120250b9b856a333c31d8c2",
+          "resource_usage": {
+            "gpu_seconds": 0.0,
+            "cpu_seconds": 1.0,
+            "llm_tokens_in": 0,
+            "llm_tokens_out": 0,
+            "cost_usd": 0.0
+          }
+        }
+      },
+      "created_at": "2026-03-29T16:55:36.853547735Z",
+      "fitness": null,
+      "chitta_memory_id": null
+    },
+    {
+      "id": "019d3a85-be95-7381-94b3-8a84f42e4f3c",
+      "kind": {
+        "Observation": {
+          "run_id": "019d3a85-be95-7381-94b3-8a7d4e1c7a37",
+          "summary": "stderr: error: manifest path `chitta-field/Cargo.toml` does not exist",
+          "data_ref": null
+        }
+      },
+      "created_at": "2026-03-29T16:55:36.853642861Z",
+      "fitness": null,
+      "chitta_memory_id": null
+    },
+    {
+      "id": "019d3a85-be95-7381-94b3-8a9643c87e21",
+      "kind": {
+        "Observation": {
+          "run_id": "019d3a85-be95-7381-94b3-8a7d4e1c7a37",
+          "summary": "exit code: 101",
+          "data_ref": null
+        }
+      },
+      "created_at": "2026-03-29T16:55:36.853647214Z",
+      "fitness": null,
+      "chitta_memory_id": null
+    },
+    {
+      "id": "019d3a85-be95-7381-94b3-8aa623923e4a",
+      "kind": {
+        "Observation": {
+          "run_id": "019d3a85-be95-7381-94b3-8a7d4e1c7a37",
+          "summary": "stderr: error: manifest path `chitta-field/Cargo.toml` does not exist",
+          "data_ref": null
+        }
+      },
+      "created_at": "2026-03-29T16:55:36.853651203Z",
+      "fitness": null,
+      "chitta_memory_id": null
+    },
+    {
+      "id": "019d3a85-be95-7381-94b3-8ab09e642661",
+      "kind": {
+        "Observation": {
+          "run_id": "019d3a85-be95-7381-94b3-8a7d4e1c7a37",
+          "summary": "exit code: 101",
+          "data_ref": null
+        }
+      },
+      "created_at": "2026-03-29T16:55:36.853655154Z",
+      "fitness": null,
+      "chitta_memory_id": null
+    },
+    {
+      "id": "019d3a85-be95-7381-94b3-8acd0ba2ea20",
+      "kind": {
+        "Observation": {
+          "run_id": "019d3a85-be95-7381-94b3-8a7d4e1c7a37",
+          "summary": "stderr: sh: Rscript: command not found",
+          "data_ref": null
+        }
+      },
+      "created_at": "2026-03-29T16:55:36.853659034Z",
+      "fitness": null,
+      "chitta_memory_id": null
+    },
+    {
+      "id": "019d3a85-be95-7381-94b3-8ad249f25aae",
+      "kind": {
+        "Observation": {
+          "run_id": "019d3a85-be95-7381-94b3-8a7d4e1c7a37",
+          "summary": "exit code: 127",
+          "data_ref": null
+        }
+      },
+      "created_at": "2026-03-29T16:55:36.853663025Z",
+      "fitness": null,
+      "chitta_memory_id": null
+    },
+    {
+      "id": "019d3a85-e88b-7992-95dd-d6a18ae70c39",
+      "kind": {
+        "Run": {
+          "plan_id": "019d3a64-3341-7742-b7bc-626d0d36b413",
+          "status": "Failed",
+          "started_at": "2026-03-29T16:55:47.595116663Z",
+          "finished_at": "2026-03-29T16:55:47.595122174Z",
+          "artifact_commit": "9fb9fe629b909112d9a298f0738f4dc8da7ac5c8",
+          "resource_usage": {
+            "gpu_seconds": 0.0,
+            "cpu_seconds": 1.0,
+            "llm_tokens_in": 0,
+            "llm_tokens_out": 0,
+            "cost_usd": 0.0
+          }
+        }
+      },
+      "created_at": "2026-03-29T16:55:47.595122827Z",
+      "fitness": null,
+      "chitta_memory_id": null
+    },
+    {
+      "id": "019d3a85-e88b-7992-95dd-d6b28dcca79b",
+      "kind": {
+        "Observation": {
+          "run_id": "019d3a85-e88b-7992-95dd-d6a18ae70c39",
+          "summary": "$ cargo install cargo-geiger tokei 2>/dev/null; cd /maps/projects/fernandezguerra/apps/repos/chitta-research && for crate in chitta-field chitta chitta-mcp; do echo \"=== $crate ===\"; tokei $crate/src --output json 2>/dev/null | python3 -c \"import sys,json; d=json.load(sys.stdin); [print(k, v['stats']['complexity'] if 'complexity' in v.get('stats',{}) else 'N/A') for k,v in d.items()]\"; done\n=== chitta-field ===\n=== chitta ===\n=== chitta-mcp ===",
+          "data_ref": null
+        }
+      },
+      "created_at": "2026-03-29T16:55:47.595163202Z",
+      "fitness": null,
+      "chitta_memory_id": null
+    },
+    {
+      "id": "019d3a85-e88b-7992-95dd-d6c03317c885",
+      "kind": {
+        "Observation": {
+          "run_id": "019d3a85-e88b-7992-95dd-d6a18ae70c39",
+          "summary": "stderr: Traceback (most recent call last):\n  File \"<string>\", line 1, in <module>\n  File \"/maps/projects/fernandezguerra/apps/opt/conda/envs/bioinfo/lib/python3.12/json/__init__.py\", line 293, in load\n    return loads(fp.read(),\n           ^^^^^^^^^^^^^^^^\n  File \"/maps/projects/fernandezguerra/apps/opt/conda/envs/bioinfo/lib/python3.12/json/__init__.py\", line 346, in loads\n    return _default_decoder.decode(s)\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/maps/projects/fernandezguerra/apps/opt/conda/e",
+          "data_ref": null
+        }
+      },
+      "created_at": "2026-03-29T16:55:47.595168508Z",
+      "fitness": null,
+      "chitta_memory_id": null
+    },
+    {
+      "id": "019d3a85-e88b-7992-95dd-d6d66c518be8",
+      "kind": {
+        "Observation": {
+          "run_id": "019d3a85-e88b-7992-95dd-d6a18ae70c39",
+          "summary": "exit code: 1",
+          "data_ref": null
+        }
+      },
+      "created_at": "2026-03-29T16:55:47.595173536Z",
+      "fitness": null,
+      "chitta_memory_id": null
+    },
+    {
+      "id": "019d3a85-e88b-7992-95dd-d6ef57ca119d",
+      "kind": {
+        "Observation": {
+          "run_id": "019d3a85-e88b-7992-95dd-d6a18ae70c39",
+          "summary": "$ cd /maps/projects/fernandezguerra/apps/repos/chitta-research && git log --oneline --all -- 'chitta-field/**' | grep -iE '(fix|bug|race|deadlock|panic|overflow)' | wc -l && git log --oneline --all -- 'chitta/**' | grep -iE '(fix|bug|race|deadlock|panic|overflow)' | wc -l\n0\n0",
+          "data_ref": null
+        }
+      },
+      "created_at": "2026-03-29T16:55:47.595178973Z",
+      "fitness": null,
+      "chitta_memory_id": null
+    },
+    {
+      "id": "019d3a85-e88b-7992-95dd-d6f1ed63a7b0",
+      "kind": {
+        "Observation": {
+          "run_id": "019d3a85-e88b-7992-95dd-d6a18ae70c39",
+          "summary": "stderr: sh: line 0: cd: /maps/projects/fernandezguerra/apps/repos/chitta-research/chitta-field: No such file or directory",
+          "data_ref": null
+        }
+      },
+      "created_at": "2026-03-29T16:55:47.595184326Z",
+      "fitness": null,
+      "chitta_memory_id": null
+    },
+    {
+      "id": "019d3a85-e88b-7992-95dd-d7019bade436",
+      "kind": {
+        "Observation": {
+          "run_id": "019d3a85-e88b-7992-95dd-d6a18ae70c39",
+          "summary": "exit code: 1",
+          "data_ref": null
+        }
+      },
+      "created_at": "2026-03-29T16:55:47.595188814Z",
+      "fitness": null,
+      "chitta_memory_id": null
+    },
+    {
+      "id": "019d3a85-fb63-79c0-8776-16c12c7fd4f3",
+      "kind": {
+        "Run": {
+          "plan_id": "019d3a64-3341-7742-b7bc-628b5bde9393",
+          "status": "Failed",
+          "started_at": "2026-03-29T16:55:52.419051098Z",
+          "finished_at": "2026-03-29T16:55:52.419058745Z",
+          "artifact_commit": "8b98c9c80dd3e969e7289086ebff0cb63f770182",
+          "resource_usage": {
+            "gpu_seconds": 0.0,
+            "cpu_seconds": 1.0,
+            "llm_tokens_in": 0,
+            "llm_tokens_out": 0,
+            "cost_usd": 0.0
+          }
+        }
+      },
+      "created_at": "2026-03-29T16:55:52.419059571Z",
+      "fitness": null,
+      "chitta_memory_id": null
+    },
+    {
+      "id": "019d3a85-fb63-79c0-8776-16d4c0b710af",
+      "kind": {
+        "Observation": {
+          "run_id": "019d3a85-fb63-79c0-8776-16c12c7fd4f3",
+          "summary": "$ pip install lizard -q && lizard /maps/projects/fernandezguerra/apps/repos/chitta-research/chitta/include/chitta/rpc/field_handler.hpp --CCN 10 --length 50 2>&1 | head -80\n================================================\n  NLOC    CCN   token  PARAM  length  location  \n------------------------------------------------\n0 file analyzed.\n==============================================================\nNLOC    Avg.NLOC  AvgCCN  Avg.token  function_cnt    file\n--------------------------------------------------------------\n\n=============================================================================================================\nNo thresholds exceeded (cyclomatic_complexity > 10 or length > 50 or nloc > 1000000 or parameter_count > 100)\n==========================================================================================\nTotal nloc   Avg.NLOC  AvgCCN  Avg.token   Fun Cnt  Warning cnt   Fun Rt   nloc Rt\n------------------------------------------------------------------------------------------\n         0       0.0     0.0        0.0        1            0      0.00    0.00",
+          "data_ref": null
+        }
+      },
+      "created_at": "2026-03-29T16:55:52.419095212Z",
+      "fitness": null,
+      "chitta_memory_id": null
+    },
+    {
+      "id": "019d3a85-fb63-79c0-8776-16efe9423ae5",
+      "kind": {
+        "Observation": {
+          "run_id": "019d3a85-fb63-79c0-8776-16c12c7fd4f3",
+          "summary": "stderr: grep: chitta/include/chitta/rpc/field_handler.hpp: No such file or directory",
+          "data_ref": null
+        }
+      },
+      "created_at": "2026-03-29T16:55:52.419119843Z",
+      "fitness": null,
+      "chitta_memory_id": null
+    },
+    {
+      "id": "019d3a85-fb63-79c0-8776-16f98572723f",
+      "kind": {
+        "Observation": {
+          "run_id": "019d3a85-fb63-79c0-8776-16c12c7fd4f3",
+          "summary": "exit code: 2",
+          "data_ref": null
+        }
+      },
+      "created_at": "2026-03-29T16:55:52.419137252Z",
+      "fitness": null,
+      "chitta_memory_id": null
+    },
+    {
+      "id": "019d3a85-fb63-79c0-8776-170e6def57dc",
+      "kind": {
+        "Observation": {
+          "run_id": "019d3a85-fb63-79c0-8776-16c12c7fd4f3",
+          "summary": "$ cd /maps/projects/fernandezguerra/apps/repos/chitta-research && grep -n 'TODO\\|FIXME\\|HACK\\|XXX\\|WARN\\|assert' chitta/include/chitta/rpc/field_handler.hpp chitta/src/simple_cli.cpp 2>/dev/null | wc -l\n0",
+          "data_ref": null
+        }
+      },
+      "created_at": "2026-03-29T16:55:52.419142197Z",
+      "fitness": null,
+      "chitta_memory_id": null
+    },
+    {
+      "id": "019d3a85-fcd3-7872-a86e-6f1eeb8ea464",
+      "kind": {
+        "Run": {
+          "plan_id": "019d3a64-3341-7742-b7bc-62ac281dd27a",
+          "status": "Failed",
+          "started_at": "2026-03-29T16:55:52.787672155Z",
+          "finished_at": "2026-03-29T16:55:52.787676555Z",
+          "artifact_commit": "59a28c0d912cd3775db8f373e8f1adfd30546d44",
+          "resource_usage": {
+            "gpu_seconds": 0.0,
+            "cpu_seconds": 1.0,
+            "llm_tokens_in": 0,
+            "llm_tokens_out": 0,
+            "cost_usd": 0.0
+          }
+        }
+      },
+      "created_at": "2026-03-29T16:55:52.787676769Z",
+      "fitness": {
+        "novelty": 0.35,
+        "empirical_gain": 0.05,
+        "reproducibility": 0.4,
+        "cost_efficiency": 0.2,
+        "transfer_potential": 0.5,
+        "calibration_improvement": 0.05
+      },
+      "chitta_memory_id": null
+    },
+    {
+      "id": "019d3a85-fcd3-7872-a86e-6f2b154c58d7",
+      "kind": {
+        "Observation": {
+          "run_id": "019d3a85-fcd3-7872-a86e-6f1eeb8ea464",
+          "summary": "$ cd /maps/projects/fernandezguerra/apps/repos/chitta-research && python3 -c \"\nimport subprocess, json\n# embed two near-identical strings and check cosine similarity via chitta CLI\npairs = [('memory retrieval', 'recall from memory'), ('bug fix', 'software defect correction')]\nfor a, b in pairs:\n    print(f'pair: {a!r} vs {b!r}')\n\"\npair: 'memory retrieval' vs 'recall from memory'\npair: 'bug fix' vs 'software defect correction'",
+          "data_ref": null
+        }
+      },
+      "created_at": "2026-03-29T16:55:52.787700130Z",
+      "fitness": null,
+      "chitta_memory_id": null
+    }
+  ],
+  "edges": [
+    {
+      "from": "019d3a4f-40ec-74a1-87b2-b07c8558052a",
+      "to": "019d3a4f-40ec-74a1-87b2-b0692eb49b31",
+      "edge": {
+        "kind": "DerivedFrom",
+        "weight": 1.0,
+        "evidence_ids": []
+      }
+    },
+    {
+      "from": "019d3a4f-40ec-74a1-87b2-b087cb54ab9b",
+      "to": "019d3a4f-40ec-74a1-87b2-b0692eb49b31",
+      "edge": {
+        "kind": "DerivedFrom",
+        "weight": 1.0,
+        "evidence_ids": []
+      }
+    },
+    {
+      "from": "019d3a4f-40ec-74a1-87b2-b095cec917b8",
+      "to": "019d3a4f-40ec-74a1-87b2-b0692eb49b31",
+      "edge": {
+        "kind": "DerivedFrom",
+        "weight": 1.0,
+        "evidence_ids": []
+      }
+    },
+    {
+      "from": "019d3a4f-40ec-74a1-87b2-b0adecd07ec2",
+      "to": "019d3a4f-40ec-74a1-87b2-b0692eb49b31",
+      "edge": {
+        "kind": "DerivedFrom",
+        "weight": 1.0,
+        "evidence_ids": []
+      }
+    },
+    {
+      "from": "019d3a4f-40ec-74a1-87b2-b0b1e89d36bd",
+      "to": "019d3a4f-40ec-74a1-87b2-b0692eb49b31",
+      "edge": {
+        "kind": "DerivedFrom",
+        "weight": 1.0,
+        "evidence_ids": []
+      }
+    },
+    {
+      "from": "019d3a4f-40ec-74a1-87b2-b0c06384d6d6",
+      "to": "019d3a4f-40ec-74a1-87b2-b0692eb49b31",
+      "edge": {
+        "kind": "Supports",
+        "weight": 1.0,
+        "evidence_ids": []
+      }
+    },
+    {
+      "from": "019d3a4f-40ec-74a1-87b2-b0dd521775b6",
+      "to": "019d3a4f-40ec-74a1-87b2-b0692eb49b31",
+      "edge": {
+        "kind": "Supports",
+        "weight": 1.0,
+        "evidence_ids": []
+      }
+    },
+    {
+      "from": "019d3a4f-40ec-74a1-87b2-b0ed0783c537",
+      "to": "019d3a4f-40ec-74a1-87b2-b0692eb49b31",
+      "edge": {
+        "kind": "Supports",
+        "weight": 1.0,
+        "evidence_ids": []
+      }
+    },
+    {
+      "from": "019d3a4f-40ec-74a1-87b2-b0f2b8ae8e5e",
+      "to": "019d3a4f-40ec-74a1-87b2-b0692eb49b31",
+      "edge": {
+        "kind": "Supports",
+        "weight": 1.0,
+        "evidence_ids": []
+      }
+    },
+    {
+      "from": "019d3a4f-40ec-74a1-87b2-b10d261e0c9b",
+      "to": "019d3a4f-40ec-74a1-87b2-b0692eb49b31",
+      "edge": {
+        "kind": "Supports",
+        "weight": 1.0,
+        "evidence_ids": []
+      }
+    },
+    {
+      "from": "019d3a4f-40ec-74a1-87b2-b11b2c906da2",
+      "to": "019d3a4f-40ec-74a1-87b2-b0692eb49b31",
+      "edge": {
+        "kind": "Supports",
+        "weight": 1.0,
+        "evidence_ids": []
+      }
+    },
+    {
+      "from": "019d3a4f-40ec-74a1-87b2-b122cca438ee",
+      "to": "019d3a4f-40ec-74a1-87b2-b0692eb49b31",
+      "edge": {
+        "kind": "Supports",
+        "weight": 1.0,
+        "evidence_ids": []
+      }
+    },
+    {
+      "from": "019d3a4f-40ec-74a1-87b2-b14e965ba90a",
+      "to": "019d3a4f-40ec-74a1-87b2-b13c3c87e8f6",
+      "edge": {
+        "kind": "DerivedFrom",
+        "weight": 1.0,
+        "evidence_ids": []
+      }
+    },
+    {
+      "from": "019d3a4f-40ec-74a1-87b2-b15e0f4e1db9",
+      "to": "019d3a4f-40ec-74a1-87b2-b13c3c87e8f6",
+      "edge": {
+        "kind": "DerivedFrom",
+        "weight": 1.0,
+        "evidence_ids": []
+      }
+    },
+    {
+      "from": "019d3a4f-40ec-74a1-87b2-b16b7a7b748c",
+      "to": "019d3a4f-40ec-74a1-87b2-b13c3c87e8f6",
+      "edge": {
+        "kind": "Supports",
+        "weight": 1.0,
+        "evidence_ids": []
+      }
+    },
+    {
+      "from": "019d3a4f-40ec-74a1-87b2-b176ca370ea9",
+      "to": "019d3a4f-40ec-74a1-87b2-b13c3c87e8f6",
+      "edge": {
+        "kind": "Supports",
+        "weight": 1.0,
+        "evidence_ids": []
+      }
+    },
+    {
+      "from": "019d3a4f-40ec-74a1-87b2-b18ec56e537b",
+      "to": "019d3a4f-40ec-74a1-87b2-b13c3c87e8f6",
+      "edge": {
+        "kind": "Supports",
+        "weight": 1.0,
+        "evidence_ids": []
+      }
+    },
+    {
+      "from": "019d3a62-025b-7613-b692-6d7da5dd6038",
+      "to": "019d3a4f-40ec-74a1-87b2-b07c8558052a",
+      "edge": {
+        "kind": "DerivedFrom",
+        "weight": 1.0,
+        "evidence_ids": []
+      }
+    },
+    {
+      "from": "019d3a62-025b-7613-b692-6d84bdeda4fd",
+      "to": "019d3a62-025b-7613-b692-6d7da5dd6038",
+      "edge": {
+        "kind": "DerivedFrom",
+        "weight": 1.0,
+        "evidence_ids": []
+      }
+    },
+    {
+      "from": "019d3a62-025b-7613-b692-6d9afbc8d7b8",
+      "to": "019d3a4f-40ec-74a1-87b2-b07c8558052a",
+      "edge": {
+        "kind": "DerivedFrom",
+        "weight": 1.0,
+        "evidence_ids": []
+      }
+    },
+    {
+      "from": "019d3a62-025b-7613-b692-6da9e98aa5e8",
+      "to": "019d3a62-025b-7613-b692-6d9afbc8d7b8",
+      "edge": {
+        "kind": "DerivedFrom",
+        "weight": 1.0,
+        "evidence_ids": []
+      }
+    },
+    {
+      "from": "019d3a62-025b-7613-b692-6db38dba679b",
+      "to": "019d3a4f-40ec-74a1-87b2-b07c8558052a",
+      "edge": {
+        "kind": "DerivedFrom",
+        "weight": 1.0,
+        "evidence_ids": []
+      }
+    },
+    {
+      "from": "019d3a62-025b-7613-b692-6dc4947ed494",
+      "to": "019d3a62-025b-7613-b692-6db38dba679b",
+      "edge": {
+        "kind": "DerivedFrom",
+        "weight": 1.0,
+        "evidence_ids": []
+      }
+    },
+    {
+      "from": "019d3a62-0570-7f81-8c79-a55075af7010",
+      "to": "019d3a62-025b-7613-b692-6d84bdeda4fd",
+      "edge": {
+        "kind": "DerivedFrom",
+        "weight": 1.0,
+        "evidence_ids": []
+      }
+    },
+    {
+      "from": "019d3a62-0570-7f81-8c79-a56e8cc80211",
+      "to": "019d3a62-0570-7f81-8c79-a55075af7010",
+      "edge": {
+        "kind": "DerivedFrom",
+        "weight": 1.0,
+        "evidence_ids": []
+      }
+    },
+    {
+      "from": "019d3a62-0570-7f81-8c79-a57b90f66ee6",
+      "to": "019d3a62-0570-7f81-8c79-a55075af7010",
+      "edge": {
+        "kind": "DerivedFrom",
+        "weight": 1.0,
+        "evidence_ids": []
+      }
+    },
+    {
+      "from": "019d3a62-06e7-70a2-94a2-450011093692",
+      "to": "019d3a62-025b-7613-b692-6da9e98aa5e8",
+      "edge": {
+        "kind": "DerivedFrom",
+        "weight": 1.0,
+        "evidence_ids": []
+      }
+    },
+    {
+      "from": "019d3a62-06e7-70a2-94a2-451f4b8d922d",
+      "to": "019d3a62-06e7-70a2-94a2-450011093692",
+      "edge": {
+        "kind": "DerivedFrom",
+        "weight": 1.0,
+        "evidence_ids": []
+      }
+    },
+    {
+      "from": "019d3a62-06e7-70a2-94a2-452d4ff05644",
+      "to": "019d3a62-06e7-70a2-94a2-450011093692",
+      "edge": {
+        "kind": "DerivedFrom",
+        "weight": 1.0,
+        "evidence_ids": []
+      }
+    },
+    {
+      "from": "019d3a62-7c6a-7243-8729-8b967bf01e96",
+      "to": "019d3a4f-40ec-74a1-87b2-b087cb54ab9b",
+      "edge": {
+        "kind": "DerivedFrom",
+        "weight": 1.0,
+        "evidence_ids": []
+      }
+    },
+    {
+      "from": "019d3a62-7c6b-72b0-983f-bb3d21da7b5b",
+      "to": "019d3a62-7c6a-7243-8729-8b967bf01e96",
+      "edge": {
+        "kind": "DerivedFrom",
+        "weight": 1.0,
+        "evidence_ids": []
+      }
+    },
+    {
+      "from": "019d3a62-7c6b-72b0-983f-bb4d81a0af8e",
+      "to": "019d3a4f-40ec-74a1-87b2-b087cb54ab9b",
+      "edge": {
+        "kind": "DerivedFrom",
+        "weight": 1.0,
+        "evidence_ids": []
+      }
+    },
+    {
+      "from": "019d3a62-7c6b-72b0-983f-bb552b2a0644",
+      "to": "019d3a62-7c6b-72b0-983f-bb4d81a0af8e",
+      "edge": {
+        "kind": "DerivedFrom",
+        "weight": 1.0,
+        "evidence_ids": []
+      }
+    },
+    {
+      "from": "019d3a62-7c6b-72b0-983f-bb68de150412",
+      "to": "019d3a4f-40ec-74a1-87b2-b087cb54ab9b",
+      "edge": {
+        "kind": "DerivedFrom",
+        "weight": 1.0,
+        "evidence_ids": []
+      }
+    },
+    {
+      "from": "019d3a62-7c6b-72b0-983f-bb73ee73a2ac",
+      "to": "019d3a62-7c6b-72b0-983f-bb68de150412",
+      "edge": {
+        "kind": "DerivedFrom",
+        "weight": 1.0,
+        "evidence_ids": []
+      }
+    },
+    {
+      "from": "019d3a63-04f3-7811-b326-1fa26985e106",
+      "to": "019d3a4f-40ec-74a1-87b2-b095cec917b8",
+      "edge": {
+        "kind": "DerivedFrom",
+        "weight": 1.0,
+        "evidence_ids": []
+      }
+    },
+    {
+      "from": "019d3a63-04f3-7811-b326-1fb9c06ab7d3",
+      "to": "019d3a63-04f3-7811-b326-1fa26985e106",
+      "edge": {
+        "kind": "DerivedFrom",
+        "weight": 1.0,
+        "evidence_ids": []
+      }
+    },
+    {
+      "from": "019d3a63-04f3-7811-b326-1fcbc67b786a",
+      "to": "019d3a4f-40ec-74a1-87b2-b095cec917b8",
+      "edge": {
+        "kind": "DerivedFrom",
+        "weight": 1.0,
+        "evidence_ids": []
+      }
+    },
+    {
+      "from": "019d3a63-04f3-7811-b326-1fddbdd14f32",
+      "to": "019d3a63-04f3-7811-b326-1fcbc67b786a",
+      "edge": {
+        "kind": "DerivedFrom",
+        "weight": 1.0,
+        "evidence_ids": []
+      }
+    },
+    {
+      "from": "019d3a63-04f3-7811-b326-1fe862c292e0",
+      "to": "019d3a4f-40ec-74a1-87b2-b095cec917b8",
+      "edge": {
+        "kind": "DerivedFrom",
+        "weight": 1.0,
+        "evidence_ids": []
+      }
+    },
+    {
+      "from": "019d3a63-04f3-7811-b326-1ffc1c23bd32",
+      "to": "019d3a63-04f3-7811-b326-1fe862c292e0",
+      "edge": {
+        "kind": "DerivedFrom",
+        "weight": 1.0,
+        "evidence_ids": []
+      }
+    },
+    {
+      "from": "019d3a63-b2f2-7553-9c8c-628d002d23a2",
+      "to": "019d3a4f-40ec-74a1-87b2-b0adecd07ec2",
+      "edge": {
+        "kind": "DerivedFrom",
+        "weight": 1.0,
+        "evidence_ids": []
+      }
+    },
+    {
+      "from": "019d3a63-b2f2-7553-9c8c-629485c63578",
+      "to": "019d3a63-b2f2-7553-9c8c-628d002d23a2",
+      "edge": {
+        "kind": "DerivedFrom",
+        "weight": 1.0,
+        "evidence_ids": []
+      }
+    },
+    {
+      "from": "019d3a63-b2f2-7553-9c8c-62a2678cf8ae",
+      "to": "019d3a4f-40ec-74a1-87b2-b0adecd07ec2",
+      "edge": {
+        "kind": "DerivedFrom",
+        "weight": 1.0,
+        "evidence_ids": []
+      }
+    },
+    {
+      "from": "019d3a63-b2f2-7553-9c8c-62bc216c46bf",
+      "to": "019d3a63-b2f2-7553-9c8c-62a2678cf8ae",
+      "edge": {
+        "kind": "DerivedFrom",
+        "weight": 1.0,
+        "evidence_ids": []
+      }
+    },
+    {
+      "from": "019d3a63-b2f2-7553-9c8c-62c208ff4904",
+      "to": "019d3a4f-40ec-74a1-87b2-b0adecd07ec2",
+      "edge": {
+        "kind": "DerivedFrom",
+        "weight": 1.0,
+        "evidence_ids": []
+      }
+    },
+    {
+      "from": "019d3a63-b2f2-7553-9c8c-62def4ef35f2",
+      "to": "019d3a63-b2f2-7553-9c8c-62c208ff4904",
+      "edge": {
+        "kind": "DerivedFrom",
+        "weight": 1.0,
+        "evidence_ids": []
+      }
+    },
+    {
+      "from": "019d3a64-3341-7742-b7bc-6259153973b4",
+      "to": "019d3a4f-40ec-74a1-87b2-b0b1e89d36bd",
+      "edge": {
+        "kind": "DerivedFrom",
+        "weight": 1.0,
+        "evidence_ids": []
+      }
+    },
+    {
+      "from": "019d3a64-3341-7742-b7bc-626d0d36b413",
+      "to": "019d3a64-3341-7742-b7bc-6259153973b4",
+      "edge": {
+        "kind": "DerivedFrom",
+        "weight": 1.0,
+        "evidence_ids": []
+      }
+    },
+    {
+      "from": "019d3a64-3341-7742-b7bc-62716ee8146e",
+      "to": "019d3a4f-40ec-74a1-87b2-b0b1e89d36bd",
+      "edge": {
+        "kind": "DerivedFrom",
+        "weight": 1.0,
+        "evidence_ids": []
+      }
+    },
+    {
+      "from": "019d3a64-3341-7742-b7bc-628b5bde9393",
+      "to": "019d3a64-3341-7742-b7bc-62716ee8146e",
+      "edge": {
+        "kind": "DerivedFrom",
+        "weight": 1.0,
+        "evidence_ids": []
+      }
+    },
+    {
+      "from": "019d3a64-3341-7742-b7bc-629b1e8c7895",
+      "to": "019d3a4f-40ec-74a1-87b2-b0b1e89d36bd",
+      "edge": {
+        "kind": "DerivedFrom",
+        "weight": 1.0,
+        "evidence_ids": []
+      }
+    },
+    {
+      "from": "019d3a64-3341-7742-b7bc-62ac281dd27a",
+      "to": "019d3a64-3341-7742-b7bc-629b1e8c7895",
+      "edge": {
+        "kind": "DerivedFrom",
+        "weight": 1.0,
+        "evidence_ids": []
+      }
+    },
+    {
+      "from": "019d3a73-c7bb-7760-9d63-d5be2ec183d3",
+      "to": "019d3a62-025b-7613-b692-6dc4947ed494",
+      "edge": {
+        "kind": "DerivedFrom",
+        "weight": 1.0,
+        "evidence_ids": []
+      }
+    },
+    {
+      "from": "019d3a73-c7bb-7760-9d63-d5c3e260a011",
+      "to": "019d3a73-c7bb-7760-9d63-d5be2ec183d3",
+      "edge": {
+        "kind": "DerivedFrom",
+        "weight": 1.0,
+        "evidence_ids": []
+      }
+    },
+    {
+      "from": "019d3a73-c7bb-7760-9d63-d5dd27824f2b",
+      "to": "019d3a73-c7bb-7760-9d63-d5be2ec183d3",
+      "edge": {
+        "kind": "DerivedFrom",
+        "weight": 1.0,
+        "evidence_ids": []
+      }
+    },
+    {
+      "from": "019d3a73-c7bb-7760-9d63-d5ee50c93f7f",
+      "to": "019d3a73-c7bb-7760-9d63-d5be2ec183d3",
+      "edge": {
+        "kind": "DerivedFrom",
+        "weight": 1.0,
+        "evidence_ids": []
+      }
+    },
+    {
+      "from": "019d3a73-c966-7fe2-89ca-045d47e34def",
+      "to": "019d3a62-7c6b-72b0-983f-bb3d21da7b5b",
+      "edge": {
+        "kind": "DerivedFrom",
+        "weight": 1.0,
+        "evidence_ids": []
+      }
+    },
+    {
+      "from": "019d3a73-c966-7fe2-89ca-046df58214ef",
+      "to": "019d3a73-c966-7fe2-89ca-045d47e34def",
+      "edge": {
+        "kind": "DerivedFrom",
+        "weight": 1.0,
+        "evidence_ids": []
+      }
+    },
+    {
+      "from": "019d3a73-c966-7fe2-89ca-04735d3221ce",
+      "to": "019d3a73-c966-7fe2-89ca-045d47e34def",
+      "edge": {
+        "kind": "DerivedFrom",
+        "weight": 1.0,
+        "evidence_ids": []
+      }
+    },
+    {
+      "from": "019d3a73-c966-7fe2-89ca-0488f78c293c",
+      "to": "019d3a73-c966-7fe2-89ca-045d47e34def",
+      "edge": {
+        "kind": "DerivedFrom",
+        "weight": 1.0,
+        "evidence_ids": []
+      }
+    },
+    {
+      "from": "019d3a73-c966-7fe2-89ca-04959abd3c74",
+      "to": "019d3a73-c966-7fe2-89ca-045d47e34def",
+      "edge": {
+        "kind": "DerivedFrom",
+        "weight": 1.0,
+        "evidence_ids": []
+      }
+    },
+    {
+      "from": "019d3a73-c966-7fe2-89ca-04a7330d52f1",
+      "to": "019d3a73-c966-7fe2-89ca-045d47e34def",
+      "edge": {
+        "kind": "DerivedFrom",
+        "weight": 1.0,
+        "evidence_ids": []
+      }
+    },
+    {
+      "from": "019d3a73-c966-7fe2-89ca-04b09ecc0895",
+      "to": "019d3a73-c966-7fe2-89ca-045d47e34def",
+      "edge": {
+        "kind": "DerivedFrom",
+        "weight": 1.0,
+        "evidence_ids": []
+      }
+    },
+    {
+      "from": "019d3a73-cb0f-7d01-9ab1-7d49e041d15e",
+      "to": "019d3a62-7c6b-72b0-983f-bb552b2a0644",
+      "edge": {
+        "kind": "DerivedFrom",
+        "weight": 1.0,
+        "evidence_ids": []
+      }
+    },
+    {
+      "from": "019d3a73-cb0f-7d01-9ab1-7d51737d1f09",
+      "to": "019d3a73-cb0f-7d01-9ab1-7d49e041d15e",
+      "edge": {
+        "kind": "DerivedFrom",
+        "weight": 1.0,
+        "evidence_ids": []
+      }
+    },
+    {
+      "from": "019d3a73-cb0f-7d01-9ab1-7d6bdee0ccbf",
+      "to": "019d3a73-cb0f-7d01-9ab1-7d49e041d15e",
+      "edge": {
+        "kind": "DerivedFrom",
+        "weight": 1.0,
+        "evidence_ids": []
+      }
+    },
+    {
+      "from": "019d3a73-cb0f-7d01-9ab1-7d794a966117",
+      "to": "019d3a73-cb0f-7d01-9ab1-7d49e041d15e",
+      "edge": {
+        "kind": "DerivedFrom",
+        "weight": 1.0,
+        "evidence_ids": []
+      }
+    },
+    {
+      "from": "019d3a73-cb0f-7d01-9ab1-7d86c9355028",
+      "to": "019d3a73-cb0f-7d01-9ab1-7d49e041d15e",
+      "edge": {
+        "kind": "DerivedFrom",
+        "weight": 1.0,
+        "evidence_ids": []
+      }
+    },
+    {
+      "from": "019d3a73-cb0f-7d01-9ab1-7d9794b5a352",
+      "to": "019d3a73-cb0f-7d01-9ab1-7d49e041d15e",
+      "edge": {
+        "kind": "DerivedFrom",
+        "weight": 1.0,
+        "evidence_ids": []
+      }
+    },
+    {
+      "from": "019d3a73-cb0f-7d01-9ab1-7da203824172",
+      "to": "019d3a73-cb0f-7d01-9ab1-7d49e041d15e",
+      "edge": {
+        "kind": "DerivedFrom",
+        "weight": 1.0,
+        "evidence_ids": []
+      }
+    },
+    {
+      "from": "019d3a85-b49c-7d92-880b-63aeb137414b",
+      "to": "019d3a62-7c6b-72b0-983f-bb73ee73a2ac",
+      "edge": {
+        "kind": "DerivedFrom",
+        "weight": 1.0,
+        "evidence_ids": []
+      }
+    },
+    {
+      "from": "019d3a85-b49c-7d92-880b-63b4d7c9a97f",
+      "to": "019d3a85-b49c-7d92-880b-63aeb137414b",
+      "edge": {
+        "kind": "DerivedFrom",
+        "weight": 1.0,
+        "evidence_ids": []
+      }
+    },
+    {
+      "from": "019d3a85-b49c-7d92-880b-63c1c2b2f751",
+      "to": "019d3a85-b49c-7d92-880b-63aeb137414b",
+      "edge": {
+        "kind": "DerivedFrom",
+        "weight": 1.0,
+        "evidence_ids": []
+      }
+    },
+    {
+      "from": "019d3a85-b49c-7d92-880b-63d0bcb0a673",
+      "to": "019d3a85-b49c-7d92-880b-63aeb137414b",
+      "edge": {
+        "kind": "DerivedFrom",
+        "weight": 1.0,
+        "evidence_ids": []
+      }
+    },
+    {
+      "from": "019d3a85-b49c-7d92-880b-63edd82af8db",
+      "to": "019d3a85-b49c-7d92-880b-63aeb137414b",
+      "edge": {
+        "kind": "DerivedFrom",
+        "weight": 1.0,
+        "evidence_ids": []
+      }
+    },
+    {
+      "from": "019d3a85-b49c-7d92-880b-63ffc3a7bfb7",
+      "to": "019d3a85-b49c-7d92-880b-63aeb137414b",
+      "edge": {
+        "kind": "DerivedFrom",
+        "weight": 1.0,
+        "evidence_ids": []
+      }
+    },
+    {
+      "from": "019d3a85-b49c-7d92-880b-6409fa9577fd",
+      "to": "019d3a85-b49c-7d92-880b-63aeb137414b",
+      "edge": {
+        "kind": "DerivedFrom",
+        "weight": 1.0,
+        "evidence_ids": []
+      }
+    },
+    {
+      "from": "019d3a85-b49c-7d92-880b-64175ac8e043",
+      "to": "019d3a85-b49c-7d92-880b-63aeb137414b",
+      "edge": {
+        "kind": "DerivedFrom",
+        "weight": 1.0,
+        "evidence_ids": []
+      }
+    },
+    {
+      "from": "019d3a85-b49c-7d92-880b-642c47fd1813",
+      "to": "019d3a85-b49c-7d92-880b-63aeb137414b",
+      "edge": {
+        "kind": "DerivedFrom",
+        "weight": 1.0,
+        "evidence_ids": []
+      }
+    },
+    {
+      "from": "019d3a85-b681-7343-859c-a9f4aa647e1b",
+      "to": "019d3a63-04f3-7811-b326-1fb9c06ab7d3",
+      "edge": {
+        "kind": "DerivedFrom",
+        "weight": 1.0,
+        "evidence_ids": []
+      }
+    },
+    {
+      "from": "019d3a85-b681-7343-859c-aa0a7703290d",
+      "to": "019d3a85-b681-7343-859c-a9f4aa647e1b",
+      "edge": {
+        "kind": "DerivedFrom",
+        "weight": 1.0,
+        "evidence_ids": []
+      }
+    },
+    {
+      "from": "019d3a85-b681-7343-859c-aa1c22cdb731",
+      "to": "019d3a85-b681-7343-859c-a9f4aa647e1b",
+      "edge": {
+        "kind": "DerivedFrom",
+        "weight": 1.0,
+        "evidence_ids": []
+      }
+    },
+    {
+      "from": "019d3a85-b681-7343-859c-aa2125f966cf",
+      "to": "019d3a85-b681-7343-859c-a9f4aa647e1b",
+      "edge": {
+        "kind": "DerivedFrom",
+        "weight": 1.0,
+        "evidence_ids": []
+      }
+    },
+    {
+      "from": "019d3a85-b681-7343-859c-aa348820c71c",
+      "to": "019d3a85-b681-7343-859c-a9f4aa647e1b",
+      "edge": {
+        "kind": "DerivedFrom",
+        "weight": 1.0,
+        "evidence_ids": []
+      }
+    },
+    {
+      "from": "019d3a85-b681-7343-859c-aa477838fd8b",
+      "to": "019d3a85-b681-7343-859c-a9f4aa647e1b",
+      "edge": {
+        "kind": "DerivedFrom",
+        "weight": 1.0,
+        "evidence_ids": []
+      }
+    },
+    {
+      "from": "019d3a85-b7ef-71d2-b558-91e8cfd0a896",
+      "to": "019d3a63-04f3-7811-b326-1fddbdd14f32",
+      "edge": {
+        "kind": "DerivedFrom",
+        "weight": 1.0,
+        "evidence_ids": []
+      }
+    },
+    {
+      "from": "019d3a85-b7ef-71d2-b558-91f3893d3a68",
+      "to": "019d3a85-b7ef-71d2-b558-91e8cfd0a896",
+      "edge": {
+        "kind": "DerivedFrom",
+        "weight": 1.0,
+        "evidence_ids": []
+      }
+    },
+    {
+      "from": "019d3a85-b7ef-71d2-b558-92023d04fb11",
+      "to": "019d3a85-b7ef-71d2-b558-91e8cfd0a896",
+      "edge": {
+        "kind": "DerivedFrom",
+        "weight": 1.0,
+        "evidence_ids": []
+      }
+    },
+    {
+      "from": "019d3a85-b7ef-71d2-b558-9219bf628c3b",
+      "to": "019d3a85-b7ef-71d2-b558-91e8cfd0a896",
+      "edge": {
+        "kind": "DerivedFrom",
+        "weight": 1.0,
+        "evidence_ids": []
+      }
+    },
+    {
+      "from": "019d3a85-b7ef-71d2-b558-9222da72ea8a",
+      "to": "019d3a85-b7ef-71d2-b558-91e8cfd0a896",
+      "edge": {
+        "kind": "DerivedFrom",
+        "weight": 1.0,
+        "evidence_ids": []
+      }
+    },
+    {
+      "from": "019d3a85-b966-75a0-9508-2e08b65f0bec",
+      "to": "019d3a63-04f3-7811-b326-1ffc1c23bd32",
+      "edge": {
+        "kind": "DerivedFrom",
+        "weight": 1.0,
+        "evidence_ids": []
+      }
+    },
+    {
+      "from": "019d3a85-b966-75a0-9508-2e1be7fd1c8b",
+      "to": "019d3a85-b966-75a0-9508-2e08b65f0bec",
+      "edge": {
+        "kind": "DerivedFrom",
+        "weight": 1.0,
+        "evidence_ids": []
+      }
+    },
+    {
+      "from": "019d3a85-b966-75a0-9508-2e2cb3086e73",
+      "to": "019d3a85-b966-75a0-9508-2e08b65f0bec",
+      "edge": {
+        "kind": "DerivedFrom",
+        "weight": 1.0,
+        "evidence_ids": []
+      }
+    },
+    {
+      "from": "019d3a85-b966-75a0-9508-2e34a54bae6a",
+      "to": "019d3a85-b966-75a0-9508-2e08b65f0bec",
+      "edge": {
+        "kind": "DerivedFrom",
+        "weight": 1.0,
+        "evidence_ids": []
+      }
+    },
+    {
+      "from": "019d3a85-b966-75a0-9508-2e40982f3114",
+      "to": "019d3a85-b966-75a0-9508-2e08b65f0bec",
+      "edge": {
+        "kind": "DerivedFrom",
+        "weight": 1.0,
+        "evidence_ids": []
+      }
+    },
+    {
+      "from": "019d3a85-bb30-76b0-8820-8a6a3791c1f5",
+      "to": "019d3a63-b2f2-7553-9c8c-629485c63578",
+      "edge": {
+        "kind": "DerivedFrom",
+        "weight": 1.0,
+        "evidence_ids": []
+      }
+    },
+    {
+      "from": "019d3a85-bb30-76b0-8820-8a7dcfe56fdc",
+      "to": "019d3a85-bb30-76b0-8820-8a6a3791c1f5",
+      "edge": {
+        "kind": "DerivedFrom",
+        "weight": 1.0,
+        "evidence_ids": []
+      }
+    },
+    {
+      "from": "019d3a85-bb30-76b0-8820-8a8f631a7a37",
+      "to": "019d3a85-bb30-76b0-8820-8a6a3791c1f5",
+      "edge": {
+        "kind": "DerivedFrom",
+        "weight": 1.0,
+        "evidence_ids": []
+      }
+    },
+    {
+      "from": "019d3a85-bb30-76b0-8820-8a99d53a0d58",
+      "to": "019d3a85-bb30-76b0-8820-8a6a3791c1f5",
+      "edge": {
+        "kind": "DerivedFrom",
+        "weight": 1.0,
+        "evidence_ids": []
+      }
+    },
+    {
+      "from": "019d3a85-bb30-76b0-8820-8aa677e9af70",
+      "to": "019d3a85-bb30-76b0-8820-8a6a3791c1f5",
+      "edge": {
+        "kind": "DerivedFrom",
+        "weight": 1.0,
+        "evidence_ids": []
+      }
+    },
+    {
+      "from": "019d3a85-bb30-76b0-8820-8ab160de1f73",
+      "to": "019d3a85-bb30-76b0-8820-8a6a3791c1f5",
+      "edge": {
+        "kind": "DerivedFrom",
+        "weight": 1.0,
+        "evidence_ids": []
+      }
+    },
+    {
+      "from": "019d3a85-bb30-76b0-8820-8ac243da0245",
+      "to": "019d3a85-bb30-76b0-8820-8a6a3791c1f5",
+      "edge": {
+        "kind": "DerivedFrom",
+        "weight": 1.0,
+        "evidence_ids": []
+      }
+    },
+    {
+      "from": "019d3a85-bb30-76b0-8820-8ada28c834a6",
+      "to": "019d3a85-bb30-76b0-8820-8a6a3791c1f5",
+      "edge": {
+        "kind": "DerivedFrom",
+        "weight": 1.0,
+        "evidence_ids": []
+      }
+    },
+    {
+      "from": "019d3a85-bb30-76b0-8820-8aeb6fefcab7",
+      "to": "019d3a85-bb30-76b0-8820-8a6a3791c1f5",
+      "edge": {
+        "kind": "DerivedFrom",
+        "weight": 1.0,
+        "evidence_ids": []
+      }
+    },
+    {
+      "from": "019d3a85-bd2c-76e3-80d0-f449aac944b1",
+      "to": "019d3a63-b2f2-7553-9c8c-62bc216c46bf",
+      "edge": {
+        "kind": "DerivedFrom",
+        "weight": 1.0,
+        "evidence_ids": []
+      }
+    },
+    {
+      "from": "019d3a85-bd2c-76e3-80d0-f459d52bfd8e",
+      "to": "019d3a85-bd2c-76e3-80d0-f449aac944b1",
+      "edge": {
+        "kind": "DerivedFrom",
+        "weight": 1.0,
+        "evidence_ids": []
+      }
+    },
+    {
+      "from": "019d3a85-bd2c-76e3-80d0-f46df02f12b5",
+      "to": "019d3a85-bd2c-76e3-80d0-f449aac944b1",
+      "edge": {
+        "kind": "DerivedFrom",
+        "weight": 1.0,
+        "evidence_ids": []
+      }
+    },
+    {
+      "from": "019d3a85-bd2c-76e3-80d0-f4793ff259d6",
+      "to": "019d3a85-bd2c-76e3-80d0-f449aac944b1",
+      "edge": {
+        "kind": "DerivedFrom",
+        "weight": 1.0,
+        "evidence_ids": []
+      }
+    },
+    {
+      "from": "019d3a85-bd2c-76e3-80d0-f48454a3d047",
+      "to": "019d3a85-bd2c-76e3-80d0-f449aac944b1",
+      "edge": {
+        "kind": "DerivedFrom",
+        "weight": 1.0,
+        "evidence_ids": []
+      }
+    },
+    {
+      "from": "019d3a85-be95-7381-94b3-8a7d4e1c7a37",
+      "to": "019d3a63-b2f2-7553-9c8c-62def4ef35f2",
+      "edge": {
+        "kind": "DerivedFrom",
+        "weight": 1.0,
+        "evidence_ids": []
+      }
+    },
+    {
+      "from": "019d3a85-be95-7381-94b3-8a84f42e4f3c",
+      "to": "019d3a85-be95-7381-94b3-8a7d4e1c7a37",
+      "edge": {
+        "kind": "DerivedFrom",
+        "weight": 1.0,
+        "evidence_ids": []
+      }
+    },
+    {
+      "from": "019d3a85-be95-7381-94b3-8a9643c87e21",
+      "to": "019d3a85-be95-7381-94b3-8a7d4e1c7a37",
+      "edge": {
+        "kind": "DerivedFrom",
+        "weight": 1.0,
+        "evidence_ids": []
+      }
+    },
+    {
+      "from": "019d3a85-be95-7381-94b3-8aa623923e4a",
+      "to": "019d3a85-be95-7381-94b3-8a7d4e1c7a37",
+      "edge": {
+        "kind": "DerivedFrom",
+        "weight": 1.0,
+        "evidence_ids": []
+      }
+    },
+    {
+      "from": "019d3a85-be95-7381-94b3-8ab09e642661",
+      "to": "019d3a85-be95-7381-94b3-8a7d4e1c7a37",
+      "edge": {
+        "kind": "DerivedFrom",
+        "weight": 1.0,
+        "evidence_ids": []
+      }
+    },
+    {
+      "from": "019d3a85-be95-7381-94b3-8acd0ba2ea20",
+      "to": "019d3a85-be95-7381-94b3-8a7d4e1c7a37",
+      "edge": {
+        "kind": "DerivedFrom",
+        "weight": 1.0,
+        "evidence_ids": []
+      }
+    },
+    {
+      "from": "019d3a85-be95-7381-94b3-8ad249f25aae",
+      "to": "019d3a85-be95-7381-94b3-8a7d4e1c7a37",
+      "edge": {
+        "kind": "DerivedFrom",
+        "weight": 1.0,
+        "evidence_ids": []
+      }
+    },
+    {
+      "from": "019d3a85-e88b-7992-95dd-d6a18ae70c39",
+      "to": "019d3a64-3341-7742-b7bc-626d0d36b413",
+      "edge": {
+        "kind": "DerivedFrom",
+        "weight": 1.0,
+        "evidence_ids": []
+      }
+    },
+    {
+      "from": "019d3a85-e88b-7992-95dd-d6b28dcca79b",
+      "to": "019d3a85-e88b-7992-95dd-d6a18ae70c39",
+      "edge": {
+        "kind": "DerivedFrom",
+        "weight": 1.0,
+        "evidence_ids": []
+      }
+    },
+    {
+      "from": "019d3a85-e88b-7992-95dd-d6c03317c885",
+      "to": "019d3a85-e88b-7992-95dd-d6a18ae70c39",
+      "edge": {
+        "kind": "DerivedFrom",
+        "weight": 1.0,
+        "evidence_ids": []
+      }
+    },
+    {
+      "from": "019d3a85-e88b-7992-95dd-d6d66c518be8",
+      "to": "019d3a85-e88b-7992-95dd-d6a18ae70c39",
+      "edge": {
+        "kind": "DerivedFrom",
+        "weight": 1.0,
+        "evidence_ids": []
+      }
+    },
+    {
+      "from": "019d3a85-e88b-7992-95dd-d6ef57ca119d",
+      "to": "019d3a85-e88b-7992-95dd-d6a18ae70c39",
+      "edge": {
+        "kind": "DerivedFrom",
+        "weight": 1.0,
+        "evidence_ids": []
+      }
+    },
+    {
+      "from": "019d3a85-e88b-7992-95dd-d6f1ed63a7b0",
+      "to": "019d3a85-e88b-7992-95dd-d6a18ae70c39",
+      "edge": {
+        "kind": "DerivedFrom",
+        "weight": 1.0,
+        "evidence_ids": []
+      }
+    },
+    {
+      "from": "019d3a85-e88b-7992-95dd-d7019bade436",
+      "to": "019d3a85-e88b-7992-95dd-d6a18ae70c39",
+      "edge": {
+        "kind": "DerivedFrom",
+        "weight": 1.0,
+        "evidence_ids": []
+      }
+    },
+    {
+      "from": "019d3a85-fb63-79c0-8776-16c12c7fd4f3",
+      "to": "019d3a64-3341-7742-b7bc-628b5bde9393",
+      "edge": {
+        "kind": "DerivedFrom",
+        "weight": 1.0,
+        "evidence_ids": []
+      }
+    },
+    {
+      "from": "019d3a85-fb63-79c0-8776-16d4c0b710af",
+      "to": "019d3a85-fb63-79c0-8776-16c12c7fd4f3",
+      "edge": {
+        "kind": "DerivedFrom",
+        "weight": 1.0,
+        "evidence_ids": []
+      }
+    },
+    {
+      "from": "019d3a85-fb63-79c0-8776-16efe9423ae5",
+      "to": "019d3a85-fb63-79c0-8776-16c12c7fd4f3",
+      "edge": {
+        "kind": "DerivedFrom",
+        "weight": 1.0,
+        "evidence_ids": []
+      }
+    },
+    {
+      "from": "019d3a85-fb63-79c0-8776-16f98572723f",
+      "to": "019d3a85-fb63-79c0-8776-16c12c7fd4f3",
+      "edge": {
+        "kind": "DerivedFrom",
+        "weight": 1.0,
+        "evidence_ids": []
+      }
+    },
+    {
+      "from": "019d3a85-fb63-79c0-8776-170e6def57dc",
+      "to": "019d3a85-fb63-79c0-8776-16c12c7fd4f3",
+      "edge": {
+        "kind": "DerivedFrom",
+        "weight": 1.0,
+        "evidence_ids": []
+      }
+    },
+    {
+      "from": "019d3a85-fcd3-7872-a86e-6f1eeb8ea464",
+      "to": "019d3a64-3341-7742-b7bc-62ac281dd27a",
+      "edge": {
+        "kind": "DerivedFrom",
+        "weight": 1.0,
+        "evidence_ids": []
+      }
+    },
+    {
+      "from": "019d3a85-fcd3-7872-a86e-6f2b154c58d7",
+      "to": "019d3a85-fcd3-7872-a86e-6f1eeb8ea464",
+      "edge": {
+        "kind": "DerivedFrom",
+        "weight": 1.0,
+        "evidence_ids": []
+      }
+    }
+  ]
+}

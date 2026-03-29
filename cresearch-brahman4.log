@@ -1,0 +1,25 @@
+[2m2026-03-29T13:04:16.479860Z[0m [32m INFO[0m [2mcresearch[0m[2m:[0m loading agenda [3magenda[0m[2m=[0magenda.brahman-20260329-124215.yaml
+[2m2026-03-29T13:04:16.480390Z[0m [32m INFO[0m [2mcresearch[0m[2m:[0m provider overridden via --provider flag [3mprovider[0m[2m=[0mclaude-cli
+[2m2026-03-29T13:04:16.480396Z[0m [32m INFO[0m [2mcresearch[0m[2m:[0m using claude -p (no API key needed)
+[2m2026-03-29T13:04:16.481852Z[0m [32m INFO[0m [2mcresearch[0m[2m:[0m resumed from snapshot [3mnodes[0m[2m=[0m364 [3mpath[0m[2m=[0mgraph_state.json
+[2m2026-03-29T13:04:16.482059Z[0m [32m INFO[0m [2mcresearch[0m[2m:[0m connected to chittad
+[2m2026-03-29T13:04:16.492164Z[0m [32m INFO[0m [2mcresearch[0m[2m:[0m artifact store ready [3mpath[0m[2m=[0martifacts
+[2m2026-03-29T13:04:16.492715Z[0m [32m INFO[0m [2mcr_agents::scout[0m[2m:[0m scout: discovering available compute resources
+[2m2026-03-29T13:04:20.741835Z[0m [32m INFO[0m [2mcr_agents::scout[0m[2m:[0m scout: resource topology stored in chitta
+[2m2026-03-29T13:04:20.741859Z[0m [32m INFO[0m [2mcr_agents::scout[0m[2m:[0m scout: resource discovery complete [3mlocal_cpus[0m[2m=[0m96 [3mlocal_gpus[0m[2m=[0m0 [3mhas_slurm[0m[2m=[0mtrue
+[2m2026-03-29T13:09:17.005109Z[0m [32m INFO[0m [2mcr_agents::brahman[0m[2m:[0m brahman: backlog gate — waiting for Adhvaryu to clear hypothesis queue [3muntested[0m[2m=[0m17 [3mlimit[0m[2m=[0m10
+[2m2026-03-29T13:31:02.525251Z[0m [32m INFO[0m [2mcresearch[0m[2m:[0m all agents idle for 2000 cycles, shutting down
+[2m2026-03-29T13:31:02.525283Z[0m [32m INFO[0m [2mcresearch[0m[2m:[0m all agents idle for 2000 cycles, shutting down
+[2m2026-03-29T13:31:02.525286Z[0m [32m INFO[0m [2mcresearch[0m[2m:[0m all agents idle for 2000 cycles, shutting down
+[2m2026-03-29T13:31:02.525289Z[0m [32m INFO[0m [2mcresearch[0m[2m:[0m all agents idle for 2000 cycles, shutting down
+[2m2026-03-29T13:31:02.525292Z[0m [32m INFO[0m [2mcresearch[0m[2m:[0m all agents idle for 2000 cycles, shutting down
+[2m2026-03-29T13:31:02.525326Z[0m [32m INFO[0m [2mcresearch[0m[2m:[0m all agents idle for 2000 cycles, shutting down
+[2m2026-03-29T13:31:02.525419Z[0m [32m INFO[0m [2mcresearch[0m[2m:[0m all agents idle for 2000 cycles, shutting down
+[2m2026-03-29T13:31:03.326337Z[0m [32m INFO[0m [2mcresearch[0m[2m:[0m shutting down [3magent[0m[2m=[0madhvaryu
+[2m2026-03-29T13:31:03.326344Z[0m [32m INFO[0m [2mcresearch[0m[2m:[0m shutting down [3magent[0m[2m=[0mudgatr
+[2m2026-03-29T13:31:03.326367Z[0m [32m INFO[0m [2mcresearch[0m[2m:[0m shutting down [3magent[0m[2m=[0mhotr
+[2m2026-03-29T13:31:03.326377Z[0m [32m INFO[0m [2mcresearch[0m[2m:[0m shutting down [3magent[0m[2m=[0mbrahman
+[2m2026-03-29T13:31:03.326383Z[0m [32m INFO[0m [2mcresearch[0m[2m:[0m shutting down [3magent[0m[2m=[0mscout
+[2m2026-03-29T13:31:03.326387Z[0m [32m INFO[0m [2mcresearch[0m[2m:[0m shutting down [3magent[0m[2m=[0mresearcher
+[2m2026-03-29T13:31:03.326397Z[0m [32m INFO[0m [2mcresearch[0m[2m:[0m shutting down [3magent[0m[2m=[0mkriya
+[2m2026-03-29T13:31:03.335541Z[0m [32m INFO[0m [2mcresearch[0m[2m:[0m graph snapshot saved [3mpath[0m[2m=[0mgraph_state.json [3mnodes[0m[2m=[0m364 [3medges[0m[2m=[0m350 [3mactions[0m[2m=[0m14030

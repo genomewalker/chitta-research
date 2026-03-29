@@ -1,0 +1,18 @@
+[2m2026-03-29T15:51:24.847947Z[0m [32m INFO[0m [2mcresearch[0m[2m:[0m loading agenda [3magenda[0m[2m=[0magenda.self.yaml
+[2m2026-03-29T15:51:24.849273Z[0m [32m INFO[0m [2mcresearch[0m[2m:[0m provider overridden via --provider flag [3mprovider[0m[2m=[0mclaude-cli
+[2m2026-03-29T15:51:24.849324Z[0m [32m INFO[0m [2mcresearch[0m[2m:[0m using claude -p (no API key needed)
+[2m2026-03-29T15:51:24.863907Z[0m [32m INFO[0m [2mcresearch[0m[2m:[0m resumed from snapshot [3mnodes[0m[2m=[0m364 [3mpath[0m[2m=[0mgraph_state.json
+[2m2026-03-29T15:51:24.864221Z[0m [32m INFO[0m [2mcresearch[0m[2m:[0m connected to chittad
+[2m2026-03-29T15:51:24.885771Z[0m [32m INFO[0m [2mcresearch[0m[2m:[0m artifact store ready [3mpath[0m[2m=[0martifacts
+[2m2026-03-29T15:51:24.887141Z[0m [32m INFO[0m [2mcr_agents::scout[0m[2m:[0m scout: discovering available compute resources
+[2m2026-03-29T15:51:31.466999Z[0m [32m INFO[0m [2mcr_agents::scout[0m[2m:[0m scout: resource topology stored in chitta
+[2m2026-03-29T15:51:31.467039Z[0m [32m INFO[0m [2mcr_agents::scout[0m[2m:[0m scout: resource discovery complete [3mlocal_cpus[0m[2m=[0m96 [3mlocal_gpus[0m[2m=[0m0 [3mhas_slurm[0m[2m=[0mtrue
+[2m2026-03-29T15:54:10.935233Z[0m [32m INFO[0m [2mcresearch[0m[2m:[0m all agents idle for 200 cycles, shutting down
+[2m2026-03-29T15:54:11.031742Z[0m [32m INFO[0m [2mcresearch[0m[2m:[0m shutting down [3magent[0m[2m=[0mresearcher
+[2m2026-03-29T15:54:11.524634Z[0m [32m INFO[0m [2mcresearch[0m[2m:[0m shutting down [3magent[0m[2m=[0mbrahman
+[2m2026-03-29T15:54:11.599384Z[0m [32m INFO[0m [2mcresearch[0m[2m:[0m shutting down [3magent[0m[2m=[0mhotr
+[2m2026-03-29T15:54:11.599425Z[0m [32m INFO[0m [2mcresearch[0m[2m:[0m shutting down [3magent[0m[2m=[0mudgatr
+[2m2026-03-29T15:54:11.610806Z[0m [32m INFO[0m [2mcresearch[0m[2m:[0m shutting down [3magent[0m[2m=[0mkriya
+[2m2026-03-29T15:54:11.610804Z[0m [32m INFO[0m [2mcresearch[0m[2m:[0m shutting down [3magent[0m[2m=[0madhvaryu
+[2m2026-03-29T15:54:11.736573Z[0m [32m INFO[0m [2mcresearch[0m[2m:[0m shutting down [3magent[0m[2m=[0mscout
+[2m2026-03-29T15:54:11.758257Z[0m [32m INFO[0m [2mcresearch[0m[2m:[0m graph snapshot saved [3mpath[0m[2m=[0mgraph_state.json [3mnodes[0m[2m=[0m364 [3medges[0m[2m=[0m350 [3mactions[0m[2m=[0m1447
