@@ -113,7 +113,14 @@ impl Agent for Hotr {
         }).await?;
 
         let content = resp.content.trim();
-        let json_str = if let Some(start) = content.find('[') {
+        // Find the first JSON array — look for `[{` to skip prose like "[Note: ...]"
+        let json_str = if let Some(start) = content.find("[{") {
+            if let Some(end) = content.rfind(']') {
+                &content[start..=end]
+            } else {
+                content
+            }
+        } else if let Some(start) = content.find('[') {
             if let Some(end) = content.rfind(']') {
                 &content[start..=end]
             } else {
@@ -123,7 +130,8 @@ impl Agent for Hotr {
             content
         };
 
-        let hypotheses: Vec<HypothesisResponse> = serde_json::from_str(json_str)?;
+        let hypotheses: Vec<HypothesisResponse> = serde_json::from_str(json_str)
+            .map_err(|e| anyhow::anyhow!("Hotr JSON parse failed: {e}\nraw response (first 300 chars): {}", &content[..content.len().min(300)]))?;
 
         let mut graph = ctx.graph.write().await;
         let mut last_action = AgentAction::Noop;
