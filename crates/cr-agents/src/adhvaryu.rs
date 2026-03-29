@@ -1,6 +1,5 @@
 use async_trait::async_trait;
 use chrono::Utc;
-use cr_llm::CompletionRequest;
 use cr_types::*;
 
 use crate::{Agent, AgentAction, AgentContext};
