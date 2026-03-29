@@ -2,6 +2,17 @@
 members = ["crates/*"]
 resolver = "2"
 
+[workspace.package]
+version = "1.0.0"
+edition = "2021"
+authors = ["genomewalker"]
+repository = "https://github.com/genomewalker/chitta-research"
+
+[workspace.metadata.compatibility]
+# Runtime dependency: chittad socket protocol
+# chitta-research 1.x requires cc-soul >= 5.0.1
+min_cc_soul_version = "5.0.1"
+
 [workspace.dependencies]
 tokio = { version = ">=1.38, <1.43", features = ["full"] }
 serde = { version = "1", features = ["derive"] }
