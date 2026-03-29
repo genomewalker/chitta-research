@@ -37,6 +37,11 @@ struct Cli {
     /// Useful for A/B testing: run once with room, once without, compare claim quality.
     #[arg(long)]
     provider: Option<String>,
+    /// Path to a resources.yaml file defining compute topology manually.
+    /// When provided, the Scout agent is disabled (no auto-discovery).
+    /// See resources.example.yaml for the format.
+    #[arg(long)]
+    resources: Option<PathBuf>,
 }
 
 fn build_llm_client(config: &cr_agenda::LlmConfig) -> Arc<dyn LlmClient> {
@@ -241,8 +246,25 @@ async fn main() -> anyhow::Result<()> {
     // Researcher runs in parallel — fetches web findings and stores in chitta
     // before Hotr generates hypotheses for each question.
     let researcher_handle = tokio::spawn(agent_loop(Box::new(Researcher::new()), ctx.clone(), shutdown.clone()));
-    // Scout runs once at startup — discovers local/Slurm/SSH compute and stores topology in chitta.
-    let scout_handle      = tokio::spawn(agent_loop(Box::new(Scout::new()),      ctx.clone(), shutdown.clone()));
+    // Scout: auto-discover compute OR load from --resources file.
+    // If --resources is provided, skip auto-discovery and store the file contents in chitta.
+    let scout_handle = if let Some(ref res_path) = cli.resources {
+        info!(path = %res_path.display(), "loading compute topology from --resources");
+        let res_content = std::fs::read_to_string(res_path)
+            .unwrap_or_else(|e| format!("error reading resources file: {e}"));
+        let chitta_arc = ctx.chitta.clone();
+        tokio::spawn(async move {
+            let mut chitta = chitta_arc.lock().await;
+            if chitta.connect().await.is_ok() {
+                let content = format!("[resource-topology:manual]\n{res_content}");
+                let _ = chitta.remember(&content, "wisdom",
+                    &["resource-topology", "compute", "manual"], 0.98).await;
+                tracing::info!("loaded manual resource topology into chitta");
+            }
+        })
+    } else {
+        tokio::spawn(agent_loop(Box::new(Scout::new()), ctx.clone(), shutdown.clone()))
+    };
 
     drop(event_tx);
     drop(ctx); // main must not hold a Sender — agents own the only clones

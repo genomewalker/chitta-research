@@ -1,0 +1,50 @@
+# chitta-research resource topology — manual override for --resources flag.
+# When provided, Scout agent is disabled and this file defines compute routing.
+#
+# Usage:
+#   cresearch --agenda agenda.yaml --resources resources.yaml
+
+nodes:
+
+  - name: dandycomp08fl
+    type: local          # local | slurm | ssh
+    cpu_cores: 64
+    ram_gb: 256
+    gpus: []             # no GPU on this node
+
+  - name: a100_cluster
+    type: slurm
+    cpu_cores: 128
+    ram_gb: 512
+    gpus:
+      - model: A100
+        vram_gb: 80
+        count: 4
+    slurm:
+      partition: gpu-a100
+      sbatch_flags: ["--gres=gpu:1", "--time=4:00:00"]
+
+  - name: workstation01
+    type: ssh
+    hostname: workstation01.domain.local
+    cpu_cores: 32
+    ram_gb: 128
+    gpus:
+      - model: RTX 3090
+        vram_gb: 24
+        count: 2
+    ssh:
+      user: kbd606
+      key: ~/.ssh/id_ed25519
+
+# Routing rules — Adhvaryu uses these to pick execution target for run: steps.
+# Rules are checked in order; first match wins.
+routing:
+  - match: "gpu"                 # step text contains "gpu"
+    prefer: a100_cluster
+  - match: "sbatch"              # step explicitly uses sbatch
+    prefer: a100_cluster
+  - match: "deep learning"
+    prefer: a100_cluster
+  - match: ".*"                  # default: run locally
+    prefer: dandycomp08fl
