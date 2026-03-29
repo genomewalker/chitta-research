@@ -6,18 +6,34 @@ programs:
       - "How should the belief graph handle duplicate hypotheses across sessions?"
       - "What is the optimal rounds-per-query tradeoff for DiscussionRoom vs single-model LLM calls?"
       - "How should chitta-field integration surface past experiment failures to Hotr?"
+      - "Which crates have the highest complexity and most potential for bugs?"
     methods:
-      - "Read and analyze source files in crates/"
-      - "Generate hypotheses grounded in the code structure"
-      - "Evaluate hypotheses via code analysis and reasoning experiments"
-      - "Propose concrete patches as Observations"
+      - "search symbols: DiscussionRoom complete step"
+      - "search symbols: execute_subprocess_steps execute_via_llm"
+      - "search symbols: BeliefGraph add_node add_edge"
+      - "run: cargo clippy --manifest-path /maps/projects/fernandezguerra/apps/repos/chitta-research/Cargo.toml --package cr-agents --package cr-llm --package cr-graph 2>&1 | head -40"
+      - "run: cargo test --manifest-path /maps/projects/fernandezguerra/apps/repos/chitta-research/Cargo.toml --package cr-llm 2>&1 | tail -15"
+      - "run: wc -l /maps/projects/fernandezguerra/apps/repos/chitta-research/crates/*/src/*.rs | sort -rn | head -15"
+      - "run: cargo clippy --manifest-path /maps/projects/fernandezguerra/apps/repos/chitta-research/Cargo.toml 2>&1 | grep 'warning\\|error' | grep -v '^warning: unused' | head -20"
     priority: 1.0
     max_budget_usd: 10.0
 
+  - title: "DiscussionRoom quality analysis"
+    domain: software_engineering
+    questions:
+      - "Does the current Synthesizer prompt reliably produce structured JSON output?"
+      - "Is 2 rounds of debate sufficient or should it be configurable per agent?"
+    methods:
+      - "search symbols: mock_room standard_room Synthesizer"
+      - "run: grep -rn 'rounds' /maps/projects/fernandezguerra/apps/repos/chitta-research/crates/cr-llm/src/room.rs"
+      - "run: grep -c 'pub fn' /maps/projects/fernandezguerra/apps/repos/chitta-research/crates/cr-llm/src/room.rs"
+    priority: 0.8
+    max_budget_usd: 5.0
+
 budget:
-  total_usd: 10.0
+  total_usd: 15.0
   gpu_slots: 0
-  cpu_workers: 2
+  cpu_workers: 4
 
 llm:
   provider: room
