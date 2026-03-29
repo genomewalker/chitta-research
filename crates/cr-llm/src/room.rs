@@ -121,7 +121,10 @@ pub fn mock_room(topic: impl Into<String>) -> DiscussionRoomBuilder {
         .add("Empiricist", "Focus on testability.",                Arc::new(MockLlmClient::new()))
         .rounds(2)
         .synthesizer(
-            "Synthesize the debate into final structured JSON output.",
+            "You are a JSON synthesizer. Read the debate above, resolve any contradictions \
+             between participants, and produce the final answer the original prompt requested. \
+             Incorporate valid criticisms. \
+             CRITICAL: Respond with ONLY raw JSON — no prose, no markdown fences.",
             Arc::new(MockLlmClient::new()),
         )
 }
@@ -156,14 +159,31 @@ pub fn standard_room(topic: impl Into<String>) -> DiscussionRoomBuilder {
 }
 
 /// Format the full discussion thread for a participant to read.
-/// Each post is prefixed with the poster's name.
+/// Each post is prefixed with the poster's name and round.
+/// Entries named "[error: ...]" are excluded from the synthesis context.
 fn build_context(topic: &str, thread: &[(String, String)], viewer: &str) -> String {
     let mut ctx = format!("Topic: {topic}\n\n");
+    let mut current_round = 0usize;
     for (name, content) in thread {
-        if name == viewer {
+        // Skip error placeholder entries — they are internal bookkeeping, not debate content.
+        if name.starts_with("[error:") {
+            continue;
+        }
+        // Emit a round separator when the round tag changes.
+        let round_tag: Option<usize> = name.strip_prefix("[R")
+            .and_then(|s| s.split(']').next())
+            .and_then(|n| n.parse().ok());
+        if let Some(r) = round_tag {
+            if r != current_round {
+                current_round = r;
+                ctx.push_str(&format!("--- Round {r} ---\n"));
+            }
+        }
+        let display_name = if let Some(pos) = name.find("] ") { &name[pos + 2..] } else { name.as_str() };
+        if display_name == viewer {
             ctx.push_str(&format!("You previously said:\n{content}\n\n"));
         } else {
-            ctx.push_str(&format!("{name}:\n{content}\n\n"));
+            ctx.push_str(&format!("{display_name}:\n{content}\n\n"));
         }
     }
     ctx
@@ -189,11 +209,13 @@ impl LlmClient for DiscussionRoom {
 
         // Debate rounds — all participants respond in parallel each round.
         for round in 0..self.rounds {
+            let round_num = round + 1;
             debug!(round, participants = self.participants.len(), "room: starting round");
 
             let mut handles = Vec::new();
             for participant in &self.participants {
-                let context = build_context(&self.topic, &thread, &participant.name);
+                let tagged_name = format!("[R{round_num}] {}", participant.name);
+                let context = build_context(&self.topic, &thread, &tagged_name);
                 let r = CompletionRequest {
                     model: req.model.clone(),
                     system: participant.system.clone(),
@@ -202,7 +224,7 @@ impl LlmClient for DiscussionRoom {
                     temperature: req.temperature,
                 };
                 let client = Arc::clone(&participant.client);
-                handles.push((participant.name.clone(), tokio::spawn(async move {
+                handles.push((tagged_name, tokio::spawn(async move {
                     client.complete(r).await
                 })));
             }
@@ -216,13 +238,13 @@ impl LlmClient for DiscussionRoom {
                         thread.push((name, resp.content));
                     }
                     Ok(Err(e)) => {
-                        // Non-fatal: log and continue with other participants
+                        // Record error as a placeholder so synthesizer sees the gap.
                         debug!(participant = %name, error = %e, "room: participant error");
-                        continue;
+                        thread.push((format!("[error: {name}]"), format!("unavailable: {e}")));
                     }
                     Err(e) => {
                         debug!(participant = %name, error = %e, "room: task panicked");
-                        continue;
+                        thread.push((format!("[error: {name}]"), format!("panicked: {e}")));
                     }
                 }
             }
