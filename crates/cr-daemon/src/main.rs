@@ -14,7 +14,7 @@ use cr_agents::udgatr::Udgatr;
 use cr_artifacts::ArtifactStore;
 use cr_chitta::ChittaClient;
 
-use cr_llm::{AnthropicClient, ClaudeCliClient, CodexClient, LlmClient, MockLlmClient, OpenAiClient};
+use cr_llm::{AnthropicClient, ClaudeCliClient, CodexClient, LlmClient, MockLlmClient, OpenAiClient, standard_room};
 use cr_resources::ResourceManager;
 
 #[derive(Parser)]
@@ -52,6 +52,12 @@ fn build_llm_client(config: &cr_agenda::LlmConfig) -> Arc<dyn LlmClient> {
         "codex" => {
             info!("using codex exec (model: {})", config.model);
             Arc::new(CodexClient::with_model(config.model.clone()))
+        }
+        "room" => {
+            // Multi-model discussion room: claude-cli (Critic) + codex (Empiricist)
+            // debate each prompt for `rounds` rounds, then synthesize with claude-cli.
+            info!("using discussion room (claude-cli + codex, 2 rounds)");
+            Arc::new(standard_room(config.model.clone()).build())
         }
         other => {
             warn!("Unknown provider '{}', defaulting to claude-cli", other);
