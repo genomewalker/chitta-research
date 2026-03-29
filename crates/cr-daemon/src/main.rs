@@ -49,8 +49,11 @@ struct Cli {
 fn build_llm_client(config: &cr_agenda::LlmConfig) -> Arc<dyn LlmClient> {
     match config.provider.as_str() {
         "claude-cli" => {
+            // Don't pass config.model here — it may be a descriptive label for
+            // the room provider (e.g. "chitta-research architecture evaluation"),
+            // not a real Claude model name.  Let claude -p use its own default.
             info!("using claude -p (no API key needed)");
-            Arc::new(ClaudeCliClient::with_model(config.model.clone()))
+            Arc::new(ClaudeCliClient::new())
         }
         "anthropic" => {
             let api_key = std::env::var(config.api_key_env.as_deref().unwrap_or("ANTHROPIC_API_KEY"))

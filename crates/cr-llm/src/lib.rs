@@ -79,7 +79,10 @@ impl LlmClient for ClaudeCliClient {
            .arg("--output-format").arg("text")
            .stdin(std::process::Stdio::piped())
            .stdout(std::process::Stdio::piped())
-           .stderr(std::process::Stdio::piped());
+           .stderr(std::process::Stdio::piped())
+           // Prevent Claude Code nested-invocation detection from blocking subprocess calls.
+           .env_remove("CLAUDECODE")
+           .env_remove("CLAUDE_CODE_ENTRYPOINT");
 
         if let Some(model) = &self.model {
             cmd.arg("--model").arg(model);
