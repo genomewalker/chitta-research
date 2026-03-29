@@ -125,7 +125,8 @@ impl Agent for Udgatr {
             content
         };
 
-        let analysis: AnalysisResult = serde_json::from_str(json_str)?;
+        let analysis: AnalysisResult = serde_json::from_str(json_str)
+            .map_err(|e| anyhow::anyhow!("Udgatr JSON parse failed: {e}\nraw (first 300): {}", &content[..content.len().min(300)]))?;
 
         let fitness = FitnessVector {
             novelty: analysis.novelty,
@@ -135,6 +136,30 @@ impl Agent for Udgatr {
             transfer_potential: analysis.transfer_potential,
             calibration_improvement: analysis.calibration_improvement,
         };
+
+        // ── Revert-if-not-improved (teeny-tiny discipline) ────────────────
+        // Runs that do not clear the empirical gain threshold are marked Reverted.
+        // The artifact is retained for provenance but the hypothesis is not updated.
+        // Threshold: 0.35 — below this the evidence is too weak to shift beliefs.
+        const MIN_EMPIRICAL_GAIN: f32 = 0.35;
+        let reverted = analysis.empirical_gain < MIN_EMPIRICAL_GAIN;
+        if reverted {
+            tracing::info!(
+                run = %run_id,
+                empirical_gain = analysis.empirical_gain,
+                threshold = MIN_EMPIRICAL_GAIN,
+                "udgatr: run reverted (below gain threshold)"
+            );
+            // Update run status to Failed to signal low-value result
+            let mut graph = ctx.graph.write().await;
+            if let Some(node) = graph.get_node_mut(run_id) {
+                if let NodeKind::Run(ref mut r) = node.kind {
+                    r.status = RunStatus::Failed;
+                }
+                node.fitness = Some(fitness);
+            }
+            return Ok(AgentAction::ScoreFitness { node_id: run_id, fitness });
+        }
 
         let mut graph = ctx.graph.write().await;
 
@@ -151,14 +176,23 @@ impl Agent for Udgatr {
                 }
             }
 
-            // Add claims for strong findings
+            // ── Structured claim format (SSL-style: [domain:pattern→outcome]) ──
+            // Formats claims as sparse, BM25-friendly triples so chitta recall
+            // surfaces them more reliably.
             if analysis.empirical_gain > 0.6 {
-                for claim_text in &analysis.claims {
+                for raw_claim in &analysis.claims {
+                    // Wrap plain prose in SSL structure if not already structured
+                    let structured_claim = if raw_claim.contains(':') && raw_claim.contains('→') {
+                        raw_claim.clone()
+                    } else {
+                        format!("[{}:finding→{}]", "research", raw_claim)
+                    };
+
                     let claim_id = NodeId::new();
                     let claim_node = TypedNode::new(
                         claim_id,
                         NodeKind::Claim(Claim {
-                            statement: claim_text.clone(),
+                            statement: structured_claim.clone(),
                             confidence: analysis.confidence_update,
                             supporting_observations: vec![run_id],
                         }),
@@ -175,6 +209,15 @@ impl Agent for Udgatr {
                         weight: analysis.confidence_update,
                         evidence_ids: vec![run_id],
                     })?;
+
+                    // Store structured claim in chitta
+                    if let Ok(mut chitta) = ctx.chitta.try_lock() {
+                        let _ = chitta.remember(
+                            &structured_claim, "claim",
+                            &["chitta-research", "finding"],
+                            analysis.confidence_update,
+                        ).await;
+                    }
                 }
             }
 

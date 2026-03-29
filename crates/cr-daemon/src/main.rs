@@ -31,6 +31,10 @@ struct Cli {
     /// Use mock LLM — no external calls, for testing the full pipeline
     #[arg(long)]
     mock: bool,
+    /// Override the LLM provider from the agenda (e.g. --provider claude-cli to skip room)
+    /// Useful for A/B testing: run once with room, once without, compare claim quality.
+    #[arg(long)]
+    provider: Option<String>,
 }
 
 fn build_llm_client(config: &cr_agenda::LlmConfig) -> Arc<dyn LlmClient> {
@@ -135,14 +139,26 @@ async fn main() -> anyhow::Result<()> {
     info!(agenda = %cli.agenda.display(), "loading agenda");
     let config = AgendaConfig::from_file(&cli.agenda)?;
 
-    let llm: Arc<dyn LlmClient> = if cli.mock && config.llm.provider == "room" {
+    // Apply --provider override before building the client
+    let effective_provider = cli.provider.as_deref()
+        .unwrap_or(&config.llm.provider);
+    let effective_config = cr_agenda::LlmConfig {
+        provider: effective_provider.to_string(),
+        model: config.llm.model.clone(),
+        api_key_env: config.llm.api_key_env.clone(),
+    };
+    if let Some(ref p) = cli.provider {
+        info!(provider = %p, "provider overridden via --provider flag");
+    }
+
+    let llm: Arc<dyn LlmClient> = if cli.mock && effective_provider == "room" {
         info!("using mock discussion room (--mock + provider=room)");
         Arc::new(mock_room(config.llm.model.clone()).build())
     } else if cli.mock {
         info!("using mock LLM (--mock flag)");
         Arc::new(MockLlmClient::new())
     } else {
-        build_llm_client(&config.llm)
+        build_llm_client(&effective_config)
     };
     let mind_path = config.chitta.mind_path.clone().replace(
         "~",
