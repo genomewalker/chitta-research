@@ -94,11 +94,17 @@ async fn agent_loop(
                     cr_agents::AgentAction::TriggerReconsolidation { node_id } => format!("reconsolidated {}", node_id),
                     cr_agents::AgentAction::Noop => "noop".to_string(),
                 };
+                let is_noop = summary == "noop";
                 let _ = ctx.event_tx.send(AgentEvent::ActionCompleted {
                     agent: name.clone(),
                     action_summary: summary,
                     elapsed_ms: elapsed,
                 }).await;
+                // Back off when idle — avoids flooding logs while Hotr waits on LLM
+                if is_noop {
+                    tokio::time::sleep(std::time::Duration::from_millis(800)).await;
+                    continue;
+                }
             }
             Err(e) => {
                 error!(agent = %name, error = %e, "step failed");
@@ -106,6 +112,8 @@ async fn agent_loop(
                     agent: name.clone(),
                     error: e.to_string(),
                 }).await;
+                tokio::time::sleep(std::time::Duration::from_millis(800)).await;
+                continue;
             }
         }
 
@@ -201,7 +209,11 @@ async fn main() -> anyhow::Result<()> {
     while let Some(event) = event_rx.recv().await {
         match event {
             AgentEvent::ActionCompleted { agent, action_summary, elapsed_ms } => {
-                info!(agent = %agent, action = %action_summary, elapsed_ms, "action completed");
+                if action_summary == "noop" {
+                    tracing::debug!(agent = %agent, "idle");
+                } else {
+                    info!(agent = %agent, action = %action_summary, elapsed_ms, "action completed");
+                }
                 action_count += 1;
 
                 if action_summary == "noop" {
