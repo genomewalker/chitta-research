@@ -252,6 +252,8 @@ impl LlmClient for DiscussionRoom {
         Ok(CompletionResponse {
             content: synthesis,
             usage: TokenUsage { input: total_input, output: total_output },
+            // Expose the full debate thread so callers can persist it
+            debate_thread: thread,
         })
     }
 }

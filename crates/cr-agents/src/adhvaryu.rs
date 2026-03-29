@@ -27,6 +27,9 @@ struct ExecutionResult {
     summary: String,
     #[serde(skip)]
     token_usage: (u64, u64),
+    /// Full debate thread from DiscussionRoom: [(participant, message), ...]
+    #[serde(skip)]
+    debate_thread: Vec<(String, String)>,
 }
 
 #[async_trait]
@@ -129,6 +132,7 @@ impl Agent for Adhvaryu {
                     metrics: serde_json::json!({}),
                     summary: format!("Code analysis via chitta tree-sitter: {} steps executed.", plan.steps.len()),
                     token_usage: (0, 0),
+                    debate_thread: vec![],
                 }
             } else {
                 // chitta not connected — fall through to LLM simulation
@@ -159,9 +163,29 @@ impl Agent for Adhvaryu {
             "plan_steps": plan.steps,
         }))?;
 
+        // Write debate.json alongside results.json if the room produced a thread
+        let mut artifact_files: Vec<(&str, Vec<u8>)> = vec![
+            ("results.json", result_json.as_bytes().to_vec()),
+        ];
+        let debate_json_bytes = if !exec_result.debate_thread.is_empty() {
+            let entries: Vec<serde_json::Value> = exec_result.debate_thread.iter()
+                .map(|(name, msg)| serde_json::json!({"participant": name, "message": msg}))
+                .collect();
+            serde_json::to_string_pretty(&entries).unwrap_or_default().into_bytes()
+        } else {
+            vec![]
+        };
+        if !debate_json_bytes.is_empty() {
+            artifact_files.push(("debate.json", debate_json_bytes));
+        }
+
+        let artifact_refs: Vec<(&str, &[u8])> = artifact_files.iter()
+            .map(|(name, bytes)| (*name, bytes.as_slice()))
+            .collect();
+
         let commit_sha = ctx.artifacts.lock().await.commit_run_artifacts(
             &run_id_str,
-            &[("results.json", result_json.as_bytes())],
+            &artifact_refs,
             &format!("Run {}: {}", run_id_str, exec_result.outcome),
         )?;
 
@@ -288,6 +312,7 @@ async fn execute_subprocess_steps(steps: &[String]) -> Result<ExecutionResult, a
             s.starts_with("run:") || s.starts_with("shell:") || s.starts_with("exec:")
         }).count()),
         token_usage: (0, 0),
+        debate_thread: vec![],
     })
 }
 
@@ -328,5 +353,6 @@ async fn execute_via_llm(
 
     let mut result: ExecutionResult = serde_json::from_str(json_str)?;
     result.token_usage = (resp.usage.input, resp.usage.output);
+    result.debate_thread = resp.debate_thread;
     Ok(result)
 }

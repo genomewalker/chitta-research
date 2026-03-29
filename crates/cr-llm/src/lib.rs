@@ -24,6 +24,9 @@ pub struct CompletionRequest {
 pub struct CompletionResponse {
     pub content: String,
     pub usage: TokenUsage,
+    /// Full debate thread from DiscussionRoom: [(participant_name, message), ...]
+    /// Empty for non-room clients.
+    pub debate_thread: Vec<(String, String)>,
 }
 
 #[derive(Debug, Clone, Default)]
@@ -102,7 +105,7 @@ impl LlmClient for ClaudeCliClient {
 
         let content = String::from_utf8_lossy(&output.stdout).trim().to_string();
         // claude -p doesn't report token counts; leave at 0
-        Ok(CompletionResponse { content, usage: TokenUsage::default() })
+        Ok(CompletionResponse { content, usage: TokenUsage::default(), debate_thread: vec![] })
     }
 }
 
@@ -162,7 +165,7 @@ impl LlmClient for CodexClient {
         }
 
         let content = String::from_utf8_lossy(&output.stdout).trim().to_string();
-        Ok(CompletionResponse { content, usage: TokenUsage::default() })
+        Ok(CompletionResponse { content, usage: TokenUsage::default(), debate_thread: vec![] })
     }
 }
 
@@ -245,7 +248,7 @@ impl AnthropicClient {
             output: data["usage"]["output_tokens"].as_u64().unwrap_or(0),
         };
 
-        Ok(CompletionResponse { content, usage })
+        Ok(CompletionResponse { content, usage, debate_thread: vec![] })
     }
 }
 
@@ -318,7 +321,7 @@ impl OpenAiClient {
             output: data["usage"]["completion_tokens"].as_u64().unwrap_or(0),
         };
 
-        Ok(CompletionResponse { content, usage })
+        Ok(CompletionResponse { content, usage, debate_thread: vec![] })
     }
 }
 
@@ -454,6 +457,7 @@ impl LlmClient for MockLlmClient {
         Ok(CompletionResponse {
             content,
             usage: TokenUsage { input: 100, output: 50 },
+            debate_thread: vec![],
         })
     }
 }
