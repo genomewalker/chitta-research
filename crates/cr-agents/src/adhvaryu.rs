@@ -332,8 +332,16 @@ async fn execute_steps_mixed(
     }).count();
     let chitta_count = steps.len() - subprocess_count;
 
+    // A run is "failed" only if subprocess steps failed AND produced no useful observations.
+    // If we have real observations despite some step failures, treat it as succeeded so that
+    // Udgatr can score it and Brahman's backlog gate can clear.
+    let useful_obs = observations.iter().any(|o| {
+        !o.starts_with("stderr:") && !o.starts_with("exit code:")
+    });
+    let outcome = if subprocess_failed && !useful_obs { "failed" } else { "succeeded" };
+
     Ok(ExecutionResult {
-        outcome: if subprocess_failed { "failed".into() } else { "succeeded".into() },
+        outcome: outcome.into(),
         observations,
         metrics: serde_json::json!({}),
         summary: format!(
