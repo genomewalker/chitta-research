@@ -159,9 +159,28 @@ async fn main() -> anyhow::Result<()> {
         max_cycles: cli.max_cycles,
     };
 
-    let graph = config.into_belief_graph()?;
+    // Resume from snapshot if it exists — preserves accumulated hypotheses and runs
+    // across restarts. Falls back to a fresh graph from the agenda if no snapshot found.
+    let graph = if cli.graph_output.exists() {
+        match std::fs::read_to_string(&cli.graph_output)
+            .ok()
+            .and_then(|s| cr_graph::BeliefGraph::from_json_snapshot(&s).ok())
+        {
+            Some(g) => {
+                info!(nodes = g.node_count(), path = %cli.graph_output.display(), "resumed from snapshot");
+                g
+            }
+            None => {
+                warn!("snapshot exists but could not be loaded — starting fresh");
+                config.into_belief_graph()?
+            }
+        }
+    } else {
+        let g = config.into_belief_graph()?;
+        info!(nodes = g.node_count(), "belief graph initialized from agenda");
+        g
+    };
     let node_count = graph.node_count();
-    info!(nodes = node_count, "belief graph initialized from agenda");
 
     let graph = Arc::new(RwLock::new(graph));
 
