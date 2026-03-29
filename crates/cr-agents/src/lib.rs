@@ -3,6 +3,7 @@ pub mod adhvaryu;
 pub mod udgatr;
 pub mod researcher;
 pub mod scout;
+pub mod kriya;
 
 use std::sync::Arc;
 

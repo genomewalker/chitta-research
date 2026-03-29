@@ -13,6 +13,7 @@ use cr_agents::adhvaryu::Adhvaryu;
 use cr_agents::udgatr::Udgatr;
 use cr_agents::researcher::Researcher;
 use cr_agents::scout::Scout;
+use cr_agents::kriya::Kriya;
 use cr_artifacts::ArtifactStore;
 use cr_chitta::ChittaClient;
 
@@ -246,6 +247,8 @@ async fn main() -> anyhow::Result<()> {
     // Researcher runs in parallel — fetches web findings and stores in chitta
     // before Hotr generates hypotheses for each question.
     let researcher_handle = tokio::spawn(agent_loop(Box::new(Researcher::new()), ctx.clone(), shutdown.clone()));
+    // Kriya: automatically applies confirmed claims as code fixes, reverts if no improvement
+    let kriya_handle      = tokio::spawn(agent_loop(Box::new(Kriya),             ctx.clone(), shutdown.clone()));
     // Scout: auto-discover compute OR load from --resources file.
     // If --resources is provided, skip auto-discovery and store the file contents in chitta.
     let scout_handle = if let Some(ref res_path) = cli.resources {
@@ -286,7 +289,7 @@ async fn main() -> anyhow::Result<()> {
                 if action_summary == "noop" {
                     *noop_counts.entry(agent).or_insert(0) += 1;
                     // Need 4 agents idle now (Hotr, Adhvaryu, Udgatr, Researcher)
-                    let all_idle = noop_counts.len() >= 5
+                    let all_idle = noop_counts.len() >= 6
                         && noop_counts.values().all(|&c| c >= max_cycles);
                     if all_idle {
                         info!("all agents idle for {} cycles, shutting down", max_cycles);
@@ -323,6 +326,7 @@ async fn main() -> anyhow::Result<()> {
     let _ = adhvaryu_handle.await;
     let _ = udgatr_handle.await;
     let _ = researcher_handle.await;
+    let _ = kriya_handle.await;
     let _ = scout_handle.await;
 
     // Save graph snapshot
