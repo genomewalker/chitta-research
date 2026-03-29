@@ -1,60 +1,96 @@
 programs:
-  - title: "Lossless MCAF Compression to 4.5 GB"
-    domain: genomics / software_engineering
+  - title: "MCAF Ultra-Lossless: Beat zstd-22 on genomic data"
+    domain: systems_programming / genomic_compression
     questions:
-      - "What is the compressed size of FRAME_CORE fields individually (POS, MAPQ, FLAG, TLEN, RNEXT, PNEXT) and which fields benefit most from delta/zig-zag coding before zstd?"
-      - "Can sparse blocks (<32 reads) be reorganized into a separate pooled ZSTD frame instead of per-block compression to improve ratio — how much does pooling 100 sparse blocks together save vs individual blocks?"
-      - "What is the compressed size of AUX tag data (FRAME_AUX) per tag type (NM, MD, AS, XS, RG, etc.) and which tags are largest — can tag-type demixing improve zstd ratio?"
-      - "Does BLOCK_LAYOUT_GROUPED (all FRAME_CORE in one stream) compress better than BLOCK_LAYOUT_COLUMN (per-field streams) for the LV7008867351.sorted.bam dataset, and by how much?"
-      - "What zstd compression level (1–22) gives the best size/time tradeoff for each frame type (FRAME_CORE, FRAME_CIGAR, FRAME_SEQ, FRAME_MD, FRAME_AUX) on this dataset?"
-      - "Can READ names (QNAME) be delta-encoded or prefix-compressed before zstd to reduce READS table size significantly beyond its current 0.053 GB?"
-      - "Does interleaving FRAME_SEQ + FRAME_MD into a single compressed stream improve ratio vs separate streams (joint entropy of nucleotide and mismatch positions)?"
-      - "What is the theoretical information content of FRAME_CORE fields given the reference genome coordinates — is there significant redundancy from nearby reads having similar FLAG/MAPQ?"
+      - "Can reference-relative encoding of FRAME_SEQ (XOR against reference bases at each aligned position) reduce nucleotide entropy below 0.3 bits/base, compared to ~1.5 bits/base for raw 2-bit — and what is the practical gain after zstd on top?"
+      - "Can cross-read joint coding exploit the fact that reads in the same region are highly similar — build a per-region dictionary from the first N reads in a block, then LZ-match subsequent reads against it before zstd. What compression ratio does this achieve vs current per-frame zstd?"
+      - "Can FLAG + MAPQ + TLEN be jointly entropy-coded as a triplet (they are correlated: high MAPQ reads cluster in FLAG space) — model their joint distribution and use arithmetic coding. What entropy does the joint model achieve vs independent zstd of each field?"
+      - "Can QNAME prefix compression use a trie-based encoding: store the trie once per block, then each read name as a trie path index + suffix? Estimate compressed READS table size vs current approach (currently ~0.053 GB uncompressed)."
+      - "Does a two-pass encoding strategy improve ratio: pass 1 collects per-block statistics (base frequencies, FLAG histogram, POS delta distribution), pass 2 uses those stats to configure field-specific codecs. Prototype for FRAME_SEQ and FRAME_CORE."
+      - "Can CIGAR strings be compressed using a run-length grammar: most CIGARs are either perfect matches (single token) or follow a small set of patterns (M, I, D). What fraction of CIGAR strings in the test BAM are in the top-20 patterns — can a codebook + index compress FRAME_CIGAR below its current size?"
+      - "Does interleaving FRAME_SEQ + FRAME_MD into a single joint stream and applying a nucleotide-mismatch joint model (mismatch positions are sparse, ~2–5% of bases) improve ratio vs separate streams? Prototype and measure on the test BAM."
+      - "Can PCR duplicate detection be leveraged for lossless compression: identical-sequence reads share the same encoded payload, stored once with a pointer array. What fraction of reads in the test BAM are exact duplicates (FRAME_SEQ identical), and what is the theoretical size reduction?"
     methods:
-      - "Read /maps/projects/fernandezguerra/apps/repos/mcaf/mcaf.hpp to understand all encoding types (ENC_*) and frame layout structs (LegacyFrameDesc, FieldSlice, BlockLayout)"
-      - "Read /maps/projects/fernandezguerra/apps/repos/mcaf/bam2mcaf.cpp to understand serialize() and how each frame type is built and compressed"
-      - "Use chitta symbol search to find encode_aux_smart, serialize, flush_sparse_batch functions and understand their data flow"
-      - "Analyze the existing MCAF file /maps/projects/kaiku-test/LV7008867351.sorted.mcaf using the Python Trailer2 parser to get per-block frame size breakdown"
-      - "Benchmark zstd levels 1/6/9/15/19/22 on 10 MB samples of FRAME_CORE, FRAME_CIGAR, FRAME_SEQ, FRAME_MD, FRAME_AUX data extracted from the BAM"
-      - "Prototype GROUPED layout change in bam2mcaf.cpp: write one compressed block for all FRAME_CORE fields instead of per-field blocks, measure size delta"
-      - "Prototype sparse block pooling: accumulate N sparse blocks before compressing as one zstd frame, benchmark N=50/100/500"
-      - "Prototype delta encoding for POS field (store diffs between consecutive read positions) and zig-zag encode TLEN before zstd compression"
-      - "Measure total size of each tag type in FRAME_AUX by tag-type demixing: separate NM/MD/AS/XS/RG into own buffers before compressing"
+      - "Read /maps/projects/fernandezguerra/apps/repos/mcaf/mcaf.hpp for ENC_* codec types and frame layout"
+      - "Read /maps/projects/fernandezguerra/apps/repos/mcaf/bam2mcaf.cpp for serialize() and per-frame encoding pipeline"
+      - "Use chitta symbol search to find encode_aux_smart, serialize, flush_sparse_batch and understand data flow"
+      - "grep -c '' /maps/projects/caeg/scratch/kbd606/bam-filter/viking/LV7008867351.sorted.mcaf 2>/dev/null || wc -c /maps/projects/caeg/scratch/kbd606/bam-filter/viking/LV7008867351.sorted.mcaf"
+      - "python3 -c \"import struct,sys; f=open('/maps/projects/caeg/scratch/kbd606/bam-filter/viking/LV7008867351.sorted.mcaf','rb'); d=f.read(); print(len(d),'bytes total'); f.close()\""
+      - "Prototype reference-relative XOR encoding: read FRAME_SEQ bytes, XOR against reference sequence bytes at POS, measure entropy of residuals vs raw sequence"
+      - "Prototype per-block dictionary for FRAME_SEQ: first 32 reads build LZ77 dictionary, remaining reads encoded as back-references + literals. Measure compression ratio"
+      - "Prototype joint FLAG+MAPQ+TLEN arithmetic coding using observed joint frequency table from 10000 reads"
     priority: 1.0
     max_budget_usd: 15.0
+    verifier:
+      cmd: "/maps/projects/fernandezguerra/apps/repos/chitta-research/scripts/verify_mcaf"
+      metric_jsonpath: ".compression_ratio"
+      success_expr: "metric > baseline * 1.05"
+      build_failure_codes: [2, 127]
+      build_retries: 2
+      timeout_s: 300
 
-  - title: "Kaiku FilterBAM Column Matching"
-    domain: genomics / software_engineering
+  - title: "MCAF Ultra-Speed: Sub-100ms scan for 10GB BAM equivalent"
+    domain: systems_programming / genomic_compression
     questions:
-      - "Which kaiku StatCol columns currently output 0 or stub values — specifically ref_gc_content, d_i, complexity_penalized_coverage — and what is the filterBAM formula for each?"
-      - "Does kaiku breadth_of_coverage computation at tier T0 overcount overlapping reads, and does the T2 fix (CIGAR-based FRAME_CIGAR) match filterBAM exactly?"
-      - "Does kaiku TAD (trimmed average depth) match filterBAM's exact algorithm: histogram of integer depths, 10th/90th percentile trim by position count, then mean of positions in range?"
-      - "Does kaiku spatial_entropy use natural log (ln) matching filterBAM, and is the adaptive n_bins (Freedman-Diaconis vs Sturges) implementation correct?"
-      - "What is the filterBAM formula for d_i (damage index) and can it be computed from the existing damage profile data already in kaiku (kct_5p, nc_5p, kga_3p arrays)?"
-      - "Does kaiku cov_evenness match filterBAM's exact formula: 1 - (count_le - sum_le/mean_depth) / ref_len where count_le includes uncovered positions?"
-      - "Does kaiku coeff_var use population std / global mean (filterBAM) vs sample std / covered mean — which is it and does it match?"
-      - "Are kaiku damage profile output columns (kct_5p_1..10, nc_5p_1..10, kga_3p_1..10) normalized correctly to match filterBAM's per-position proportions?"
+      - "Can FRAME_SEQ decoding be vectorized with AVX2/AVX-512: decode 32 2-bit bases per SIMD instruction rather than one at a time. What throughput does a vectorized decoder achieve (GB/s) vs the current scalar loop?"
+      - "Can columnar lazy loading be implemented: mcaf_info --fields FLAG,MAPQ,POS only decompresses FRAME_CORE, skipping FRAME_SEQ and FRAME_CIGAR entirely. What is the speedup for stats-only queries vs full decode?"
+      - "Can parallel multi-threaded decompression pipeline (one thread per frame type: FRAME_CORE | FRAME_CIGAR | FRAME_SEQ | FRAME_MD | FRAME_AUX in parallel) reduce total scan latency? Model expected speedup with N=4 threads."
+      - "Can a block skip index (block offset + min/max POS per block stored in the trailer) allow random-access queries by genomic region without scanning all blocks? Estimate index size and query latency for a 1Mbp region vs full scan."
+      - "Does zstd decompression (not compression) of FRAME_SEQ become the bottleneck at low compression levels — and can zstd level 1 + AVX2 checksum reduce decode latency by >2x vs level 19 on the test MCAF?"
+      - "Can memory-mapped I/O with MADV_SEQUENTIAL + prefetch hints (madvise MADV_WILLNEED for the next 4 blocks) reduce I/O wait time for sequential scans vs read() syscall approach?"
+      - "Can FRAME_CORE (POS, FLAG, MAPQ, TLEN, RNEXT, PNEXT) be packed into a single 128-bit SIMD word per read for cache-efficient bulk processing — what alignment and struct layout achieves best cache line utilization?"
+      - "Does a columnar filter-first approach (decompress only FRAME_CORE, apply mapq>=20 filter, then only decompress FRAME_SEQ for passing reads) reduce total data decoded for typical quality-filtered queries by >5x?"
     methods:
-      - "Read /maps/projects/fernandezguerra/apps/repos/kaiku/include/kaiku/ref_stats.hpp for the full StatCol enum and RefStats struct"
-      - "Read /maps/projects/fernandezguerra/apps/repos/kaiku/src/filter/coverage.cpp for compute_coverage implementation (TAD, entropy, Gini, evenness, coeff_var)"
-      - "Read /maps/projects/fernandezguerra/apps/repos/kaiku/src/filter/damage_profile.cpp for accumulate_damage and normalize_damage implementations"
-      - "Read /maps/projects/fernandezguerra/apps/repos/kaiku/src/filter/output.cpp for the column-writing code that maps StatCol to output values"
-      - "Use chitta symbol search for compute_coverage, accumulate_damage, normalize_damage, write_filter_mcafo to trace the full stats pipeline"
-      - "Read filterBAM source or documentation to extract exact formulas for d_i, ref_gc_content, complexity_penalized_coverage"
-      - "Run kaiku and filterBAM on the same small BAM (500 refs) and compare TSV output column-by-column to identify numerical discrepancies"
-      - "For each discrepant column: identify exact line in kaiku source causing the mismatch and propose a fix"
-      - "Check breadth_of_coverage at T0 (read-level) vs T2 (CIGAR-level): do overlapping reads inflate T0 breadth vs filterBAM?"
+      - "Read /maps/projects/fernandezguerra/apps/repos/mcaf/mcaf.hpp for decoder structs and the read iteration API"
+      - "Use chitta symbol search to find decode, scan, iterate, mcaf_info main entry points"
+      - "time python3 -c \"import mmap,os; f=open('/maps/projects/caeg/scratch/kbd606/bam-filter/viking/LV7008867351.sorted.mcaf'); m=mmap.mmap(f.fileno(),0,access=mmap.ACCESS_READ); print(len(m)); m.close()\" 2>&1"
+      - "Prototype columnar lazy decode: modify the MCAF reader to skip frames not in a requested set, measure time reduction"
+      - "Benchmark zstd decompress throughput at level 1 vs 19 on a 10MB FRAME_SEQ sample: python3 -c \"import zstandard as zstd,os,time\""
+      - "Check if AVX2 is available: grep -m1 'avx2' /proc/cpuinfo && echo 'AVX2 available' || echo 'no AVX2'"
+      - "Measure current mcaf scan time as baseline: time find /maps/projects/kaiku-test/ -name '*.mcaf' -exec wc -c {} \\; 2>&1 | head -5"
     priority: 0.9
-    max_budget_usd: 10.0
+    max_budget_usd: 12.0
+    verifier:
+      cmd: "/maps/projects/fernandezguerra/apps/repos/chitta-research/scripts/verify_mcaf --mode speed"
+      metric_jsonpath: ".scan_time_ms"
+      success_expr: "metric < baseline * 0.85"
+      build_failure_codes: [2, 127]
+      build_retries: 2
+      timeout_s: 120
 
 budget:
-  total_usd: 25.0
+  total_usd: 27.0
   gpu_slots: 0
   cpu_workers: 4
 
 llm:
-  provider: claude-cli
-  model: claude-sonnet-4-6
+  provider: room
+  model: "MCAF ultra-lossless and ultra-speed compression research"
+  room:
+    rounds: 2
+    participants:
+      - name: Critic
+        backend: claude-cli
+        system: "You are a compression algorithm expert and scientific critic. Find every flaw in the hypothesis — what assumptions about data distribution are wrong, what benchmarks are missing, what edge cases break the approach. Focus on genomic data specifics: reads are variable-length, coverage is uneven, paired-end reads have structured correlation."
+
+      - name: Empiricist
+        backend: codex
+        model: gpt-5.4
+        system: "You are an empiricist focused on measurable outcomes. For each compression hypothesis: what is the exact experiment, what data do you need, what is the measurement protocol, and what result would falsify the hypothesis? Be concrete about tools (zstd, python3 zstandard, /proc/cpuinfo, samtools view) and exact commands."
+
+      - name: Systems-Architect
+        backend: opencode
+        model: openai/gpt-5.4
+        system: "You are a systems programmer expert in SIMD, cache hierarchies, and file format design. Focus on implementation feasibility: can this be added to bam2mcaf.cpp without breaking the existing frame layout? What is the memory overhead? What platform assumptions (x86 AVX2, Linux mmap) are required? Propose the minimal C++ change."
+
+      - name: Information-Theorist
+        backend: opencode
+        model: github-copilot/gemini-2.5-pro
+        system: "You are an information theorist. For each compression hypothesis: compute the theoretical entropy bound, cite the relevant coding theory (Lempel-Ziv, arithmetic coding, prediction by partial matching). Is the proposed approach entropy-optimal? What is the gap between proposed and Shannon limit for genomic data? Use math."
+
+    synthesizer:
+      backend: claude-cli
+      system: "You are a JSON synthesizer. Read the four-way debate above — Critic (flaws), Empiricist (measurements), Systems-Architect (implementation), Information-Theorist (entropy bounds). Reconcile contradictions and produce the final structured answer. CRITICAL: Respond with ONLY raw JSON — no prose, no markdown fences. Start with {."
 
 chitta:
   mind_path: ~/.claude/mind
