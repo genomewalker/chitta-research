@@ -146,7 +146,7 @@ pub fn standard_room(topic: impl Into<String>) -> DiscussionRoomBuilder {
         )
         .rounds(2)
         .synthesizer(
-            "You are a JSON synthesizer. Read the debate above and produce the final \
+            "You are a JSON synthesizer. Read the debate above, resolve any contradictions between participants, and produce the final \
              answer the original prompt requested. Incorporate valid criticisms. \
              CRITICAL: Respond with ONLY raw JSON — no prose, no explanation, no \
              [brackets], no markdown fences. Start your response with the first \
