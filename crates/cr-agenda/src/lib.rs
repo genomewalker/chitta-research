@@ -196,3 +196,32 @@ chitta:
         assert_eq!(config.budget.cpu_workers, 4);
     }
 }
+
+#[cfg(test)]
+mod nan_priority_tests {
+    use super::*;
+
+    #[test]
+    fn nan_priority_yaml_parses_and_builds_graph() {
+        let yaml = r#"
+programs:
+  - title: "NaN priority"
+    domain: test
+    questions: []
+    priority: .nan
+budget:
+  total_usd: 1.0
+llm:
+  provider: anthropic
+  model: claude-sonnet-4-6
+  api_key_env: ANTHROPIC_API_KEY
+chitta:
+  mind_path: /tmp/mind
+"#;
+        let config = AgendaConfig::from_yaml(yaml).unwrap();
+        assert!(config.programs[0].priority.is_nan(), "expected .nan to parse as NaN");
+        let graph = config.into_belief_graph().unwrap();
+        assert_eq!(graph.node_count(), 1);
+        assert_eq!(graph.edge_count(), 0);
+    }
+}

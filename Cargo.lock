@@ -384,6 +384,16 @@ dependencies = [
 ]
 
 [[package]]
+name = "cr-report"
+version = "0.1.0"
+dependencies = [
+ "anyhow",
+ "clap",
+ "serde",
+ "serde_json",
+]
+
+[[package]]
 name = "cr-resources"
 version = "0.1.0"
 dependencies = [

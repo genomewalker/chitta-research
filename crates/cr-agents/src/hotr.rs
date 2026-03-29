@@ -1,3 +1,5 @@
+use std::cmp::Ordering;
+
 use async_trait::async_trait;
 use cr_llm::{CompletionRequest, Message};
 use cr_types::*;
@@ -45,6 +47,15 @@ struct ExperimentPlanResponse {
     steps: Vec<String>,
 }
 
+fn cmp_program_priority_desc(a: f32, b: f32) -> Ordering {
+    match (a.is_nan(), b.is_nan()) {
+        (true, true) => Ordering::Equal,
+        (true, false) => Ordering::Greater,
+        (false, true) => Ordering::Less,
+        (false, false) => b.total_cmp(&a),
+    }
+}
+
 #[async_trait]
 impl Agent for Hotr {
     fn name(&self) -> &str {
@@ -63,7 +74,7 @@ impl Agent for Hotr {
                     _ => None,
                 })
                 .collect();
-            programs.sort_by(|a, b| b.1.priority.partial_cmp(&a.1.priority).unwrap());
+            programs.sort_by(|a, b| cmp_program_priority_desc(a.1.priority, b.1.priority));
 
             let Some((prog_id, program)) = programs.first() else {
                 return Ok(AgentAction::Noop);
@@ -205,5 +216,23 @@ impl Agent for Hotr {
         }
 
         Ok(last_action)
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use cr_types::ResearchProgram;
+
+    #[test]
+    fn cmp_program_priority_desc_sorts_descending_and_places_nan_last() {
+        let mut programs = vec![
+            ResearchProgram { title: "nan".into(), domain: "test".into(), priority: f32::NAN, max_budget_usd: 1.0 },
+            ResearchProgram { title: "high".into(), domain: "test".into(), priority: 2.0, max_budget_usd: 1.0 },
+            ResearchProgram { title: "low".into(), domain: "test".into(), priority: 1.0, max_budget_usd: 1.0 },
+        ];
+        programs.sort_by(|a, b| cmp_program_priority_desc(a.priority, b.priority));
+        let titles: Vec<_> = programs.into_iter().map(|p| p.title).collect();
+        assert_eq!(titles, vec!["high", "low", "nan"]);
     }
 }
