@@ -3,758 +3,810 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>chitta-research — Autonomous Research Operating System</title>
-  <meta name="description" content="A high-performance autonomous research system in Rust. Persistent typed belief graph, three Vedic agents, 6-dimensional Pareto fitness, and native chitta-field memory integration.">
-  <meta property="og:title" content="chitta-research">
-  <meta property="og:description" content="An autonomous research operating system. Beyond autoresearch — persistent epistemic graph, Pareto fitness, reconsolidation.">
-  <meta property="og:type" content="website">
+  <title>chitta-research</title>
+  <meta name="description" content="An autonomous research operating system in Rust. Persistent belief graph, Vedic agents, 6-dimensional Pareto fitness.">
   <style>
+    @import url('https://fonts.googleapis.com/css2?family=DM+Mono:ital,wght@0,300;0,400;0,500;1,400&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,700;1,9..40,300&display=swap');
+
     :root {
-      --bg:       #0d0f14;
-      --surface:  #131720;
-      --border:   #1e2535;
-      --accent:   #5b8dee;
-      --accent2:  #a78bfa;
-      --green:    #34d399;
-      --red:      #f87171;
-      --amber:    #fbbf24;
-      --text:     #e2e8f0;
-      --muted:    #7a8599;
-      --code-bg:  #0a0c12;
+      --ink:      #0f0e0c;
+      --paper:    #f5f0e8;
+      --warm:     #ede6d6;
+      --rule:     #c8bfaa;
+      --faint:    #e0d9cc;
+      --red:      #b94040;
+      --blue:     #2a4d8f;
+      --green:    #2d6a4f;
+      --amber:    #8a5c00;
+      --serif:    'DM Sans', system-ui, sans-serif;
+      --mono:     'DM Mono', 'Fira Code', Menlo, monospace;
     }
 
-    * { box-sizing: border-box; margin: 0; padding: 0; }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    html { scroll-behavior: smooth; }
 
     body {
-      background: var(--bg);
-      color: var(--text);
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;
+      background: var(--paper);
+      color: var(--ink);
+      font-family: var(--serif);
       font-size: 16px;
-      line-height: 1.7;
+      line-height: 1.75;
     }
 
-    a { color: var(--accent); text-decoration: none; }
-    a:hover { text-decoration: underline; }
-
-    /* ── Layout ────────────────────────────────────────────── */
-
-    header {
-      border-bottom: 1px solid var(--border);
-      padding: 1rem 2rem;
-      display: flex;
-      align-items: center;
-      gap: 1.5rem;
+    /* ── Grain overlay ─────────────────────────────────────────────────── */
+    body::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      z-index: 0;
+      opacity: 0.025;
+      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 512 512' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E");
     }
 
-    .logo {
-      font-size: 1.1rem;
-      font-weight: 700;
-      letter-spacing: -0.02em;
-      color: var(--text);
-    }
-
-    .logo span { color: var(--accent); }
-
-    nav { margin-left: auto; display: flex; gap: 1.5rem; }
-    nav a { color: var(--muted); font-size: 0.9rem; }
-    nav a:hover { color: var(--text); text-decoration: none; }
-
-    main {
-      max-width: 900px;
-      margin: 0 auto;
-      padding: 0 2rem 6rem;
-    }
-
-    section { padding-top: 5rem; }
+    /* ── Typography ────────────────────────────────────────────────────── */
+    a { color: var(--blue); text-decoration: underline; text-underline-offset: 3px; }
+    a:hover { color: var(--ink); }
 
     h1 {
-      font-size: clamp(2.2rem, 5vw, 3.4rem);
-      font-weight: 800;
+      font-size: clamp(3rem, 8vw, 6.5rem);
+      font-weight: 700;
       letter-spacing: -0.04em;
-      line-height: 1.1;
+      line-height: 0.95;
     }
 
     h2 {
-      font-size: 1.5rem;
-      font-weight: 700;
+      font-size: clamp(1.3rem, 3vw, 1.8rem);
+      font-weight: 500;
       letter-spacing: -0.02em;
-      margin-bottom: 1.25rem;
+      line-height: 1.25;
     }
 
     h3 {
-      font-size: 1.05rem;
-      font-weight: 600;
-      margin-bottom: 0.5rem;
-      color: var(--accent);
-    }
-
-    p { color: var(--muted); margin-bottom: 1rem; }
-    p strong { color: var(--text); }
-
-    /* ── Hero ──────────────────────────────────────────────── */
-
-    .hero { padding-top: 6rem; padding-bottom: 1rem; }
-
-    .hero-badge {
-      display: inline-block;
-      background: rgba(91, 141, 238, 0.1);
-      border: 1px solid rgba(91, 141, 238, 0.3);
-      color: var(--accent);
-      font-size: 0.75rem;
-      font-weight: 600;
-      letter-spacing: 0.08em;
+      font-size: 0.72rem;
+      font-weight: 500;
+      letter-spacing: 0.12em;
       text-transform: uppercase;
-      padding: 0.3rem 0.75rem;
-      border-radius: 4px;
-      margin-bottom: 1.5rem;
+      color: var(--amber);
+      margin-bottom: 0.75rem;
     }
 
-    .hero h1 { margin-bottom: 1.25rem; }
+    p {
+      font-size: 1rem;
+      font-weight: 300;
+      max-width: 62ch;
+    }
 
-    .hero-lead {
-      font-size: 1.15rem;
-      line-height: 1.75;
-      max-width: 680px;
+    code, pre {
+      font-family: var(--mono);
+    }
+
+    /* ── Grid ──────────────────────────────────────────────────────────── */
+    .wrap {
+      max-width: 1160px;
+      margin: 0 auto;
+      padding: 0 2rem;
+      position: relative;
+      z-index: 1;
+    }
+
+    /* ── Rule ──────────────────────────────────────────────────────────── */
+    .rule {
+      border: none;
+      border-top: 1px solid var(--rule);
+      margin: 0;
+    }
+
+    /* ── Nav ───────────────────────────────────────────────────────────── */
+    nav {
+      padding: 1.25rem 2rem;
+      display: flex;
+      align-items: center;
+      gap: 2rem;
+      position: sticky;
+      top: 0;
+      background: rgba(245, 240, 232, 0.92);
+      backdrop-filter: blur(12px);
+      z-index: 100;
+      border-bottom: 1px solid var(--rule);
+    }
+
+    .nav-logo {
+      font-size: 0.9rem;
+      font-weight: 700;
+      letter-spacing: -0.02em;
+      color: var(--ink);
+      text-decoration: none;
+    }
+
+    .nav-links {
+      margin-left: auto;
+      display: flex;
+      gap: 2rem;
+    }
+
+    .nav-links a {
+      font-size: 0.82rem;
+      font-weight: 400;
+      color: var(--ink);
+      text-decoration: none;
+      opacity: 0.6;
+      transition: opacity 0.15s;
+    }
+
+    .nav-links a:hover { opacity: 1; }
+
+    /* ── Hero ──────────────────────────────────────────────────────────── */
+    .hero {
+      padding: 9rem 2rem 7rem;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 4rem;
+      align-items: end;
+      max-width: 1160px;
+      margin: 0 auto;
+    }
+
+    @media (max-width: 768px) {
+      .hero { grid-template-columns: 1fr; gap: 2.5rem; padding: 5rem 2rem 4rem; }
+    }
+
+    .hero-eyebrow {
+      font-size: 0.72rem;
+      font-weight: 500;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--red);
+      margin-bottom: 1.25rem;
+    }
+
+    .hero h1 { margin-bottom: 0; }
+
+    .hero-right p {
+      font-size: 1.1rem;
+      font-weight: 300;
+      line-height: 1.8;
       margin-bottom: 2rem;
+      max-width: 52ch;
     }
 
-    .cta-group { display: flex; gap: 1rem; flex-wrap: wrap; }
+    .btn-row { display: flex; gap: 1rem; flex-wrap: wrap; }
 
     .btn {
       display: inline-block;
-      padding: 0.65rem 1.4rem;
-      border-radius: 6px;
-      font-size: 0.9rem;
-      font-weight: 600;
-      transition: opacity 0.15s;
-    }
-    .btn:hover { opacity: 0.85; text-decoration: none; }
-
-    .btn-primary {
-      background: var(--accent);
-      color: #fff;
+      padding: 0.6rem 1.5rem;
+      font-size: 0.85rem;
+      font-weight: 500;
+      text-decoration: none;
+      border-radius: 3px;
+      transition: all 0.15s;
     }
 
-    .btn-ghost {
-      border: 1px solid var(--border);
-      color: var(--text);
-      background: var(--surface);
+    .btn-solid {
+      background: var(--ink);
+      color: var(--paper);
     }
 
-    /* ── Differentiators ───────────────────────────────────── */
+    .btn-solid:hover { background: #2a2520; color: var(--paper); }
 
-    .diff-grid {
+    .btn-outline {
+      border: 1px solid var(--rule);
+      color: var(--ink);
+    }
+
+    .btn-outline:hover { border-color: var(--ink); }
+
+    /* ── Tape accent ────────────────────────────────────────────────────── */
+    .tape {
+      display: inline-block;
+      background: rgba(138, 92, 0, 0.12);
+      border-top: 1px solid rgba(138, 92, 0, 0.25);
+      border-bottom: 1px solid rgba(138, 92, 0, 0.25);
+      padding: 0.1rem 0.4rem;
+    }
+
+    /* ── Manifesto / intro strip ─────────────────────────────────────────── */
+    .intro-strip {
+      border-top: 1px solid var(--rule);
+      border-bottom: 1px solid var(--rule);
+      background: var(--warm);
+      padding: 3.5rem 2rem;
+    }
+
+    .intro-strip .wrap {
       display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
-      gap: 1rem;
-      margin-top: 1.5rem;
-    }
-
-    .diff-card {
-      background: var(--surface);
-      border: 1px solid var(--border);
-      border-radius: 8px;
-      padding: 1.5rem;
-    }
-
-    .diff-card h3 { margin-bottom: 0.4rem; }
-    .diff-card p { font-size: 0.9rem; margin: 0; }
-
-    /* ── Architecture diagram ──────────────────────────────── */
-
-    .arch-box {
-      background: var(--code-bg);
-      border: 1px solid var(--border);
-      border-radius: 8px;
-      padding: 1.75rem 2rem;
-      overflow-x: auto;
-    }
-
-    .arch-box pre {
-      font-family: "JetBrains Mono", "Fira Code", "Cascadia Code", Menlo, monospace;
-      font-size: 0.82rem;
-      line-height: 1.65;
-      color: var(--text);
-      white-space: pre;
-    }
-
-    .arch-box .c-accent  { color: var(--accent); }
-    .arch-box .c-accent2 { color: var(--accent2); }
-    .arch-box .c-green   { color: var(--green); }
-    .arch-box .c-muted   { color: var(--muted); }
-
-    /* ── The Loop ──────────────────────────────────────────── */
-
-    .loop-steps {
-      display: grid;
-      gap: 1px;
-      border: 1px solid var(--border);
-      border-radius: 8px;
-      overflow: hidden;
-      margin-top: 1.5rem;
-    }
-
-    .loop-step {
-      background: var(--surface);
-      padding: 1.5rem;
-      display: grid;
-      grid-template-columns: 2.5rem 1fr;
-      gap: 1rem;
+      grid-template-columns: 1fr 2fr;
+      gap: 4rem;
       align-items: start;
     }
 
-    .loop-step + .loop-step { border-top: 1px solid var(--border); }
-
-    .step-num {
-      width: 2rem;
-      height: 2rem;
-      border-radius: 50%;
-      background: rgba(91, 141, 238, 0.15);
-      border: 1px solid rgba(91, 141, 238, 0.4);
-      color: var(--accent);
-      font-size: 0.8rem;
-      font-weight: 700;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      flex-shrink: 0;
+    @media (max-width: 768px) {
+      .intro-strip .wrap { grid-template-columns: 1fr; gap: 2rem; }
     }
 
-    .step-body h3 { color: var(--text); font-size: 1rem; }
-    .step-body p { font-size: 0.9rem; margin-bottom: 0; }
+    .intro-label {
+      font-size: 0.72rem;
+      font-weight: 500;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--amber);
+      padding-top: 0.2rem;
+    }
 
-    /* ── Comparison table ──────────────────────────────────── */
+    .intro-strip p {
+      font-size: 1.05rem;
+      font-weight: 300;
+      line-height: 1.85;
+      max-width: 64ch;
+    }
 
-    .compare-wrap { overflow-x: auto; margin-top: 1.5rem; }
+    .intro-strip p + p { margin-top: 1rem; }
 
-    table {
-      width: 100%;
-      border-collapse: collapse;
+    /* ── Section scaffold ───────────────────────────────────────────────── */
+    .section {
+      padding: 5rem 2rem;
+    }
+
+    .section-inner {
+      max-width: 1160px;
+      margin: 0 auto;
+    }
+
+    .section-header {
+      display: grid;
+      grid-template-columns: 220px 1fr;
+      gap: 4rem;
+      align-items: baseline;
+      margin-bottom: 3rem;
+    }
+
+    @media (max-width: 768px) {
+      .section-header { grid-template-columns: 1fr; gap: 0.75rem; }
+    }
+
+    /* ── Agents ─────────────────────────────────────────────────────────── */
+    .agents-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 0;
+      border: 1px solid var(--rule);
+      border-radius: 4px;
+      overflow: hidden;
+    }
+
+    @media (max-width: 768px) {
+      .agents-grid { grid-template-columns: 1fr; }
+    }
+
+    .agent {
+      padding: 2.5rem 2rem;
+      border-right: 1px solid var(--rule);
+    }
+
+    .agent:last-child { border-right: none; }
+
+    @media (max-width: 768px) {
+      .agent { border-right: none; border-bottom: 1px solid var(--rule); }
+      .agent:last-child { border-bottom: none; }
+    }
+
+    .agent-name {
+      font-size: 0.72rem;
+      font-weight: 500;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      margin-bottom: 0.25rem;
+    }
+
+    .agent-sanskrit {
+      font-size: 0.85rem;
+      font-style: italic;
+      font-weight: 300;
+      color: var(--amber);
+      margin-bottom: 1.25rem;
+    }
+
+    .agent h2 {
+      font-size: 1.15rem;
+      font-weight: 600;
+      margin-bottom: 0.75rem;
+    }
+
+    .agent p {
+      font-size: 0.88rem;
+      line-height: 1.7;
+      max-width: 100%;
+    }
+
+    /* ── Memory ─────────────────────────────────────────────────────────── */
+    .memory-layout {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 2rem;
+      align-items: start;
+    }
+
+    @media (max-width: 768px) {
+      .memory-layout { grid-template-columns: 1fr; }
+    }
+
+    .memory-stack {
+      border: 1px solid var(--rule);
+      border-radius: 4px;
+      overflow: hidden;
+    }
+
+    .memory-row {
+      padding: 1rem 1.5rem;
+      border-bottom: 1px solid var(--faint);
+      display: grid;
+      grid-template-columns: 140px 1fr;
+      gap: 1.5rem;
+      align-items: baseline;
+    }
+
+    .memory-row:last-child { border-bottom: none; }
+
+    .mem-label {
+      font-size: 0.78rem;
+      font-family: var(--mono);
+      color: var(--blue);
+      font-weight: 400;
+    }
+
+    .mem-desc {
+      font-size: 0.85rem;
+      font-weight: 300;
+      color: var(--ink);
+      opacity: 0.8;
+    }
+
+    .fitness-list {
+      list-style: none;
+      counter-reset: f;
+      border: 1px solid var(--rule);
+      border-radius: 4px;
+      overflow: hidden;
+    }
+
+    .fitness-list li {
+      counter-increment: f;
+      padding: 0.9rem 1.5rem;
+      border-bottom: 1px solid var(--faint);
+      display: grid;
+      grid-template-columns: 1.5rem 1fr auto;
+      gap: 1rem;
+      align-items: baseline;
       font-size: 0.88rem;
     }
 
-    thead th {
-      text-align: left;
-      padding: 0.75rem 1rem;
-      border-bottom: 1px solid var(--border);
-      color: var(--text);
+    .fitness-list li:last-child { border-bottom: none; }
+
+    .fitness-list li::before {
+      content: counter(f);
+      font-family: var(--mono);
+      font-size: 0.72rem;
+      color: var(--rule);
+      font-weight: 500;
+    }
+
+    .fitness-dim { font-weight: 500; }
+    .fitness-val {
+      font-family: var(--mono);
+      font-size: 0.72rem;
+      color: var(--green);
+    }
+
+    /* ── Loop diagram ────────────────────────────────────────────────────── */
+    .loop-track {
+      position: relative;
+      padding-left: 3rem;
+    }
+
+    .loop-track::before {
+      content: '';
+      position: absolute;
+      left: 0.85rem;
+      top: 1.5rem;
+      bottom: 1.5rem;
+      width: 1px;
+      background: var(--rule);
+    }
+
+    .loop-item {
+      position: relative;
+      padding: 1.5rem 0 1.5rem 1.5rem;
+      border-bottom: 1px solid var(--faint);
+    }
+
+    .loop-item:last-child { border-bottom: none; }
+
+    .loop-item::before {
+      content: '';
+      position: absolute;
+      left: -2.15rem;
+      top: 2.1rem;
+      width: 0.6rem;
+      height: 0.6rem;
+      border-radius: 50%;
+      background: var(--rule);
+      border: 2px solid var(--paper);
+      outline: 1px solid var(--rule);
+    }
+
+    .loop-item.active::before {
+      background: var(--blue);
+      outline-color: var(--blue);
+    }
+
+    .loop-item h2 {
+      font-size: 1rem;
       font-weight: 600;
-      background: var(--surface);
+      margin-bottom: 0.4rem;
     }
 
-    thead th:first-child { border-radius: 8px 0 0 0; }
-    thead th:last-child  { border-radius: 0 8px 0 0; }
-
-    tbody tr:nth-child(even) td { background: rgba(255,255,255,0.015); }
-
-    td {
-      padding: 0.7rem 1rem;
-      border-bottom: 1px solid var(--border);
-      color: var(--muted);
-      vertical-align: top;
+    .loop-item p {
+      font-size: 0.88rem;
+      font-weight: 300;
+      line-height: 1.65;
+      max-width: 100%;
     }
 
-    td:first-child { color: var(--text); font-weight: 500; white-space: nowrap; }
-
-    .yes  { color: var(--green); font-weight: 600; }
-    .no   { color: var(--red);   font-weight: 600; }
-    .part { color: var(--amber); font-weight: 600; }
-
-    /* ── Code block ────────────────────────────────────────── */
-
-    .code-section { margin-top: 1.5rem; }
-
-    .code-tabs {
-      display: flex;
-      gap: 0;
-      border-bottom: 1px solid var(--border);
-      margin-bottom: 0;
-    }
-
-    .code-tab {
-      padding: 0.5rem 1.1rem;
-      font-size: 0.82rem;
-      font-weight: 600;
-      color: var(--muted);
-      cursor: pointer;
-      border-bottom: 2px solid transparent;
-      transition: color 0.15s;
-    }
-
-    .code-tab.active {
-      color: var(--accent);
-      border-bottom-color: var(--accent);
-    }
-
-    pre.code-block {
-      background: var(--code-bg);
-      border: 1px solid var(--border);
-      border-top: none;
-      border-radius: 0 0 8px 8px;
-      padding: 1.5rem;
+    /* ── Code block ─────────────────────────────────────────────────────── */
+    .code-block {
+      background: var(--ink);
+      color: #d4c9b4;
+      border-radius: 4px;
+      padding: 1.75rem 2rem;
       overflow-x: auto;
-      font-family: "JetBrains Mono", "Fira Code", "Cascadia Code", Menlo, monospace;
+      font-family: var(--mono);
       font-size: 0.82rem;
       line-height: 1.7;
-      color: var(--text);
     }
 
-    .kw   { color: var(--accent); }
-    .str  { color: var(--green); }
-    .num  { color: var(--amber); }
-    .cmt  { color: var(--muted); font-style: italic; }
-    .key  { color: var(--accent2); }
+    .code-block .k  { color: #7aa6d4; }  /* keywords */
+    .code-block .s  { color: #98c379; }  /* strings */
+    .code-block .c  { color: #666; font-style: italic; }  /* comments */
+    .code-block .n  { color: #e5c07b; }  /* numbers */
+    .code-block .p  { color: #c678dd; }  /* punctuation accent */
 
-    /* ── Crates ────────────────────────────────────────────── */
-
-    .crates-grid {
+    /* ── Start section ──────────────────────────────────────────────────── */
+    .start-grid {
       display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
-      gap: 0.75rem;
-      margin-top: 1.5rem;
+      grid-template-columns: 1fr 1fr;
+      gap: 2rem;
     }
 
-    .crate-card {
-      background: var(--surface);
-      border: 1px solid var(--border);
-      border-radius: 6px;
-      padding: 1rem 1.25rem;
+    @media (max-width: 768px) {
+      .start-grid { grid-template-columns: 1fr; }
     }
 
-    .crate-name {
-      font-family: "JetBrains Mono", "Fira Code", Menlo, monospace;
-      font-size: 0.85rem;
-      color: var(--accent2);
-      font-weight: 600;
-      margin-bottom: 0.35rem;
+    .start-card {
+      border: 1px solid var(--rule);
+      border-radius: 4px;
+      overflow: hidden;
     }
 
-    .crate-desc {
-      font-size: 0.82rem;
-      color: var(--muted);
-      line-height: 1.5;
+    .start-card-head {
+      padding: 1rem 1.5rem;
+      border-bottom: 1px solid var(--rule);
+      background: var(--warm);
+      display: flex;
+      align-items: center;
+      gap: 1rem;
     }
 
-    /* ── Footer ────────────────────────────────────────────── */
+    .start-card-head h2 { font-size: 0.9rem; font-weight: 600; }
+    .start-card-label {
+      margin-left: auto;
+      font-size: 0.7rem;
+      font-family: var(--mono);
+      opacity: 0.5;
+    }
 
+    /* ── Footer ─────────────────────────────────────────────────────────── */
     footer {
-      border-top: 1px solid var(--border);
+      border-top: 1px solid var(--rule);
       padding: 2rem;
-      text-align: center;
-      color: var(--muted);
-      font-size: 0.82rem;
+      display: flex;
+      align-items: center;
+      gap: 2rem;
+      flex-wrap: wrap;
+      max-width: 1160px;
+      margin: 0 auto;
     }
 
-    /* ── Responsive ────────────────────────────────────────── */
+    footer p {
+      font-size: 0.8rem;
+      opacity: 0.5;
+      max-width: none;
+      margin: 0;
+    }
 
-    @media (max-width: 640px) {
-      header { padding: 1rem; }
-      main   { padding: 0 1rem 4rem; }
-      .hero  { padding-top: 3.5rem; }
-      nav    { display: none; }
+    footer a { font-size: 0.8rem; }
+
+    .footer-right {
+      margin-left: auto;
+      display: flex;
+      gap: 1.5rem;
     }
   </style>
 </head>
 <body>
 
-<header>
-  <span class="logo">chitta<span>-research</span></span>
-  <nav>
-    <a href="#architecture">Architecture</a>
+<!-- Nav -->
+<nav>
+  <a href="#" class="nav-logo">chitta-research</a>
+  <div class="nav-links">
+    <a href="#agents">Agents</a>
+    <a href="#memory">Memory</a>
     <a href="#loop">The Loop</a>
-    <a href="#comparison">Comparison</a>
-    <a href="#quickstart">Quickstart</a>
+    <a href="#start">Get Started</a>
     <a href="https://github.com/genomewalker/chitta-research">GitHub</a>
-  </nav>
-</header>
+  </div>
+</nav>
 
-<main>
-
-  <!-- Hero -->
-  <section class="hero">
-    <div class="hero-badge">Research Operating System</div>
-    <h1>Autonomous research<br>with persistent memory.</h1>
-    <p class="hero-lead">
-      chitta-research is a Rust system that runs three concurrent agents in a closed
-      loop — generating hypotheses, executing experiments, scoring results — against a
-      typed belief graph that accumulates structured knowledge across every session.
-      Unlike one-shot autoresearch pipelines, it remembers what it tried, what failed,
-      and what those failures mean for everything downstream.
-    </p>
-    <div class="cta-group">
-      <a class="btn btn-primary" href="#quickstart">Get started</a>
-      <a class="btn btn-ghost" href="https://github.com/genomewalker/chitta-research">View source</a>
-    </div>
-  </section>
-
-  <!-- Differentiators -->
-  <section id="differentiators">
-    <h2>Why it exists</h2>
+<!-- Hero -->
+<div class="hero">
+  <div class="hero-left">
+    <p class="hero-eyebrow">Autonomous Research OS</p>
+    <h1>chitta-<br>research</h1>
+  </div>
+  <div class="hero-right">
     <p>
-      Systems like autoresearch, AIDE, and AI Scientist treat each run as independent.
-      They produce a report, not a knowledge base. chitta-research is built around the
-      premise that <strong>scientific reasoning is inherently cumulative</strong> — and
-      that the structure of what you know matters as much as the content.
+      An experiment loop that <span class="tape">remembers</span>. Each run deposits typed
+      evidence into a persistent belief graph. Corrections lower domain reliability.
+      Hypotheses evolve across sessions, not just within them.
     </p>
-    <div class="diff-grid">
-      <div class="diff-card">
-        <h3>Typed belief graph</h3>
-        <p>Eight node types connected by five epistemic edge kinds. Every hypothesis
-        carries prior and posterior confidence. Claims record which observations
-        support them. The graph persists across runs via JSON snapshot.</p>
+    <div class="btn-row">
+      <a href="#start" class="btn btn-solid">Get started</a>
+      <a href="https://github.com/genomewalker/chitta-research" class="btn btn-outline">View source</a>
+    </div>
+  </div>
+</div>
+<hr class="rule">
+
+<!-- Intro strip -->
+<div class="intro-strip">
+  <div class="wrap">
+    <div class="intro-label">What this is</div>
+    <div>
+      <p>
+        Existing autonomous research systems — autoresearch, AIDE, AI Scientist — share a
+        structural flaw: they forget. Each run starts cold. The agent re-learns what
+        failed last time. The experiment log is either a flat TSV or a git history that
+        requires reading to extract meaning.
+      </p>
+      <p>
+        chitta-research is built differently. Every hypothesis, experiment, observation,
+        and correction is a first-class node in a typed <strong>belief graph</strong> that
+        persists across sessions. When an experiment fails, the failure is reasoned about
+        structurally — domain reliability drops, downstream beliefs are reconsolidated,
+        and future hypothesis selection accounts for what was learned. The system gets
+        smarter with each run, not just within each run.
+      </p>
+    </div>
+  </div>
+</div>
+
+<!-- Agents -->
+<div class="section" id="agents">
+  <div class="section-inner">
+    <div class="section-header">
+      <h3>Three agents</h3>
+      <h2>Each agent has one job, one access pattern, and one failure mode.</h2>
+    </div>
+    <div class="agents-grid">
+      <div class="agent">
+        <div class="agent-name">Hotr</div>
+        <div class="agent-sanskrit">hotṛ — the invoker</div>
+        <h2>Hypothesis Generator</h2>
+        <p>
+          Finds Question nodes in the belief graph with no child Hypotheses. Recalls
+          similar past experiments via HNSW semantic search, weighted by PoE domain
+          reliability. Calls the LLM with this grounded context to generate structured
+          hypotheses plus experiment plans. Adds them as typed graph nodes with
+          DerivedFrom edges.
+        </p>
       </div>
-      <div class="diff-card">
-        <h3>6-dim Pareto fitness</h3>
-        <p>Novelty, empirical gain, reproducibility, cost efficiency, transfer
-        potential, and calibration improvement. No single weighting is imposed.
-        Dominated results are pruned; trade-offs are preserved.</p>
+      <div class="agent">
+        <div class="agent-name">Adhvaryu</div>
+        <div class="agent-sanskrit">adhvaryu — the ritual technician</div>
+        <h2>Experiment Executor</h2>
+        <p>
+          Picks the highest-fitness ExperimentPlan with no child Run. Acquires a
+          resource slot from the semaphore manager. Executes the experiment — either
+          via LLM simulation or a subprocess. Commits raw artifacts to the git store.
+          Creates a Run node with full provenance: plan ID, git commit hash, elapsed
+          time, resource usage.
+        </p>
       </div>
-      <div class="diff-card">
-        <h3>Reconsolidation</h3>
-        <p>Corrections to high-priority beliefs propagate immediately to all downstream
-        nodes via DerivedFrom traversal. BlockedBy edges mark the affected subgraph.
-        Dead ends lower chitta recall scores for future searches.</p>
-      </div>
-      <div class="diff-card">
-        <h3>No API key required</h3>
-        <p>The default provider spawns <code>claude -p</code>, reusing the
-        authenticated Claude Code session. No separate billing. Anthropic API, OpenAI,
-        and Codex exec are also supported.</p>
-      </div>
-      <div class="diff-card">
-        <h3>chitta-field native</h3>
-        <p>Agents write memories, triplets, and observations to chittad over a Unix
-        socket. HNSW + BM25 + SDR cortical indexing. Failed experiments lower domain
-        realm scores so future hypothesis generation avoids proven dead ends.</p>
-      </div>
-      <div class="diff-card">
-        <h3>git-backed artifacts</h3>
-        <p>Every experiment result is committed to a local git repo. Commit SHAs are
-        stored on Run nodes. Full provenance: graph node → git commit → file content.
-        Reproducibility is a first-class citizen.</p>
+      <div class="agent">
+        <div class="agent-name">Udgatr</div>
+        <div class="agent-sanskrit">udgātṛ — the chanter</div>
+        <h2>Analyst</h2>
+        <p>
+          Finds Succeeded Run nodes with no FitnessVector. Calls the LLM to score on
+          six dimensions. Updates posterior confidence on the parent Hypothesis.
+          Creates Claim nodes for strong findings. Adds CONFIRMS or REFUTES edges.
+          When a high-confidence belief is refuted, triggers immediate reconsolidation
+          — not a nightly batch.
+        </p>
       </div>
     </div>
-  </section>
+  </div>
+</div>
+<hr class="rule">
 
-  <!-- Architecture -->
-  <section id="architecture">
-    <h2>Architecture</h2>
-    <p>
-      An 11-crate Cargo workspace. Three Tokio tasks run concurrently on a 100 ms
-      polling loop. The orchestrator shuts down when all agents idle out, the budget
-      is exhausted, or SIGINT is received.
-    </p>
-    <div class="arch-box">
-<pre>
-<span class="c-muted">agenda.yaml</span>
-    |
-    v
-<span class="c-accent">cr-agenda</span> ──&gt; <span class="c-accent2">BeliefGraph</span> (<span class="c-accent">cr-graph</span> + <span class="c-accent">cr-types</span>)
-                    |
-    ┌───────────────┼───────────────┐
-    v               v               v
-<span class="c-green"> Hotr           Adhvaryu        Udgatr</span>
-<span class="c-muted"> hypotheses      executor        scorer</span>
-    |               |               |
-    └───────────────┼───────────────┘
-                    |
-            <span class="c-accent2">AgentContext</span>  (cr-agents)
-            |       |       |       |
-          <span class="c-accent">LLM</span>   <span class="c-accent">Chitta</span>  <span class="c-accent">Artifacts</span> <span class="c-accent">Resources</span>
-        cr-llm  cr-chitta cr-artifacts cr-resources
-                    |
-          <span class="c-accent2">chittad daemon</span>  (Unix socket, JSON-RPC)
-          HNSW + BM25 + SDR cortical index
-
-<span class="c-muted">cr-fitness        Pareto frontier computation</span>
-<span class="c-muted">cr-reconsolidation  downstream confidence propagation</span>
-</pre>
+<!-- Memory -->
+<div class="section" id="memory">
+  <div class="section-inner">
+    <div class="section-header">
+      <h3>Memory</h3>
+      <h2>A belief graph that decays, reconsolidates, and tracks domain reliability.</h2>
     </div>
-  </section>
-
-  <!-- The Loop -->
-  <section id="loop">
-    <h2>The research loop</h2>
-    <p>
-      Each cycle, three agents concurrently poll the shared belief graph (protected by
-      a <code>tokio::sync::RwLock</code>) and take the next available action. Work is
-      naturally serialized by what exists in the graph — Hotr must generate hypotheses
-      before Adhvaryu can execute them, and Adhvaryu must produce runs before Udgatr
-      can score them.
-    </p>
-    <div class="loop-steps">
-      <div class="loop-step">
-        <div class="step-num">1</div>
-        <div class="step-body">
-          <h3>Hotr — hypothesis generation</h3>
-          <p>
-            Selects the highest-priority ResearchProgram. Finds its unanswered
-            Questions (no Hypothesis children via DerivedFrom edges). Sends the
-            question and domain context to the LLM. Adds 2–3 Hypothesis nodes and
-            ExperimentPlan children. Records the event in chitta with tags
-            <code>[hotr, hypothesis]</code>.
-          </p>
+    <div class="memory-layout">
+      <div>
+        <h3 style="margin-bottom:1rem">Graph node types</h3>
+        <div class="memory-stack">
+          <div class="memory-row"><span class="mem-label">ResearchProgram</span><span class="mem-desc">Top-level container. Owns budget, priority, domain.</span></div>
+          <div class="memory-row"><span class="mem-label">Question</span><span class="mem-desc">An open research question within a program.</span></div>
+          <div class="memory-row"><span class="mem-label">Hypothesis</span><span class="mem-desc">Testable statement. Carries prior and posterior confidence.</span></div>
+          <div class="memory-row"><span class="mem-label">ExperimentPlan</span><span class="mem-desc">Executable protocol. Linked to one Hypothesis.</span></div>
+          <div class="memory-row"><span class="mem-label">Run</span><span class="mem-desc">Execution record. Git commit hash, resource usage, outcome.</span></div>
+          <div class="memory-row"><span class="mem-label">Observation</span><span class="mem-desc">Raw measurement from a Run.</span></div>
+          <div class="memory-row"><span class="mem-label">Claim</span><span class="mem-desc">Statistically significant finding. May carry a confidence scope.</span></div>
+          <div class="memory-row"><span class="mem-label">Method</span><span class="mem-desc">Reusable protocol extracted across experiments.</span></div>
         </div>
       </div>
-      <div class="loop-step">
-        <div class="step-num">2</div>
-        <div class="step-body">
-          <h3>Adhvaryu — experiment execution</h3>
-          <p>
-            Finds ExperimentPlan nodes with no Run child. Acquires a resource semaphore
-            slot. Sends the plan steps and hypothesis to the LLM. Commits
-            <code>results.json</code> to the artifact git repo. Adds Run, Observation
-            nodes. Charges cost against the budget. Records the outcome in chitta.
-          </p>
-        </div>
+      <div>
+        <h3 style="margin-bottom:1rem">Pareto fitness dimensions</h3>
+        <ul class="fitness-list">
+          <li><span class="fitness-dim">novelty</span><span class="fitness-val">0.0 – 1.0</span></li>
+          <li><span class="fitness-dim">empirical_gain</span><span class="fitness-val">0.0 – 1.0</span></li>
+          <li><span class="fitness-dim">reproducibility</span><span class="fitness-val">0.0 – 1.0</span></li>
+          <li><span class="fitness-dim">cost_efficiency</span><span class="fitness-val">0.0 – 1.0</span></li>
+          <li><span class="fitness-dim">transfer_potential</span><span class="fitness-val">0.0 – 1.0</span></li>
+          <li><span class="fitness-dim">calibration_improvement</span><span class="fitness-val">0.0 – 1.0</span></li>
+        </ul>
+        <p style="margin-top:1.25rem;font-size:0.85rem;">
+          Experiments are ranked by Pareto dominance, not a scalar. A run that scores
+          high on empirical gain but low on reproducibility will not crowd out a more
+          reproducible result. Budget is allocated proportionally across the Pareto
+          frontier.
+        </p>
+        <p style="margin-top:0.75rem;font-size:0.85rem;">
+          When chitta is connected, domain reliability (PoE) from the
+          <code style="font-size:0.78rem">chittad</code> daemon multiplies recall scores
+          at query time — realms with many corrections naturally surface less.
+        </p>
       </div>
-      <div class="loop-step">
-        <div class="step-num">3</div>
-        <div class="step-body">
-          <h3>Udgatr — scoring and claims</h3>
-          <p>
-            Finds succeeded Runs with no FitnessVector. Sends hypothesis, plan, and
-            observations to the LLM for structured 6-dim scoring. Updates the Run's
-            fitness. Updates hypothesis posterior confidence. For empirical_gain &gt; 0.6,
-            creates Claim nodes with Supports or Refutes edges. Writes a triplet
-            (<code>hypothesis:ID confirmed_by run:ID</code>) to chitta.
-          </p>
+    </div>
+  </div>
+</div>
+<hr class="rule">
+
+<!-- The Loop -->
+<div class="section" id="loop" style="background:var(--warm)">
+  <div class="section-inner">
+    <div class="section-header">
+      <h3>The loop</h3>
+      <h2>Six steps, repeating until budget is exhausted or the agenda is answered.</h2>
+    </div>
+    <div style="max-width:640px">
+      <div class="loop-track">
+        <div class="loop-item active">
+          <h2>Recall</h2>
+          <p>Hotr queries the belief graph and chitta memory for open Questions and
+          past experiments similar to the current agenda. PoE-weighted recall means
+          directions that have failed before get less attention.</p>
         </div>
-      </div>
-      <div class="loop-step">
-        <div class="step-num">4</div>
-        <div class="step-body">
-          <h3>Shutdown and snapshot</h3>
-          <p>
-            When all three agents are idle for <code>--max-cycles</code> consecutive
-            cycles, or the total budget is exhausted, or SIGINT arrives, the loop
-            terminates. The full belief graph is written to <code>graph_state.json</code>
-            and is available for the next run or external analysis.
-          </p>
+        <div class="loop-item">
+          <h2>Hypothesize</h2>
+          <p>The LLM generates testable hypotheses grounded in recalled context —
+          not blank-slate generation. Each hypothesis becomes a graph node with a
+          prior confidence and DerivedFrom edges to its source Question.</p>
+        </div>
+        <div class="loop-item">
+          <h2>Execute</h2>
+          <p>Adhvaryu selects the highest-fitness unexecuted plan, acquires a resource
+          slot, runs the experiment, and commits the raw artifacts to git. The Run
+          node records full provenance.</p>
+        </div>
+        <div class="loop-item">
+          <h2>Score</h2>
+          <p>Udgatr computes a 6-dimensional FitnessVector for each completed run and
+          updates the posterior confidence on the parent Hypothesis. Claims are created
+          for statistically significant findings.</p>
+        </div>
+        <div class="loop-item">
+          <h2>Reconsolidate</h2>
+          <p>When a correction refutes a belief with tier &ge; 2, downstream nodes are
+          invalidated immediately — not at the next nightly batch. The graph stays
+          coherent across hundreds of experiments.</p>
+        </div>
+        <div class="loop-item">
+          <h2>Persist</h2>
+          <p>The belief graph snapshot is written to disk. If chitta is connected,
+          key findings are stored as typed memories with triplet edges, becoming
+          retrievable across future sessions and projects.</p>
         </div>
       </div>
     </div>
-  </section>
+  </div>
+</div>
+<hr class="rule">
 
-  <!-- Comparison -->
-  <section id="comparison">
-    <h2>Comparison</h2>
-    <p>How chitta-research differs from related systems.</p>
-    <div class="compare-wrap">
-      <table>
-        <thead>
-          <tr>
-            <th>Feature</th>
-            <th>chitta-research</th>
-            <th>autoresearch</th>
-            <th>AIDE</th>
-            <th>AI Scientist</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr>
-            <td>Persistent belief graph</td>
-            <td class="yes">Yes — typed nodes + edges</td>
-            <td class="no">No</td>
-            <td class="no">No</td>
-            <td class="no">No</td>
-          </tr>
-          <tr>
-            <td>Epistemic confidence tracking</td>
-            <td class="yes">Prior + posterior per hypothesis</td>
-            <td class="no">No</td>
-            <td class="no">No</td>
-            <td class="part">Partial</td>
-          </tr>
-          <tr>
-            <td>Multi-dim fitness</td>
-            <td class="yes">6-dim Pareto</td>
-            <td class="no">Scalar score</td>
-            <td class="part">Improvement score</td>
-            <td class="part">Single metric</td>
-          </tr>
-          <tr>
-            <td>Correction propagation</td>
-            <td class="yes">Reconsolidation engine</td>
-            <td class="no">No</td>
-            <td class="no">No</td>
-            <td class="no">No</td>
-          </tr>
-          <tr>
-            <td>Native semantic memory</td>
-            <td class="yes">chitta-field (HNSW + BM25 + SDR)</td>
-            <td class="no">No</td>
-            <td class="no">No</td>
-            <td class="no">No</td>
-          </tr>
-          <tr>
-            <td>No API key option</td>
-            <td class="yes">claude -p (claude-cli provider)</td>
-            <td class="no">API key required</td>
-            <td class="no">API key required</td>
-            <td class="no">API key required</td>
-          </tr>
-          <tr>
-            <td>Artifact provenance</td>
-            <td class="yes">git commit SHA on Run nodes</td>
-            <td class="part">File output</td>
-            <td class="part">File output</td>
-            <td class="part">File output</td>
-          </tr>
-          <tr>
-            <td>Concurrent agents</td>
-            <td class="yes">3 async Tokio tasks</td>
-            <td class="no">Sequential</td>
-            <td class="no">Sequential</td>
-            <td class="part">Parallel papers</td>
-          </tr>
-          <tr>
-            <td>Domain agnostic</td>
-            <td class="yes">Any empirical domain</td>
-            <td class="part">ML-focused</td>
-            <td class="part">ML-focused</td>
-            <td class="part">ML-focused</td>
-          </tr>
-          <tr>
-            <td>Language</td>
-            <td>Rust (1.92.0)</td>
-            <td>Python</td>
-            <td>Python</td>
-            <td>Python</td>
-          </tr>
-        </tbody>
-      </table>
+<!-- Get Started -->
+<div class="section" id="start">
+  <div class="section-inner">
+    <div class="section-header">
+      <h3>Get started</h3>
+      <h2>Clone, build, define an agenda, run.</h2>
     </div>
-  </section>
-
-  <!-- Quickstart -->
-  <section id="quickstart">
-    <h2>Quickstart</h2>
-    <p>
-      Requires Rust 1.92.0 (the <code>rust-toolchain.toml</code> pins the version).
-      Use <code>./build.sh</code> rather than calling <code>cargo</code> directly on
-      HPC systems — it clears the conda linker override that causes link failures.
-    </p>
-
-    <div class="code-section">
-      <div class="code-tabs">
-        <div class="code-tab active">1. Build</div>
-      </div>
-<pre class="code-block"><span class="cmt"># Clone and build</span>
+    <div class="start-grid">
+      <div>
+        <h3 style="margin-bottom:1rem">1. Build</h3>
+        <div class="code-block"><span class="c"># requires Rust 1.92+ and cargo</span>
 git clone https://github.com/genomewalker/chitta-research
 cd chitta-research
-./build.sh build --release</pre>
+./build.sh build
+
+<span class="c"># test the full pipeline without any API key</span>
+./build.sh run --bin cr-daemon -- \
+  --agenda agenda.example.yaml \
+  --mock --max-cycles 5</div>
+        <p style="margin-top:1.25rem;font-size:0.85rem;">
+          The <code>--mock</code> flag uses an internal LLM stub that returns
+          structured responses instantly — runs the complete Hotr→Adhvaryu→Udgatr
+          pipeline without any external calls.
+        </p>
+      </div>
+      <div>
+        <h3 style="margin-bottom:1rem">2. Write your agenda</h3>
+        <div class="code-block"><span class="k">programs</span>:
+  - <span class="k">title</span>: <span class="s">"ARG prevalence in ancient permafrost"</span>
+    <span class="k">domain</span>: <span class="s">metagenomics</span>
+    <span class="k">questions</span>:
+      - <span class="s">"Do ARGs increase with permafrost depth?"</span>
+      - <span class="s">"Are ancient ARGs phylogenetically distinct?"</span>
+    <span class="k">methods</span>:
+      - <span class="s">"BLASTp against CARD database"</span>
+    <span class="k">priority</span>: <span class="n">1.0</span>
+    <span class="k">max_budget_usd</span>: <span class="n">5.0</span>
+
+<span class="k">llm</span>:
+  <span class="k">provider</span>: <span class="s">claude-cli</span>  <span class="c"># uses `claude -p`, no key</span>
+  <span class="k">model</span>: <span class="s">claude-sonnet-4-6</span>
+
+<span class="k">chitta</span>:
+  <span class="k">mind_path</span>: <span class="s">~/.claude/mind</span>  <span class="c"># optional</span></div>
+      </div>
     </div>
 
-    <div class="code-section">
-      <div class="code-tabs">
-        <div class="code-tab active">2. Test the pipeline (no external calls)</div>
-      </div>
-<pre class="code-block"><span class="cmt"># --mock uses a deterministic stub LLM</span>
-<span class="cmt"># Full pipeline runs: graph build, agent steps, artifact commits, scoring</span>
-./build.sh run --release --bin chitta-research -- \
-    --agenda agenda.example.yaml \
-    --mock \
-    --max-cycles <span class="num">5</span></pre>
-    </div>
-
-    <div class="code-section">
-      <div class="code-tabs">
-        <div class="code-tab active">3. Run for real (claude-cli, no API key)</div>
-      </div>
-<pre class="code-block"><span class="cmt"># Requires `claude` on PATH (Claude Code installation)</span>
-./build.sh run --release --bin chitta-research -- \
-    --agenda agenda.example.yaml \
-    --max-cycles <span class="num">20</span></pre>
-    </div>
-
-    <div class="code-section">
-      <div class="code-tabs">
-        <div class="code-tab active">agenda.yaml format</div>
-      </div>
-<pre class="code-block"><span class="key">programs</span>:
-  - <span class="key">title</span>: <span class="str">"ARG prevalence in ancient permafrost"</span>
-    <span class="key">domain</span>: <span class="str">metagenomics</span>
-    <span class="key">questions</span>:
-      - <span class="str">"Do antibiotic resistance genes increase with permafrost depth?"</span>
-      - <span class="str">"Are ancient ARGs phylogenetically distinct from modern variants?"</span>
-    <span class="key">methods</span>:
-      - <span class="str">"BLASTp against CARD"</span>
-      - <span class="str">"Short-read assembly with MEGAHIT"</span>
-    <span class="key">priority</span>: <span class="num">1.0</span>
-    <span class="key">max_budget_usd</span>: <span class="num">5.0</span>
-
-<span class="key">budget</span>:
-  <span class="key">total_usd</span>: <span class="num">10.0</span>     <span class="cmt"># hard ceiling across all programs</span>
-  <span class="key">gpu_slots</span>: <span class="num">0</span>
-  <span class="key">cpu_workers</span>: <span class="num">4</span>
-
-<span class="key">llm</span>:
-  <span class="key">provider</span>: <span class="str">claude-cli</span>  <span class="cmt"># no API key needed</span>
-  <span class="key">model</span>: <span class="str">claude-sonnet-4-6</span>
-
-<span class="key">chitta</span>:
-  <span class="key">mind_path</span>: <span class="str">~/.claude/mind</span></pre>
-    </div>
-  </section>
-
-  <!-- Crates -->
-  <section id="crates">
-    <h2>Crate structure</h2>
-    <p>11 crates in the Cargo workspace. Each has a single responsibility.</p>
-    <div class="crates-grid">
-      <div class="crate-card">
-        <div class="crate-name">cr-types</div>
-        <div class="crate-desc">Core types: NodeKind, EdgeKind, FitnessVector, RunStatus, ResourceUsage. All serde-serializable.</div>
-      </div>
-      <div class="crate-card">
-        <div class="crate-name">cr-graph</div>
-        <div class="crate-desc">BeliefGraph — petgraph-backed stable directed graph with typed lookup, evidence queries, JSON snapshot I/O.</div>
-      </div>
-      <div class="crate-card">
-        <div class="crate-name">cr-agents</div>
-        <div class="crate-desc">Agent trait + AgentContext + three implementations: Hotr, Adhvaryu, Udgatr.</div>
-      </div>
-      <div class="crate-card">
-        <div class="crate-name">cr-fitness</div>
-        <div class="crate-desc">Pareto frontier computation over FitnessVector arrays. Pure function, no I/O.</div>
-      </div>
-      <div class="crate-card">
-        <div class="crate-name">cr-llm</div>
-        <div class="crate-desc">LlmClient trait + ClaudeCliClient, AnthropicClient, OpenAiClient, CodexClient, MockLlmClient.</div>
-      </div>
-      <div class="crate-card">
-        <div class="crate-name">cr-chitta</div>
-        <div class="crate-desc">Async Unix socket client for the chittad daemon. JSON-RPC MCP tools/call protocol.</div>
-      </div>
-      <div class="crate-card">
-        <div class="crate-name">cr-reconsolidation</div>
-        <div class="crate-desc">Downstream confidence propagation when a belief is corrected. Inserts BlockedBy edges.</div>
-      </div>
-      <div class="crate-card">
-        <div class="crate-name">cr-artifacts</div>
-        <div class="crate-desc">git2-backed artifact store. Commits result files to a local repo; returns SHA for graph nodes.</div>
-      </div>
-      <div class="crate-card">
-        <div class="crate-name">cr-resources</div>
-        <div class="crate-desc">Semaphore-based GPU/CPU slot manager + atomic budget accounting.</div>
-      </div>
-      <div class="crate-card">
-        <div class="crate-name">cr-agenda</div>
-        <div class="crate-desc">YAML parser for the agenda format. Converts programs and questions into the initial BeliefGraph.</div>
-      </div>
-      <div class="crate-card">
-        <div class="crate-name">cr-daemon</div>
-        <div class="crate-desc">Binary entry point. CLI parsing, context construction, agent task spawning, event loop, graph snapshot.</div>
+    <div style="margin-top:2rem">
+      <h3 style="margin-bottom:1rem">LLM providers</h3>
+      <div class="memory-stack">
+        <div class="memory-row"><span class="mem-label">claude-cli</span><span class="mem-desc">Uses <code>claude -p</code> via stdin. No API key. Reuses your current Claude Code session auth.</span></div>
+        <div class="memory-row"><span class="mem-label">codex</span><span class="mem-desc">Uses <code>codex exec</code> non-interactively. Requires codex CLI installed.</span></div>
+        <div class="memory-row"><span class="mem-label">anthropic</span><span class="mem-label">Direct API. Set <code>ANTHROPIC_API_KEY</code>.</span></div>
+        <div class="memory-row"><span class="mem-label">openai</span><span class="mem-desc">Direct API. Set <code>OPENAI_API_KEY</code>.</span></div>
+        <div class="memory-row"><span class="mem-label">mock</span><span class="mem-desc">Internal stub. Pass <code>--mock</code> flag. No external calls. For testing.</span></div>
       </div>
     </div>
-  </section>
+  </div>
+</div>
 
-</main>
-
+<!-- Footer -->
+<hr class="rule">
 <footer>
-  chitta-research &mdash; built in Rust 1.92.0 &mdash;
-  <a href="https://github.com/genomewalker/chitta-research">github.com/genomewalker/chitta-research</a>
+  <p>chitta-research &mdash; Rust &mdash; MIT License</p>
+  <div class="footer-right">
+    <a href="https://github.com/genomewalker/chitta-research">GitHub</a>
+    <a href="https://github.com/genomewalker/chitta-research/blob/main/README.md">README</a>
+    <a href="https://github.com/genomewalker/cc-soul">chitta-field</a>
+  </div>
 </footer>
 
 </body>
