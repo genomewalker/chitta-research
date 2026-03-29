@@ -49,6 +49,48 @@ pub struct LlmConfig {
     pub provider: String,
     pub model: String,
     pub api_key_env: Option<String>,
+    /// When `provider = "room"`, this block defines participants instead of
+    /// using the built-in `standard_room` preset.
+    #[serde(default)]
+    pub room: Option<RoomConfig>,
+}
+
+/// Top-level room configuration embedded in the agenda YAML.
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct RoomConfig {
+    /// Number of debate rounds. Default: 2.
+    #[serde(default = "default_room_rounds")]
+    pub rounds: usize,
+    pub participants: Vec<ParticipantConfig>,
+    /// Synthesizer participant. If absent the last thread entry is returned verbatim.
+    #[serde(default)]
+    pub synthesizer: Option<ParticipantConfig>,
+}
+
+fn default_room_rounds() -> usize { 2 }
+
+/// One participant in a configurable room.
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct ParticipantConfig {
+    /// Display name shown in the debate thread.
+    pub name: String,
+    /// Backend to use: `claude-cli`, `codex`, `anthropic`, `openai`, `gemini`,
+    /// or `openai-compat` (for local models via Ollama / LM Studio).
+    pub backend: String,
+    /// Model name (required for `anthropic`, `openai`, `gemini`, `openai-compat`, `codex`).
+    #[serde(default)]
+    pub model: Option<String>,
+    /// Environment variable holding the API key. Defaults per backend:
+    /// anthropic→ANTHROPIC_API_KEY, openai→OPENAI_API_KEY, gemini→GOOGLE_API_KEY.
+    #[serde(default)]
+    pub api_key_env: Option<String>,
+    /// Base URL override for `openai-compat` (e.g. `http://localhost:11434/v1`).
+    #[serde(default)]
+    pub base_url: Option<String>,
+    /// System prompt for this participant's role.
+    /// Defaults to a generic analytical role if absent.
+    #[serde(default)]
+    pub system: Option<String>,
 }
 
 #[derive(Debug, Serialize, Deserialize)]

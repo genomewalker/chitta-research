@@ -18,7 +18,7 @@ use cr_agents::brahman::Brahman;
 use cr_artifacts::ArtifactStore;
 use cr_chitta::ChittaClient;
 
-use cr_llm::{AnthropicClient, ClaudeCliClient, CodexClient, GeminiClient, LlmClient, MockLlmClient, OpenAiClient, mock_room, standard_room, three_way_room};
+use cr_llm::{AnthropicClient, ClaudeCliClient, CodexClient, GeminiClient, LlmClient, MockLlmClient, OpenAiClient, OpenCodeClient, mock_room, standard_room};
 use cr_resources::ResourceManager;
 
 #[derive(Parser)]
@@ -46,12 +46,89 @@ struct Cli {
     resources: Option<PathBuf>,
 }
 
+/// Build an `Arc<dyn LlmClient>` from a single `ParticipantConfig`.
+fn build_participant_client(p: &cr_agenda::ParticipantConfig) -> Arc<dyn LlmClient> {
+    let model = p.model.clone().unwrap_or_default();
+    match p.backend.as_str() {
+        "claude-cli" => Arc::new(ClaudeCliClient::new()),
+        "codex" => Arc::new(CodexClient::with_model(model)),
+        "anthropic" => {
+            let key = std::env::var(p.api_key_env.as_deref().unwrap_or("ANTHROPIC_API_KEY"))
+                .unwrap_or_else(|_| { warn!("ANTHROPIC_API_KEY not set for '{}'", p.name); "dummy-key".to_string() });
+            Arc::new(AnthropicClient::new(key))
+        }
+        "openai" => {
+            let key = std::env::var(p.api_key_env.as_deref().unwrap_or("OPENAI_API_KEY"))
+                .unwrap_or_else(|_| { warn!("OPENAI_API_KEY not set for '{}'", p.name); "dummy-key".to_string() });
+            Arc::new(OpenAiClient::openai(key))
+        }
+        "gemini" => {
+            let key = std::env::var(p.api_key_env.as_deref().unwrap_or("GOOGLE_API_KEY"))
+                .unwrap_or_else(|_| { warn!("GOOGLE_API_KEY not set for '{}'", p.name); String::new() });
+            Arc::new(GeminiClient::new(key, model))
+        }
+        "openai-compat" => {
+            let key = std::env::var(p.api_key_env.as_deref().unwrap_or("OPENAI_API_KEY"))
+                .unwrap_or_else(|_| "local".to_string());
+            let base = p.base_url.clone().unwrap_or_else(|| "http://localhost:11434/v1".to_string());
+            Arc::new(OpenAiClient::new(key, base))
+        }
+        "opencode" => {
+            // opencode -p [--model <model>]: run any OpenCode-supported model non-interactively.
+            // Multiple participants can use different models by specifying `model:` in the agenda.
+            match &p.model {
+                Some(m) => Arc::new(OpenCodeClient::with_model(m.clone())),
+                None => Arc::new(OpenCodeClient::new()),
+            }
+        }
+        other => {
+            warn!("Unknown participant backend '{}' for '{}', falling back to claude-cli", other, p.name);
+            Arc::new(ClaudeCliClient::new())
+        }
+    }
+}
+
+/// Default system prompt for a participant when none is specified in the agenda.
+fn default_system(name: &str, index: usize) -> String {
+    match index % 3 {
+        0 => format!("{name}: Find every flaw, untested assumption, and confound. Be specific and brief."),
+        1 => format!("{name}: Focus on testability — is the experiment measurable, reproducible, falsifiable? Propose concrete improvements."),
+        _ => format!("{name}: Focus on structural soundness — is the design extensible, minimal, and domain-agnostic?"),
+    }
+}
+
 fn build_llm_client(config: &cr_agenda::LlmConfig) -> Arc<dyn LlmClient> {
+    // If provider is "room" and a `room:` block is present, build from config.
+    if config.provider == "room" {
+        if let Some(room_cfg) = &config.room {
+            info!("building configurable room with {} participants, {} rounds",
+                room_cfg.participants.len(), room_cfg.rounds);
+            let mut builder = cr_llm::DiscussionRoom::builder(config.model.clone())
+                .rounds(room_cfg.rounds);
+            for (i, p) in room_cfg.participants.iter().enumerate() {
+                let system = p.system.clone()
+                    .unwrap_or_else(|| default_system(&p.name, i));
+                let client = build_participant_client(p);
+                builder = builder.add(p.name.clone(), system, client);
+            }
+            if let Some(synth) = &room_cfg.synthesizer {
+                let system = synth.system.clone().unwrap_or_else(|| {
+                    "You are a JSON synthesizer. Read the debate above, resolve any \
+                     contradictions, and produce the final answer the original prompt \
+                     requested. CRITICAL: Respond with ONLY raw JSON — no prose, no \
+                     markdown fences.".to_string()
+                });
+                builder = builder.synthesizer(system, build_participant_client(synth));
+            }
+            return Arc::new(builder.build());
+        }
+        // No room block — fall through to the built-in preset
+        info!("using standard room (claude-cli + codex, 2 rounds)");
+        return Arc::new(standard_room(config.model.clone()).build());
+    }
+
     match config.provider.as_str() {
         "claude-cli" => {
-            // Don't pass config.model here — it may be a descriptive label for
-            // the room provider (e.g. "chitta-research architecture evaluation"),
-            // not a real Claude model name.  Let claude -p use its own default.
             info!("using claude -p (no API key needed)");
             Arc::new(ClaudeCliClient::new())
         }
@@ -69,25 +146,19 @@ fn build_llm_client(config: &cr_agenda::LlmConfig) -> Arc<dyn LlmClient> {
             info!("using codex exec (model: {})", config.model);
             Arc::new(CodexClient::with_model(config.model.clone()))
         }
-        "room" => {
-            // Multi-model discussion room: claude-cli (Critic) + codex (Empiricist)
-            // debate each prompt for `rounds` rounds, then synthesize with claude-cli.
-            info!("using discussion room (claude-cli + codex, 2 rounds)");
-            Arc::new(standard_room(config.model.clone()).build())
-        }
         "gemini" => {
             let api_key = std::env::var(config.api_key_env.as_deref().unwrap_or("GOOGLE_API_KEY"))
                 .unwrap_or_else(|_| { warn!("GOOGLE_API_KEY not set"); "dummy-key".to_string() });
             info!("using Gemini (model: {})", config.model);
             Arc::new(GeminiClient::new(api_key, config.model.clone()))
         }
-        "three-way-room" => {
-            let gemini_key = std::env::var("GOOGLE_API_KEY")
-                .unwrap_or_else(|_| { warn!("GOOGLE_API_KEY not set for three-way room"); String::new() });
-            let gemini_model = std::env::var("GEMINI_MODEL")
-                .unwrap_or_else(|_| "gemini-2.5-pro".to_string());
-            info!("using three-way room (claude-cli + codex + gemini)");
-            Arc::new(three_way_room(config.model.clone(), gemini_key, gemini_model).build())
+        "openai-compat" => {
+            let api_key = std::env::var(config.api_key_env.as_deref().unwrap_or("OPENAI_API_KEY"))
+                .unwrap_or_else(|_| "local".to_string());
+            let base_url = std::env::var("OPENAI_COMPAT_BASE_URL")
+                .unwrap_or_else(|_| "http://localhost:11434/v1".to_string());
+            info!("using openai-compat at {base_url}");
+            Arc::new(OpenAiClient::new(api_key, base_url))
         }
         other => {
             warn!("Unknown provider '{}', defaulting to claude-cli", other);
@@ -172,6 +243,7 @@ async fn main() -> anyhow::Result<()> {
         provider: effective_provider.to_string(),
         model: config.llm.model.clone(),
         api_key_env: config.llm.api_key_env.clone(),
+        room: config.llm.room.clone(),
     };
     if let Some(ref p) = cli.provider {
         info!(provider = %p, "provider overridden via --provider flag");

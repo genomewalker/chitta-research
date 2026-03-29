@@ -172,6 +172,71 @@ impl LlmClient for CodexClient {
     }
 }
 
+// ── OpenCode CLI ───────────────────────────────────────────────────────────
+
+/// LLM client that drives `opencode -p` — non-interactive OpenCode CLI.
+/// Supports any model OpenCode knows about via `--model`.
+/// Multiple instances with different models can coexist as separate room participants.
+pub struct OpenCodeClient {
+    pub model: Option<String>,
+}
+
+impl OpenCodeClient {
+    pub fn new() -> Self { Self { model: None } }
+    pub fn with_model(model: impl Into<String>) -> Self { Self { model: Some(model.into()) } }
+}
+
+#[async_trait]
+impl LlmClient for OpenCodeClient {
+    async fn complete(&self, req: CompletionRequest) -> Result<CompletionResponse, LlmError> {
+        let mut prompt = String::new();
+        if !req.system.is_empty() {
+            prompt.push_str(&req.system);
+            prompt.push_str("\n\n");
+        }
+        for m in &req.messages {
+            if m.role == "user" {
+                prompt.push_str(&m.content);
+                prompt.push('\n');
+            }
+        }
+
+        let mut cmd = tokio::process::Command::new("opencode");
+        cmd.arg("-p")
+           .stdin(std::process::Stdio::piped())
+           .stdout(std::process::Stdio::piped())
+           .stderr(std::process::Stdio::piped())
+           // Don't inherit Claude Code's session env vars
+           .env_remove("CLAUDECODE")
+           .env_remove("CLAUDE_CODE_ENTRYPOINT");
+
+        if let Some(model) = &self.model {
+            cmd.arg("--model").arg(model);
+        }
+
+        let mut child = cmd.spawn()
+            .map_err(|e| LlmError::Process(e.to_string()))?;
+
+        if let Some(stdin) = child.stdin.take() {
+            use tokio::io::AsyncWriteExt;
+            let mut stdin = stdin;
+            stdin.write_all(prompt.as_bytes()).await
+                .map_err(|e| LlmError::Process(e.to_string()))?;
+        }
+
+        let output = child.wait_with_output().await
+            .map_err(|e| LlmError::Process(e.to_string()))?;
+
+        if !output.status.success() {
+            let stderr = String::from_utf8_lossy(&output.stderr).to_string();
+            return Err(LlmError::Process(format!("opencode -p failed: {stderr}")));
+        }
+
+        let content = String::from_utf8_lossy(&output.stdout).trim().to_string();
+        Ok(CompletionResponse { content, usage: TokenUsage::default(), debate_thread: vec![] })
+    }
+}
+
 #[async_trait]
 pub trait LlmClient: Send + Sync {
     async fn complete(&self, req: CompletionRequest) -> Result<CompletionResponse, LlmError>;
