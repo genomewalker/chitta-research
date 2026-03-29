@@ -184,15 +184,44 @@ async fn main() -> anyhow::Result<()> {
         max_cycles: cli.max_cycles,
     };
 
-    // Resume from snapshot if it exists — preserves accumulated hypotheses and runs
-    // across restarts. Falls back to a fresh graph from the agenda if no snapshot found.
+    // Resume from snapshot if it exists — preserves accumulated hypotheses and runs.
+    // IMPORTANT: also merge new programs/questions from the current agenda that are
+    // not yet in the snapshot, so switching to a new agenda actually works.
     let graph = if cli.graph_output.exists() {
         match std::fs::read_to_string(&cli.graph_output)
             .ok()
             .and_then(|s| cr_graph::BeliefGraph::from_json_snapshot(&s).ok())
         {
-            Some(g) => {
-                info!(nodes = g.node_count(), path = %cli.graph_output.display(), "resumed from snapshot");
+            Some(mut g) => {
+                // Merge new agenda nodes into the resumed graph
+                let agenda_graph = config.into_belief_graph()?;
+                let existing_texts: std::collections::HashSet<String> = g.all_nodes().iter()
+                    .filter_map(|n| match &n.kind {
+                        cr_types::NodeKind::Question(q) => Some(q.text.clone()),
+                        cr_types::NodeKind::ResearchProgram(p) => Some(p.title.clone()),
+                        _ => None,
+                    })
+                    .collect();
+                let mut added = 0usize;
+                for node in agenda_graph.all_nodes() {
+                    let key = match &node.kind {
+                        cr_types::NodeKind::Question(q) => Some(q.text.clone()),
+                        cr_types::NodeKind::ResearchProgram(p) => Some(p.title.clone()),
+                        _ => None,
+                    };
+                    if let Some(k) = key {
+                        if !existing_texts.contains(&k) {
+                            let _ = g.add_node(node.clone());
+                            added += 1;
+                        }
+                    }
+                }
+                if added > 0 {
+                    info!(nodes = g.node_count(), new = added, path = %cli.graph_output.display(),
+                          "resumed from snapshot + merged new agenda questions");
+                } else {
+                    info!(nodes = g.node_count(), path = %cli.graph_output.display(), "resumed from snapshot");
+                }
                 g
             }
             None => {
