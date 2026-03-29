@@ -180,7 +180,7 @@ async fn main() -> anyhow::Result<()> {
         info!(nodes = g.node_count(), "belief graph initialized from agenda");
         g
     };
-    let node_count = graph.node_count();
+    let _node_count = graph.node_count();
 
     let graph = Arc::new(RwLock::new(graph));
 

@@ -3,6 +3,10 @@ name = "cr-daemon"
 version = "0.1.0"
 edition = "2021"
 
+[[bin]]
+name = "cresearch"
+path = "src/main.rs"
+
 [dependencies]
 cr-types = { path = "../cr-types" }
 cr-graph = { path = "../cr-graph" }
