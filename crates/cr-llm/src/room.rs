@@ -158,6 +158,47 @@ pub fn standard_room(topic: impl Into<String>) -> DiscussionRoomBuilder {
         )
 }
 
+/// Preset: three-way room with Claude (Critic), Codex/GPT-5.4 (Empiricist),
+/// and Gemini (Architect). Pass `gemini_api_key` and `gemini_model`
+/// (e.g. "gemini-2.5-pro").  Use `topic` as the debate seed.
+pub fn three_way_room(
+    topic: impl Into<String>,
+    gemini_api_key: String,
+    gemini_model: String,
+) -> DiscussionRoomBuilder {
+    let topic = topic.into();
+    DiscussionRoom::builder(topic)
+        .add(
+            "Critic",
+            "You are a scientific critic. Find every flaw, untested assumption, \
+             and confound in the hypothesis or plan. Be specific and brief.",
+            Arc::new(crate::ClaudeCliClient::new()),
+        )
+        .add(
+            "Empiricist",
+            "You are an empiricist. Focus on testability: is the experiment \
+             actually measurable, reproducible, and falsifiable? Propose concrete \
+             improvements to the experimental design.",
+            Arc::new(crate::CodexClient::new()),
+        )
+        .add(
+            "Architect",
+            "You are a systems architect. Focus on structural soundness: \
+             is the design extensible, minimal, and domain-agnostic? \
+             Identify hidden coupling and propose cleaner abstractions.",
+            Arc::new(crate::GeminiClient::new(gemini_api_key, gemini_model)),
+        )
+        .rounds(2)
+        .synthesizer(
+            "You are a JSON synthesizer. Read the three-way debate above, reconcile \
+             contradictions between Critic, Empiricist, and Architect, and produce the \
+             final answer the original prompt requested. Incorporate valid criticisms \
+             from all three. \
+             CRITICAL: Respond with ONLY raw JSON — no prose, no markdown fences.",
+            Arc::new(crate::ClaudeCliClient::new()),
+        )
+}
+
 /// Format the full discussion thread for a participant to read.
 /// Each post is prefixed with the poster's name and round.
 /// Entries named "[error: ...]" are excluded from the synthesis context.

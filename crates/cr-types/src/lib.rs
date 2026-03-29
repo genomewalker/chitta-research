@@ -95,13 +95,81 @@ pub struct Method {
     pub description: String,
 }
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub enum RunStatus {
     Queued,
     Running,
     Succeeded,
     Failed,
     Cancelled,
+    /// Awaiting human or instrument input before the run can complete.
+    AwaitingInput { resume_token: String },
+}
+
+/// Spec for an external verifier command, defined per-program in the agenda YAML.
+/// The verifier must emit a `VerificationResult` JSON object to stdout.
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct VerifierSpec {
+    /// Command to execute. May use `{output}` and `{baseline}` placeholders.
+    pub cmd: String,
+    /// jq-style path into the JSON output for the primary metric (e.g. ".compression_ratio").
+    /// If absent, Udgatr reads `status` directly.
+    #[serde(default)]
+    pub metric_jsonpath: Option<String>,
+    /// Boolean success expression over `metric` and `baseline` (e.g. "metric < baseline * 0.85").
+    /// If absent, pass = exit code 0.
+    #[serde(default)]
+    pub success_expr: Option<String>,
+    /// Exit codes that signal build/infra failure (not hypothesis falsification).
+    /// Kriya retries on these codes rather than penalising the hypothesis.
+    #[serde(default = "default_build_failure_codes")]
+    pub build_failure_codes: Vec<i32>,
+    /// Max retries on build failure before propagating as `Invalid`.
+    #[serde(default = "default_build_retries")]
+    pub build_retries: u32,
+    /// Verifier command timeout in seconds.
+    #[serde(default = "default_verifier_timeout")]
+    pub timeout_s: u64,
+}
+
+fn default_build_failure_codes() -> Vec<i32> { vec![2] }
+fn default_build_retries() -> u32 { 2 }
+fn default_verifier_timeout() -> u64 { 300 }
+
+/// Structured output from a verifier command.
+/// Verifier scripts must emit exactly one JSON object of this shape to stdout.
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct VerificationResult {
+    pub status: VerificationStatus,
+    /// Named numeric measurements (e.g. `{"compression_ratio": 1.93, "scan_time_ms": 412}`).
+    #[serde(default)]
+    pub metrics: std::collections::HashMap<String, f64>,
+    /// Baseline measurements for comparison.
+    #[serde(default)]
+    pub baseline_metrics: Option<std::collections::HashMap<String, f64>>,
+    /// Claim statements supported by these measurements.
+    #[serde(default)]
+    pub supports: Vec<String>,
+    /// Claim statements refuted by these measurements.
+    #[serde(default)]
+    pub refutes: Vec<String>,
+    /// Estimated cost in USD (optional).
+    #[serde(default)]
+    pub cost: Option<f64>,
+    /// Free-form notes.
+    #[serde(default)]
+    pub notes: Option<String>,
+}
+
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[serde(tag = "kind", rename_all = "snake_case")]
+pub enum VerificationStatus {
+    Pass,
+    Fail,
+    /// Awaiting human or instrument input; `resume_token` is used to inject results later.
+    Pending { resume_token: String },
+    /// Build or infrastructure failure — does not count as hypothesis falsification.
+    Invalid,
 }
 
 #[derive(Debug, Clone, Copy, Serialize, Deserialize)]

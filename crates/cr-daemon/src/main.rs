@@ -18,7 +18,7 @@ use cr_agents::brahman::Brahman;
 use cr_artifacts::ArtifactStore;
 use cr_chitta::ChittaClient;
 
-use cr_llm::{AnthropicClient, ClaudeCliClient, CodexClient, LlmClient, MockLlmClient, OpenAiClient, mock_room, standard_room};
+use cr_llm::{AnthropicClient, ClaudeCliClient, CodexClient, GeminiClient, LlmClient, MockLlmClient, OpenAiClient, mock_room, standard_room, three_way_room};
 use cr_resources::ResourceManager;
 
 #[derive(Parser)]
@@ -74,6 +74,20 @@ fn build_llm_client(config: &cr_agenda::LlmConfig) -> Arc<dyn LlmClient> {
             // debate each prompt for `rounds` rounds, then synthesize with claude-cli.
             info!("using discussion room (claude-cli + codex, 2 rounds)");
             Arc::new(standard_room(config.model.clone()).build())
+        }
+        "gemini" => {
+            let api_key = std::env::var(config.api_key_env.as_deref().unwrap_or("GOOGLE_API_KEY"))
+                .unwrap_or_else(|_| { warn!("GOOGLE_API_KEY not set"); "dummy-key".to_string() });
+            info!("using Gemini (model: {})", config.model);
+            Arc::new(GeminiClient::new(api_key, config.model.clone()))
+        }
+        "three-way-room" => {
+            let gemini_key = std::env::var("GOOGLE_API_KEY")
+                .unwrap_or_else(|_| { warn!("GOOGLE_API_KEY not set for three-way room"); String::new() });
+            let gemini_model = std::env::var("GEMINI_MODEL")
+                .unwrap_or_else(|_| "gemini-2.5-pro".to_string());
+            info!("using three-way room (claude-cli + codex + gemini)");
+            Arc::new(three_way_room(config.model.clone(), gemini_key, gemini_model).build())
         }
         other => {
             warn!("Unknown provider '{}', defaulting to claude-cli", other);
@@ -185,6 +199,7 @@ async fn main() -> anyhow::Result<()> {
         questions: config.programs.first().map(|p| p.questions.clone()).unwrap_or_default(),
         max_budget_usd: total_budget,
         max_cycles: cli.max_cycles,
+        verifier: config.programs.first().and_then(|p| p.verifier.clone()),
     };
 
     // Resume from snapshot if it exists — preserves accumulated hypotheses and runs.

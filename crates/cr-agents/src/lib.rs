@@ -14,7 +14,7 @@ use cr_chitta::ChittaClient;
 use cr_graph::BeliefGraph;
 use cr_llm::LlmClient;
 use cr_resources::ResourceManager;
-use cr_types::{EpistemicEdge, FitnessVector, NodeId, NodeKind};
+use cr_types::{EpistemicEdge, FitnessVector, NodeId, NodeKind, VerifierSpec};
 
 #[async_trait]
 pub trait Agent: Send + Sync {
@@ -39,6 +39,10 @@ pub struct ResearchAgenda {
     pub questions: Vec<String>,
     pub max_budget_usd: f32,
     pub max_cycles: u64,
+    /// Optional external verifier spec threaded from the agenda YAML.
+    /// When present, Kriya uses it as a promotion gate instead of
+    /// the built-in LOC/test heuristics.
+    pub verifier: Option<VerifierSpec>,
 }
 
 pub enum AgentAction {

@@ -1,5 +1,5 @@
 pub mod room;
-pub use room::{DiscussionRoom, DiscussionRoomBuilder, Participant, mock_room, standard_room};
+pub use room::{DiscussionRoom, DiscussionRoomBuilder, Participant, mock_room, standard_room, three_way_room};
 
 use async_trait::async_trait;
 use serde::{Deserialize, Serialize};
@@ -330,6 +330,84 @@ impl OpenAiClient {
 
 #[async_trait]
 impl LlmClient for OpenAiClient {
+    async fn complete(&self, req: CompletionRequest) -> Result<CompletionResponse, LlmError> {
+        retry_complete(|| self.do_complete(&req)).await
+    }
+}
+
+// ── Google Gemini ──────────────────────────────────────────────────────────
+
+pub struct GeminiClient {
+    client: reqwest::Client,
+    api_key: String,
+    model: String,
+}
+
+impl GeminiClient {
+    pub fn new(api_key: String, model: String) -> Self {
+        Self { client: reqwest::Client::new(), api_key, model }
+    }
+
+    async fn do_complete(&self, req: &CompletionRequest) -> Result<CompletionResponse, LlmError> {
+        // Build contents array; system prompt goes into system_instruction
+        let mut contents: Vec<serde_json::Value> = Vec::new();
+        for m in &req.messages {
+            let role = if m.role == "assistant" { "model" } else { "user" };
+            contents.push(serde_json::json!({
+                "role": role,
+                "parts": [{"text": m.content}]
+            }));
+        }
+
+        let mut body = serde_json::json!({
+            "contents": contents,
+            "generationConfig": {
+                "maxOutputTokens": req.max_tokens,
+                "temperature": req.temperature,
+            }
+        });
+
+        if !req.system.is_empty() {
+            body["system_instruction"] = serde_json::json!({
+                "parts": [{"text": req.system}]
+            });
+        }
+
+        let url = format!(
+            "https://generativelanguage.googleapis.com/v1beta/models/{}:generateContent?key={}",
+            self.model, self.api_key
+        );
+
+        let resp = self
+            .client
+            .post(&url)
+            .header("content-type", "application/json")
+            .json(&body)
+            .send()
+            .await?;
+
+        let status = resp.status().as_u16();
+        if !resp.status().is_success() {
+            let body = resp.text().await.unwrap_or_default();
+            return Err(LlmError::Api { status, body });
+        }
+
+        let data: serde_json::Value = resp.json().await?;
+        let content = data["candidates"][0]["content"]["parts"][0]["text"]
+            .as_str()
+            .unwrap_or("")
+            .to_string();
+        let usage = TokenUsage {
+            input: data["usageMetadata"]["promptTokenCount"].as_u64().unwrap_or(0),
+            output: data["usageMetadata"]["candidatesTokenCount"].as_u64().unwrap_or(0),
+        };
+
+        Ok(CompletionResponse { content, usage, debate_thread: vec![] })
+    }
+}
+
+#[async_trait]
+impl LlmClient for GeminiClient {
     async fn complete(&self, req: CompletionRequest) -> Result<CompletionResponse, LlmError> {
         retry_complete(|| self.do_complete(&req)).await
     }

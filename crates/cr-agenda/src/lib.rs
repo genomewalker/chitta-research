@@ -1,6 +1,7 @@
 use anyhow::{Context, Result};
 use serde::{Deserialize, Serialize};
 
+pub use cr_types::VerifierSpec;
 use cr_types::*;
 use cr_graph::BeliefGraph;
 
@@ -23,6 +24,10 @@ pub struct ProgramConfig {
     pub priority: f32,
     #[serde(default = "default_budget")]
     pub max_budget_usd: f32,
+    /// Optional external verifier. When present, Kriya uses it as a promotion
+    /// gate instead of the built-in LOC/test heuristics.
+    #[serde(default)]
+    pub verifier: Option<VerifierSpec>,
 }
 
 fn default_priority() -> f32 { 1.0 }
