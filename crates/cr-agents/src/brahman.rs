@@ -60,23 +60,41 @@ REQUIRED OUTPUT FORMAT — respond with ONLY this JSON:
 /// How often Brahman activates (in seconds)
 const BRAHMAN_INTERVAL_SECS: u64 = 1800; // 30 minutes
 
-/// Minimum claims before a question is considered saturated
-const SATURATION_THRESHOLD: usize = 4;
-
 /// Minimum novelty score on recent claims before triggering stagnation
 const STAGNATION_NOVELTY_FLOOR: f32 = 0.40;
 
+/// ── Research constitution ─────────────────────────────────────────────────
+/// Rules that prevent infinite self-referential loops.
+
+/// Max consecutive self-improvement agendas before Brahman refuses to generate another.
+/// Forces a domain switch or hard stop rather than infinite meta-research.
+const MAX_SELF_IMPROVEMENT_DEPTH: u32 = 3;
+
+/// If novelty stays below this for 2 consecutive activations, hard stop — the
+/// graph is fully saturated and generating more agendas won't help.
+const HARD_STOP_NOVELTY: f32 = 0.20;
+
+/// Don't generate a new agenda if more than this many hypotheses are untested.
+/// Generation is outpacing execution — let Adhvaryu/Udgatr catch up first.
+const MAX_HYPOTHESIS_BACKLOG: usize = 10;
+
 pub struct Brahman {
     last_activation: std::sync::Mutex<std::time::Instant>,
+    /// Count of consecutive self-improvement agendas generated this session
+    self_improvement_depth: std::sync::atomic::AtomicU32,
+    /// Novelty score from previous activation (for hard-stop detection)
+    prev_novelty: std::sync::Mutex<f32>,
 }
 
 impl Brahman {
     pub fn new() -> Self {
         Self {
-            // First activation after 5 minutes — let Hotr/Adhvaryu/Udgatr build context first
+            // First activation after 5 minutes — let other agents build context first
             last_activation: std::sync::Mutex::new(
                 std::time::Instant::now() - std::time::Duration::from_secs(BRAHMAN_INTERVAL_SECS - 300)
             ),
+            self_improvement_depth: std::sync::atomic::AtomicU32::new(0),
+            prev_novelty: std::sync::Mutex::new(1.0),
         }
     }
 }
@@ -160,13 +178,66 @@ impl Agent for Brahman {
         }
         *self.last_activation.lock().unwrap() = std::time::Instant::now();
 
-        let (graph_summary, novelty) = {
+        let (graph_summary, novelty, untested_hyps) = {
             let graph = ctx.graph.read().await;
             let nodes: Vec<&TypedNode> = graph.all_nodes().into_iter().collect();
             let summary = build_graph_summary(&nodes);
             let novelty = recent_novelty(&nodes);
-            (summary, novelty)
+            let untested = nodes.iter().filter(|n| {
+                if let NodeKind::Hypothesis(h) = &n.kind { h.posterior_confidence.is_none() } else { false }
+            }).count();
+            (summary, novelty, untested)
         };
+
+        // ── Research constitution checks ──────────────────────────────────
+        // Rule 1: Hypothesis backlog gate — let Adhvaryu/Udgatr catch up first
+        if untested_hyps > MAX_HYPOTHESIS_BACKLOG {
+            tracing::info!(
+                untested = untested_hyps,
+                limit = MAX_HYPOTHESIS_BACKLOG,
+                "brahman: backlog gate — waiting for Adhvaryu to clear hypothesis queue"
+            );
+            return Ok(AgentAction::Noop);
+        }
+
+        // Rule 2: Hard novelty stop — graph is fully saturated
+        let prev = *self.prev_novelty.lock().unwrap();
+        *self.prev_novelty.lock().unwrap() = novelty;
+        if novelty < HARD_STOP_NOVELTY && prev < HARD_STOP_NOVELTY {
+            tracing::warn!(
+                novelty,
+                prev_novelty = prev,
+                "brahman: HARD STOP — novelty below floor for 2 consecutive activations, \
+                 graph is saturated. Run cr-report and start a new agenda manually."
+            );
+            if let Ok(mut chitta) = ctx.chitta.try_lock() {
+                let _ = chitta.remember(
+                    &format!("[brahman:hard-stop] Novelty {novelty:.2} for 2 activations — \
+                              graph saturated. Manual intervention required."),
+                    "wisdom", &["brahman", "hard-stop"], 0.95,
+                ).await;
+            }
+            return Ok(AgentAction::Noop);
+        }
+
+        // Rule 3: Self-improvement depth cap
+        let depth = self.self_improvement_depth.load(std::sync::atomic::Ordering::Relaxed);
+        if depth >= MAX_SELF_IMPROVEMENT_DEPTH {
+            tracing::warn!(
+                depth,
+                limit = MAX_SELF_IMPROVEMENT_DEPTH,
+                "brahman: self-improvement depth cap reached — refusing to generate \
+                 another self-referential agenda. Run cr-report and switch domains."
+            );
+            if let Ok(mut chitta) = ctx.chitta.try_lock() {
+                let _ = chitta.remember(
+                    &format!("[brahman:depth-cap] {depth} consecutive self-improvement agendas — \
+                              refusing to generate more. Switch to a domain agenda."),
+                    "wisdom", &["brahman", "depth-cap"], 0.95,
+                ).await;
+            }
+            return Ok(AgentAction::Noop);
+        }
 
         // Recall relevant memories from chitta for context
         let chitta_context = {
@@ -292,10 +363,23 @@ chitta:
                 chrono::Utc::now().format("%Y%m%d-%H%M%S"));
             std::fs::write(&agenda_path, &agenda_yaml)?;
 
+            // Track self-improvement depth for the constitution cap
+            let is_self_improvement = agenda_domain == "software_engineering"
+                || agenda_title.to_lowercase().contains("chitta")
+                || agenda_title.to_lowercase().contains("cresearch")
+                || agenda_title.to_lowercase().contains("test")
+                || agenda_title.to_lowercase().contains("fix");
+            if is_self_improvement {
+                self.self_improvement_depth.fetch_add(1, std::sync::atomic::Ordering::Relaxed);
+            } else {
+                self.self_improvement_depth.store(0, std::sync::atomic::Ordering::Relaxed);
+            }
+
             tracing::info!(
                 path = %agenda_path,
                 title = %agenda_title,
                 domain = %agenda_domain,
+                self_improvement_depth = self.self_improvement_depth.load(std::sync::atomic::Ordering::Relaxed),
                 "brahman: wrote new agenda (stagnation detected)"
             );
 
