@@ -1,0 +1,27 @@
+programs:
+  - title: "chitta-research self-improvement"
+    domain: software_engineering
+    questions:
+      - "What are the weakest points in the DiscussionRoom synthesis quality?"
+      - "How should the belief graph handle duplicate hypotheses across sessions?"
+      - "What is the optimal rounds-per-query tradeoff for DiscussionRoom vs single-model LLM calls?"
+      - "How should chitta-field integration surface past experiment failures to Hotr?"
+    methods:
+      - "Read and analyze source files in crates/"
+      - "Generate hypotheses grounded in the code structure"
+      - "Evaluate hypotheses via code analysis and reasoning experiments"
+      - "Propose concrete patches as Observations"
+    priority: 1.0
+    max_budget_usd: 10.0
+
+budget:
+  total_usd: 10.0
+  gpu_slots: 0
+  cpu_workers: 2
+
+llm:
+  provider: room
+  model: "chitta-research architecture evaluation"
+
+chitta:
+  mind_path: ~/.claude/mind
