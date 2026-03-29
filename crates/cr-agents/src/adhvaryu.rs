@@ -125,66 +125,8 @@ impl Agent for Adhvaryu {
         // Acquire resources
         let _slot = ctx.resources.acquire(false).await?;
 
-        // Detect subprocess plans — steps starting with "run:" execute shell commands directly.
-        // This enables real data analysis: "run: python analyze.py --input data.csv"
-        let is_subprocess = plan.steps.iter().any(|s| {
-            let s = s.to_lowercase();
-            s.starts_with("run:") || s.starts_with("shell:") || s.starts_with("exec:")
-        });
-
-        // Detect code-analysis plans — route through chitta tree-sitter instead of LLM.
-        let is_code_analysis = !is_subprocess && plan.steps.iter().any(|s| {
-            let s = s.to_lowercase();
-            s.contains("read") || s.contains("search") || s.contains("symbol") ||
-            s.contains("analyze") || s.contains("source") || s.contains("codebase") ||
-            s.contains("function") || s.contains("struct") || s.contains("trait")
-        });
-
-        let exec_result: ExecutionResult = if is_subprocess {
-            execute_subprocess_steps(&plan.steps).await?
-        } else if is_code_analysis {
-            let mut chitta = ctx.chitta.lock().await;
-            let connected = chitta.connect().await.is_ok();
-            if connected {
-                let mut observations = Vec::new();
-                for step in &plan.steps {
-                    let sl = step.to_lowercase();
-                    let obs = if sl.contains("search") || sl.contains("symbol") {
-                        let query = step.split_once(':').map(|(_, q)| q.trim()).unwrap_or(step);
-                        chitta.search_symbols(query, 5).await.unwrap_or_else(|e| e.to_string())
-                    } else if sl.contains("read") || sl.contains("function") {
-                        let name = step.split_once(':').map(|(_, q)| q.trim()).unwrap_or(step);
-                        chitta.read_function(name, None).await.unwrap_or_else(|e| e.to_string())
-                    } else if sl.contains("codebase") || sl.contains("index") {
-                        let path = step.split_once(':').map(|(_, q)| q.trim())
-                            .unwrap_or(".");
-                        chitta.learn_codebase(path).await.unwrap_or_else(|e| e.to_string())
-                    } else {
-                        chitta.code_context(step).await.unwrap_or_else(|e| e.to_string())
-                    };
-                    if !obs.is_empty() && obs.len() < 2000 {
-                        observations.push(obs);
-                    }
-                }
-                ExecutionResult {
-                    outcome: "succeeded".into(),
-                    observations: if observations.is_empty() {
-                        vec!["Code analysis completed via tree-sitter.".into()]
-                    } else {
-                        observations
-                    },
-                    metrics: serde_json::json!({}),
-                    summary: format!("Code analysis via chitta tree-sitter: {} steps executed.", plan.steps.len()),
-                    token_usage: (0, 0),
-                    debate_thread: vec![],
-                }
-            } else {
-                // chitta not connected — fall through to LLM simulation
-                execute_via_llm(&ctx, &hypothesis_text, &plan.steps).await?
-            }
-        } else {
-            execute_via_llm(&ctx, &hypothesis_text, &plan.steps).await?
-        };
+        let exec_result: ExecutionResult =
+            execute_steps_mixed(&plan.steps, &ctx, &hypothesis_text).await?;
 
         let status = if exec_result.outcome == "succeeded" {
             RunStatus::Succeeded
@@ -293,78 +235,116 @@ impl Agent for Adhvaryu {
     }
 }
 
-/// Execute plan steps that start with `run:`, `shell:`, or `exec:` as real subprocesses.
-/// Captures stdout as observations. Any non-zero exit code marks the run as failed.
-/// Steps without a prefix are skipped (treated as documentation).
-async fn execute_subprocess_steps(steps: &[String]) -> Result<ExecutionResult, anyhow::Error> {
+/// Per-step dispatcher: each step is routed independently based on its prefix.
+/// Mixed plans (run: + search: + read:) work correctly — no step is silently dropped.
+/// Steps with no recognised prefix fall through to LLM execution only if no other
+/// step produced output; this avoids polluting observations with duplicate code-context stats.
+async fn execute_steps_mixed(
+    steps: &[String],
+    ctx: &AgentContext,
+    hypothesis_text: &str,
+) -> Result<ExecutionResult, anyhow::Error> {
     let mut observations = Vec::new();
-    let mut failed = false;
+    let mut subprocess_failed = false;
+
+    // Try to connect chitta once for all chitta-routed steps.
+    let chitta_connected = {
+        let mut chitta = ctx.chitta.lock().await;
+        chitta.connect().await.is_ok()
+    };
 
     for step in steps {
-        let cmd = if let Some(c) = step.strip_prefix("run:").or_else(|| step.strip_prefix("shell:")).or_else(|| step.strip_prefix("exec:")) {
-            c.trim()
-        } else {
-            continue; // documentation step, skip
-        };
+        let sl = step.to_lowercase();
 
-        let output = tokio::process::Command::new("sh")
-            .arg("-c")
-            .arg(cmd)
-            .output()
-            .await;
-
-        match output {
-            Ok(out) => {
-                let stdout = String::from_utf8_lossy(&out.stdout).trim().to_string();
-                let stderr = String::from_utf8_lossy(&out.stderr).trim().to_string();
-
-                if !stdout.is_empty() {
-                    let obs_content = if stdout.len() > 2000 {
-                        format!("{}\n[... truncated {} bytes]", &stdout[..2000], stdout.len() - 2000)
-                    } else {
-                        stdout.clone()
-                    };
-                    let otype = classify_output(&stdout, &stderr);
-                    let prefix = type_prefix(otype);
-                    let obs = if prefix.is_empty() {
-                        format!("$ {}\n{}", cmd, obs_content)
-                    } else {
-                        format!("{} $ {}\n{}", prefix, cmd, obs_content)
-                    };
-                    observations.push(obs);
-                }
-
-                if !out.status.success() {
-                    failed = true;
-                    if !stderr.is_empty() {
-                        observations.push(format!("stderr: {}", &stderr[..stderr.len().min(500)]));
+        if sl.starts_with("run:") || sl.starts_with("shell:") || sl.starts_with("exec:") {
+            // Subprocess step — execute as shell command.
+            let cmd = step.splitn(2, ':').nth(1).map(|s| s.trim()).unwrap_or("");
+            if cmd.is_empty() { continue; }
+            let output = tokio::process::Command::new("sh")
+                .arg("-c")
+                .arg(cmd)
+                .output()
+                .await;
+            match output {
+                Ok(out) => {
+                    let stdout = String::from_utf8_lossy(&out.stdout).trim().to_string();
+                    let stderr = String::from_utf8_lossy(&out.stderr).trim().to_string();
+                    if !stdout.is_empty() {
+                        let obs_content = if stdout.len() > 2000 {
+                            format!("{}\n[... truncated {} bytes]", &stdout[..2000], stdout.len() - 2000)
+                        } else {
+                            stdout.clone()
+                        };
+                        let otype = classify_output(&stdout, &stderr);
+                        let prefix = type_prefix(otype);
+                        let obs = if prefix.is_empty() {
+                            format!("$ {}\n{}", cmd, obs_content)
+                        } else {
+                            format!("{} $ {}\n{}", prefix, cmd, obs_content)
+                        };
+                        observations.push(obs);
                     }
-                    observations.push(format!("exit code: {}", out.status.code().unwrap_or(-1)));
+                    if !out.status.success() {
+                        subprocess_failed = true;
+                        if !stderr.is_empty() {
+                            observations.push(format!("stderr: {}", &stderr[..stderr.len().min(500)]));
+                        }
+                        observations.push(format!("exit code: {}", out.status.code().unwrap_or(-1)));
+                    }
+                }
+                Err(e) => {
+                    subprocess_failed = true;
+                    observations.push(format!("failed to spawn '{}': {}", cmd, e));
                 }
             }
-            Err(e) => {
-                failed = true;
-                observations.push(format!("failed to spawn '{}': {}", cmd, e));
-            }
+
+        } else if (sl.contains("search") || sl.contains("symbol")) && chitta_connected {
+            let query = step.split_once(':').map(|(_, q)| q.trim()).unwrap_or(step);
+            let mut chitta = ctx.chitta.lock().await;
+            let obs = chitta.search_symbols(query, 5).await.unwrap_or_else(|e| e.to_string());
+            if !obs.is_empty() && obs.len() < 2000 { observations.push(obs); }
+
+        } else if (sl.contains("read") || sl.contains("function")) && chitta_connected {
+            let name = step.split_once(':').map(|(_, q)| q.trim()).unwrap_or(step);
+            let mut chitta = ctx.chitta.lock().await;
+            let obs = chitta.read_function(name, None).await.unwrap_or_else(|e| e.to_string());
+            if !obs.is_empty() && obs.len() < 2000 { observations.push(obs); }
+
+        } else if (sl.contains("codebase") || sl.contains("index")) && chitta_connected {
+            let path = step.split_once(':').map(|(_, q)| q.trim()).unwrap_or(".");
+            let mut chitta = ctx.chitta.lock().await;
+            let obs = chitta.learn_codebase(path).await.unwrap_or_else(|e| e.to_string());
+            if !obs.is_empty() && obs.len() < 2000 { observations.push(obs); }
+
         }
+        // Steps with no recognised prefix are treated as documentation — skipped.
+        // No fallthrough to code_context to avoid duplicate static-stats observations.
     }
 
+    // If no step produced output, delegate to LLM simulation.
     if observations.is_empty() {
-        observations.push("No subprocess steps produced output.".into());
+        return execute_via_llm(ctx, hypothesis_text, steps).await;
     }
+
+    let subprocess_count = steps.iter().filter(|s| {
+        let s = s.to_lowercase();
+        s.starts_with("run:") || s.starts_with("shell:") || s.starts_with("exec:")
+    }).count();
+    let chitta_count = steps.len() - subprocess_count;
 
     Ok(ExecutionResult {
-        outcome: if failed { "failed".into() } else { "succeeded".into() },
+        outcome: if subprocess_failed { "failed".into() } else { "succeeded".into() },
         observations,
         metrics: serde_json::json!({}),
-        summary: format!("{} subprocess steps executed.", steps.iter().filter(|s| {
-            let s = s.to_lowercase();
-            s.starts_with("run:") || s.starts_with("shell:") || s.starts_with("exec:")
-        }).count()),
+        summary: format!(
+            "{} subprocess + {} chitta steps executed.",
+            subprocess_count, chitta_count
+        ),
         token_usage: (0, 0),
         debate_thread: vec![],
     })
 }
+
 
 async fn execute_via_llm(
     ctx: &crate::AgentContext,
