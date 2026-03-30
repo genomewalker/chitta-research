@@ -93,42 +93,84 @@ impl Agent for Hotr {
                 .collect();
             programs.sort_by(|a, b| cmp_program_priority_desc(a.1.priority, b.1.priority));
 
-            let Some((prog_id, program)) = programs.first() else {
-                return Ok(AgentAction::Noop);
-            };
-            let prog_id = *prog_id;
+            // Allow up to 3 hypothesis rounds per question.
+            // Iterate programs in priority order; within each program pick the
+            // question with the fewest hypotheses (< MAX) to maximise coverage.
+            const MAX_HYPOTHESES_PER_QUESTION: usize = 3;
+            let mut chosen = None;
+            'outer: for (prog_id, program) in &programs {
+                let prog_id = *prog_id;
+                let questions: Vec<_> = all_nodes
+                    .iter()
+                    .filter_map(|n| match &n.kind {
+                        NodeKind::Question(q) if q.program_id == prog_id => Some(*n),
+                        _ => None,
+                    })
+                    .collect();
+                if questions.is_empty() { continue; }
 
-            let questions: Vec<_> = all_nodes
-                .iter()
-                .filter_map(|n| match &n.kind {
-                    NodeKind::Question(q) if q.program_id == prog_id => Some(*n),
-                    _ => None,
-                })
-                .collect();
-
-            let mut unanswered = Vec::new();
-            for q in &questions {
-                let derived = graph.children(q.id, EdgeKind::DerivedFrom);
-                let has_hypothesis = derived.iter().any(|n| matches!(n.kind, NodeKind::Hypothesis(_)));
-                if !has_hypothesis {
-                    unanswered.push(*q);
+                let mut best: Option<(usize, usize)> = None; // (idx, n_hyps)
+                for (i, q) in questions.iter().enumerate() {
+                    let derived = graph.children(q.id, EdgeKind::DerivedFrom);
+                    let n_hyps = derived.iter()
+                        .filter(|n| matches!(n.kind, NodeKind::Hypothesis(_)))
+                        .count();
+                    if n_hyps < MAX_HYPOTHESES_PER_QUESTION {
+                        if best.map(|(_, bn)| n_hyps < bn).unwrap_or(true) {
+                            best = Some((i, n_hyps));
+                        }
+                    }
+                }
+                if let Some((idx, _)) = best {
+                    let q = &questions[idx];
+                    let text = match &q.kind {
+                        NodeKind::Question(q) => q.text.clone(),
+                        _ => unreachable!(),
+                    };
+                    chosen = Some((program.title.clone(), program.domain.clone(), text, q.id));
+                    break 'outer;
                 }
             }
 
-            let Some(question) = unanswered.first() else {
+            let Some(result) = chosen else {
                 return Ok(AgentAction::Noop);
             };
+            result
+        };
 
-            let text = match &question.kind {
-                NodeKind::Question(q) => q.text.clone(),
-                _ => unreachable!(),
+        // Inject relevant code context from chitta if a codebase is configured.
+        // Limit to 2000 chars to avoid bloating the room prompt.
+        let (code_context, web_refs) = if let Ok(mut chitta) = ctx.chitta.try_lock() {
+            let code = if !ctx.codebase_path.is_empty() {
+                chitta.code_context(&q_text).await
+                    .ok()
+                    .filter(|s| !s.is_empty())
+                    .map(|s| format!("\n\nRelevant code context from {}:\n{}", ctx.codebase_path, &s[..s.len().min(2000)]))
+                    .unwrap_or_default()
+            } else {
+                String::new()
             };
-
-            (program.title.clone(), program.domain.clone(), text, question.id)
+            // Recall web research findings stored by the Researcher agent.
+            let refs = chitta.recall(&format!("web-research {q_text}"), 6).await
+                .ok()
+                .map(|hits| {
+                    let filtered: Vec<String> = hits.into_iter()
+                        .filter(|h| h.kind == "wisdom" && h.content.contains("[web-research:"))
+                        .map(|h| h.content)
+                        .collect();
+                    filtered
+                })
+                .filter(|v| !v.is_empty())
+                .map(|v| format!("\n\nRelevant literature (from web research):\n{}", v.join("\n---\n")))
+                .unwrap_or_default();
+            (code, refs)
+        } else {
+            (String::new(), String::new())
         };
 
         let user_msg = format!(
-            "Research program: {prog_title}\nDomain: {prog_domain}\n\nQuestion: {q_text}\n\n\
+            "Research program: {prog_title}\nDomain: {prog_domain}\n\nQuestion: {q_text}\
+             {code_context}{web_refs}\n\n\
              REQUIRED OUTPUT FORMAT — respond with ONLY this JSON array structure, \
              no other text before or after:\n\
              [\n  {{\n    \"statement\": \"specific testable hypothesis\",\n\

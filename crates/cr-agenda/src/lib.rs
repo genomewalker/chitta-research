@@ -11,6 +11,8 @@ pub struct AgendaConfig {
     pub budget: BudgetConfig,
     pub llm: LlmConfig,
     pub chitta: ChittaConfig,
+    #[serde(default)]
+    pub codebase_path: Option<String>,
 }
 
 #[derive(Debug, Serialize, Deserialize)]

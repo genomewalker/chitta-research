@@ -1,0 +1,98 @@
+programs:
+  - title: "MCAF Ultra-Lossless: Beat zstd-22 on genomic data"
+    domain: systems_programming / genomic_compression
+    questions:
+      - "Can reference-relative encoding of FRAME_SEQ (XOR against reference bases at each aligned position) reduce nucleotide entropy below 0.3 bits/base, compared to ~1.5 bits/base for raw 2-bit — and what is the practical gain after zstd on top?"
+      - "Can cross-read joint coding exploit the fact that reads in the same region are highly similar — build a per-region dictionary from the first N reads in a block, then LZ-match subsequent reads against it before zstd. What compression ratio does this achieve vs current per-frame zstd?"
+      - "Can FLAG + MAPQ + TLEN be jointly entropy-coded as a triplet (they are correlated: high MAPQ reads cluster in FLAG space) — model their joint distribution and use arithmetic coding. What entropy does the joint model achieve vs independent zstd of each field?"
+      - "Can QNAME prefix compression use a trie-based encoding: store the trie once per block, then each read name as a trie path index + suffix? Estimate compressed READS table size vs current approach (currently ~0.053 GB uncompressed)."
+      - "Does a two-pass encoding strategy improve ratio: pass 1 collects per-block statistics (base frequencies, FLAG histogram, POS delta distribution), pass 2 uses those stats to configure field-specific codecs. Prototype for FRAME_SEQ and FRAME_CORE."
+      - "Can CIGAR strings be compressed using a run-length grammar: most CIGARs are either perfect matches (single token) or follow a small set of patterns (M, I, D). What fraction of CIGAR strings in the test BAM are in the top-20 patterns — can a codebook + index compress FRAME_CIGAR below its current size?"
+      - "Does interleaving FRAME_SEQ + FRAME_MD into a single joint stream and applying a nucleotide-mismatch joint model (mismatch positions are sparse, ~2–5% of bases) improve ratio vs separate streams? Prototype and measure on the test BAM."
+      - "Can PCR duplicate detection be leveraged for lossless compression: identical-sequence reads share the same encoded payload, stored once with a pointer array. What fraction of reads in the test BAM are exact duplicates (FRAME_SEQ identical), and what is the theoretical size reduction?"
+    methods:
+      - "Read /maps/projects/fernandezguerra/apps/repos/mcaf/mcaf.hpp for ENC_* codec types and frame layout"
+      - "Read /maps/projects/fernandezguerra/apps/repos/mcaf/bam2mcaf.cpp for serialize() and per-frame encoding pipeline"
+      - "Use chitta symbol search to find encode_aux_smart, serialize, flush_sparse_batch and understand data flow"
+      - "grep -c '' /maps/projects/caeg/scratch/kbd606/bam-filter/viking/LV7008867351.sorted.mcaf 2>/dev/null || wc -c /maps/projects/caeg/scratch/kbd606/bam-filter/viking/LV7008867351.sorted.mcaf"
+      - "python3 -c \"import struct,sys; f=open('/maps/projects/caeg/scratch/kbd606/bam-filter/viking/LV7008867351.sorted.mcaf','rb'); d=f.read(); print(len(d),'bytes total'); f.close()\""
+      - "Prototype reference-relative XOR encoding: read FRAME_SEQ bytes, XOR against reference sequence bytes at POS, measure entropy of residuals vs raw sequence"
+      - "Prototype per-block dictionary for FRAME_SEQ: first 32 reads build LZ77 dictionary, remaining reads encoded as back-references + literals. Measure compression ratio"
+      - "Prototype joint FLAG+MAPQ+TLEN arithmetic coding using observed joint frequency table from 10000 reads"
+    priority: 1.0
+    max_budget_usd: 15.0
+    verifier:
+      cmd: "/maps/projects/fernandezguerra/apps/repos/chitta-research/verify_mcaf"
+      metric_jsonpath: ".compression_ratio"
+      success_expr: "metric > baseline * 1.05"
+      build_failure_codes: [2, 127]
+      build_retries: 2
+      timeout_s: 300
+
+  - title: "MCAF Ultra-Speed: Sub-100ms scan for 10GB BAM equivalent"
+    domain: systems_programming / genomic_compression
+    questions:
+      - "Can FRAME_SEQ decoding be vectorized with AVX2/AVX-512: decode 32 2-bit bases per SIMD instruction rather than one at a time. What throughput does a vectorized decoder achieve (GB/s) vs the current scalar loop?"
+      - "Can columnar lazy loading be implemented: mcaf_info --fields FLAG,MAPQ,POS only decompresses FRAME_CORE, skipping FRAME_SEQ and FRAME_CIGAR entirely. What is the speedup for stats-only queries vs full decode?"
+      - "Can parallel multi-threaded decompression pipeline (one thread per frame type: FRAME_CORE | FRAME_CIGAR | FRAME_SEQ | FRAME_MD | FRAME_AUX in parallel) reduce total scan latency? Model expected speedup with N=4 threads."
+      - "Can a block skip index (block offset + min/max POS per block stored in the trailer) allow random-access queries by genomic region without scanning all blocks? Estimate index size and query latency for a 1Mbp region vs full scan."
+      - "Does zstd decompression (not compression) of FRAME_SEQ become the bottleneck at low compression levels — and can zstd level 1 + AVX2 checksum reduce decode latency by >2x vs level 19 on the test MCAF?"
+      - "Can memory-mapped I/O with MADV_SEQUENTIAL + prefetch hints (madvise MADV_WILLNEED for the next 4 blocks) reduce I/O wait time for sequential scans vs read() syscall approach?"
+      - "Can FRAME_CORE (POS, FLAG, MAPQ, TLEN, RNEXT, PNEXT) be packed into a single 128-bit SIMD word per read for cache-efficient bulk processing — what alignment and struct layout achieves best cache line utilization?"
+      - "Does a columnar filter-first approach (decompress only FRAME_CORE, apply mapq>=20 filter, then only decompress FRAME_SEQ for passing reads) reduce total data decoded for typical quality-filtered queries by >5x?"
+    methods:
+      - "Read /maps/projects/fernandezguerra/apps/repos/mcaf/mcaf.hpp for decoder structs and the read iteration API"
+      - "Use chitta symbol search to find decode, scan, iterate, mcaf_info main entry points"
+      - "time python3 -c \"import mmap,os; f=open('/maps/projects/caeg/scratch/kbd606/bam-filter/viking/LV7008867351.sorted.mcaf'); m=mmap.mmap(f.fileno(),0,access=mmap.ACCESS_READ); print(len(m)); m.close()\" 2>&1"
+      - "Prototype columnar lazy decode: modify the MCAF reader to skip frames not in a requested set, measure time reduction"
+      - "Benchmark zstd decompress throughput at level 1 vs 19 on a 10MB FRAME_SEQ sample: python3 -c \"import zstandard as zstd,os,time\""
+      - "Check if AVX2 is available: grep -m1 'avx2' /proc/cpuinfo && echo 'AVX2 available' || echo 'no AVX2'"
+      - "Measure current mcaf scan time as baseline: time find /maps/projects/kaiku-test/ -name '*.mcaf' -exec wc -c {} \\; 2>&1 | head -5"
+    priority: 0.9
+    max_budget_usd: 12.0
+    verifier:
+      cmd: "/maps/projects/fernandezguerra/apps/repos/chitta-research/verify_mcaf --mode speed"
+      metric_jsonpath: ".scan_time_ms"
+      success_expr: "metric < baseline * 0.85"
+      build_failure_codes: [2, 127]
+      build_retries: 2
+      timeout_s: 120
+
+budget:
+  total_usd: 27.0
+  gpu_slots: 0
+  cpu_workers: 4
+
+llm:
+  provider: room
+  model: "MCAF ultra-lossless and ultra-speed compression research"
+  room:
+    rounds: 2
+    participants:
+      - name: Critic
+        # Swapped to claude-cli while 2-GPU ollama job (15814349) waits for jmn549's A100
+        # Switch back: llama3.3:70b via openai-compat at http://dandygpun01fl:11434/v1
+        backend: claude-cli
+        system: "You are a compression algorithm expert and scientific critic. Find every flaw in the hypothesis — what assumptions about data distribution are wrong, what benchmarks are missing, what edge cases break the approach. Focus on genomic data specifics: reads are variable-length, coverage is uneven, paired-end reads have structured correlation."
+
+      - name: Empiricist
+        # Swapped to claude-cli while GPU unavailable
+        # Switch back: qwen3:30b-a3b via openai-compat at http://dandygpun01fl:11434/v1
+        backend: claude-cli
+        system: "You are an empiricist focused on measurable outcomes. For each compression hypothesis: what is the exact experiment, what data do you need, what is the measurement protocol, and what result would falsify the hypothesis? Be concrete about tools (zstd, python3 zstandard, /proc/cpuinfo, samtools view) and exact commands."
+
+      - name: Information-Theorist
+        # Swapped to claude-cli while GPU unavailable
+        # Switch back: deepseek-r1:32b via openai-compat at http://dandygpun01fl:11434/v1
+        backend: claude-cli
+        system: "You are an information theorist and systems programmer expert in genomic compression. For each compression hypothesis: (1) compute the theoretical entropy bound citing relevant coding theory, (2) assess implementation feasibility in C++ bam2mcaf.cpp, (3) propose the minimal code change. Current measured state: 342M alignments of 1.74M unique reads (avg 196 aligns/read). FRAME_CORE=2.49GB(1.8x), BLOCK_LAYOUT_COLUMN already active. Key finding: gc_frac/dust_score/seq_len stored per-alignment instead of per-read — 342M×3 bytes vs 1.74M×4 bytes. NM stored as u16 not u8. Repos: /maps/projects/fernandezguerra/apps/repos/mcaf/"
+
+    synthesizer:
+      name: Synthesizer
+      backend: claude-cli
+      system: "You are a JSON synthesizer. Read the three-way debate above — Critic (flaws), Empiricist (measurements), Information-Theorist (entropy+implementation). Synthesize the best testable hypotheses for the research question. CRITICAL: Respond with ONLY a raw JSON array — no prose, no markdown fences. Each element must have exactly these fields: {\"statement\": \"specific testable hypothesis string\", \"prior_confidence\": 0.65, \"experiment_plan\": {\"description\": \"how to test\", \"steps\": [\"step1\", \"step2\"]}}. Output 1-3 hypotheses. Start with [."
+
+chitta:
+  mind_path: ~/.claude/mind
+
+codebase_path: /maps/projects/fernandezguerra/apps/repos/mcaf

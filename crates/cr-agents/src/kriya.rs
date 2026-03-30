@@ -41,14 +41,35 @@ fn applied_marker(claim_id: &NodeId) -> String {
     format!(".applied-{}", claim_id)
 }
 
-fn extract_file_hint(claim: &str) -> Option<String> {
-    if let Some(start) = claim.find("crates/") {
-        let rest = &claim[start..];
-        let end = rest.find(|c: char| !c.is_alphanumeric() && c != '/' && c != '_' && c != '-' && c != '.')
-            .unwrap_or(rest.len());
-        let candidate = &rest[..end];
-        if candidate.ends_with(".rs") {
-            return Some(candidate.to_string());
+/// Extract a relative file path hint from a claim string.
+/// Supports Rust (.rs), C++ (.hpp, .cpp, .h, .cc), and Python (.py) files.
+fn extract_file_hint(claim: &str, codebase_path: &str) -> Option<String> {
+    let prefixes: &[&str] = if codebase_path.is_empty() {
+        &["crates/"]
+    } else {
+        &[codebase_path, "crates/"]
+    };
+    let extensions = [".rs", ".hpp", ".cpp", ".h", ".cc", ".py"];
+
+    for prefix in prefixes {
+        if let Some(start) = claim.find(prefix) {
+            let rest = &claim[start..];
+            let end = rest.find(|c: char| c == ' ' || c == '\'' || c == '"' || c == '\n' || c == ')')
+                .unwrap_or(rest.len());
+            let candidate = &rest[..end];
+            if extensions.iter().any(|ext| candidate.ends_with(ext)) {
+                return Some(candidate.trim_start_matches(prefix).to_string());
+            }
+        }
+    }
+    // Also look for bare filenames like "bam2mcaf.cpp"
+    for ext in &extensions {
+        if let Some(pos) = claim.find(ext) {
+            let start = claim[..pos].rfind(|c: char| c == ' ' || c == '(' || c == '\'').map(|i| i + 1).unwrap_or(0);
+            let candidate = &claim[start..pos + ext.len()];
+            if !candidate.contains('/') && !candidate.is_empty() {
+                return Some(candidate.to_string());
+            }
         }
     }
     None
@@ -152,17 +173,17 @@ async fn run_verifier(spec: &VerifierSpec, output_path: Option<&str>) -> Verific
 }
 
 /// Fallback verifier: built-in LOC/test/warning heuristic for code-only claims.
-async fn run_builtin_verifier(claim_text: &str) -> (String, String, i64) {
+async fn run_builtin_verifier(claim_text: &str, codebase: &str) -> (String, String, i64) {
     let claim_lower = claim_text.to_lowercase();
+    let test_cmd = format!("cd {codebase} && CARGO_TARGET_DIR=/tmp/cr-target ./build.sh test 2>&1 | grep -E '^test result' | grep -o '[0-9]* failed' | awk '{{print $1}}' || echo 0");
+    let warn_cmd = format!("cd {codebase} && CARGO_TARGET_DIR=/tmp/cr-target ./build.sh build 2>&1 | grep -c '^warning' || echo 0");
+    let loc_cmd  = format!("find {codebase} -name '*.rs' -not -path '*/target/*' | xargs wc -l 2>/dev/null | tail -1 | awk '{{print $1}}'");
     let (baseline_cmd, verifier_desc) = if claim_lower.contains("test") || claim_lower.contains("panic") || claim_lower.contains("error") {
-        ("cd /maps/projects/fernandezguerra/apps/repos/chitta-research && CARGO_TARGET_DIR=/tmp/cr-target ./build.sh test 2>&1 | grep -E '^test result' | grep -o '[0-9]* failed' | awk '{print $1}' || echo 0",
-         "cargo test failures (lower=better)")
+        (test_cmd, "cargo test failures (lower=better)")
     } else if claim_lower.contains("warning") || claim_lower.contains("lint") || claim_lower.contains("unused") {
-        ("cd /maps/projects/fernandezguerra/apps/repos/chitta-research && CARGO_TARGET_DIR=/tmp/cr-target ./build.sh build 2>&1 | grep -c '^warning' || echo 0",
-         "compiler warnings (lower=better)")
+        (warn_cmd, "compiler warnings (lower=better)")
     } else {
-        ("wc -l /maps/projects/fernandezguerra/apps/repos/chitta-research/crates/cr-agents/src/*.rs | grep total | awk '{print $1}'",
-         "total LOC in cr-agents (lower or unchanged=ok)")
+        (loc_cmd, "total LOC (lower or unchanged=ok)")
     };
     let (_, out) = run_cmd(&format!("run: {baseline_cmd}"), 120).await;
     let count: i64 = out.lines().last().and_then(|l| l.trim().parse().ok()).unwrap_or(0);
@@ -200,17 +221,30 @@ impl Agent for Kriya {
             "kriya: applying claim"
         );
 
-        let file_context = if let Some(file_hint) = extract_file_hint(&claim_text) {
-            let path = format!("/maps/projects/fernandezguerra/apps/repos/chitta-research/{file_hint}");
-            std::fs::read_to_string(&path)
-                .map(|s| format!("\nRelevant file ({file_hint}):\n```rust\n{}\n```", &s[..s.len().min(2000)]))
+        let codebase = if ctx.codebase_path.is_empty() {
+            "/maps/projects/fernandezguerra/apps/repos/chitta-research".to_string()
+        } else {
+            ctx.codebase_path.clone()
+        };
+
+        let file_context = if let Some(file_hint) = extract_file_hint(&claim_text, &codebase) {
+            let abs_path = if file_hint.starts_with('/') {
+                file_hint.clone()
+            } else {
+                format!("{codebase}/{file_hint}")
+            };
+            let lang = if file_hint.ends_with(".rs") { "rust" }
+                else if file_hint.ends_with(".py") { "python" }
+                else { "cpp" };
+            std::fs::read_to_string(&abs_path)
+                .map(|s| format!("\nRelevant file ({file_hint}):\n```{lang}\n{}\n```", &s[..s.len().min(3000)]))
                 .unwrap_or_default()
         } else {
             String::new()
         };
 
         let user_msg = format!(
-            "Codebase: /maps/projects/fernandezguerra/apps/repos/chitta-research\n\
+            "Codebase: {codebase}\n\
              Confirmed claim (confidence {claim_conf:.2}):\n{claim_text}\
              {file_context}\n\n\
              Generate a concrete automated fix. If no safe automated fix exists, \
@@ -250,7 +284,7 @@ impl Agent for Kriya {
 
         if !fix_ok {
             tracing::warn!(exit_code = fix_exit, output = %&fix_out[..fix_out.len().min(200)], "kriya: fix command failed, reverting");
-            let _ = run_cmd("run: cd /maps/projects/fernandezguerra/apps/repos/chitta-research && git checkout .", 15).await;
+            let _ = run_cmd(&format!("run: cd {codebase} && git checkout ."), 15).await;
             mark_applied(&claim_id);
             return Ok(AgentAction::Noop);
         }
@@ -264,14 +298,14 @@ impl Agent for Kriya {
                 VerificationStatus::Pass => true,
                 VerificationStatus::Fail => {
                     tracing::info!("kriya: verifier fail — reverting");
-                    let _ = run_cmd("run: cd /maps/projects/fernandezguerra/apps/repos/chitta-research && git checkout .", 15).await;
+                    let _ = run_cmd(&format!("run: cd {codebase} && git checkout ."), 15).await;
                     mark_applied(&claim_id);
                     return Ok(AgentAction::Noop);
                 }
                 VerificationStatus::Invalid => {
                     // Build/infra error — does not falsify hypothesis; don't mark as attempted
                     tracing::warn!(notes = ?result.notes, "kriya: invalid (build failure) — skipping without penalising hypothesis");
-                    let _ = run_cmd("run: cd /maps/projects/fernandezguerra/apps/repos/chitta-research && git checkout .", 15).await;
+                    let _ = run_cmd(&format!("run: cd {codebase} && git checkout ."), 15).await;
                     return Ok(AgentAction::Noop);
                 }
                 VerificationStatus::Pending { resume_token } => {
@@ -286,7 +320,7 @@ impl Agent for Kriya {
             }
         } else {
             // Fallback: built-in heuristic verifier
-            let (baseline_cmd, verifier_desc, baseline_count) = run_builtin_verifier(&claim_text).await;
+            let (baseline_cmd, verifier_desc, baseline_count) = run_builtin_verifier(&claim_text, &codebase).await;
             let (_, after_out) = run_cmd(&format!("run: {baseline_cmd}"), 60).await;
             let after_count: i64 = after_out.lines()
                 .last().and_then(|l| l.trim().parse().ok()).unwrap_or(999);
@@ -298,7 +332,7 @@ impl Agent for Kriya {
 
             if !improved {
                 tracing::info!(before = baseline_count, after = after_count, "kriya: no improvement — reverting");
-                let _ = run_cmd("run: cd /maps/projects/fernandezguerra/apps/repos/chitta-research && git checkout .", 15).await;
+                let _ = run_cmd(&format!("run: cd {codebase} && git checkout ."), 15).await;
                 mark_applied(&claim_id);
                 return Ok(AgentAction::Noop);
             }
@@ -309,7 +343,7 @@ impl Agent for Kriya {
         if promoted {
             tracing::info!(explanation = %explanation, "kriya: promoting — committing");
             let (_, _) = run_cmd(
-                &format!("run: cd /maps/projects/fernandezguerra/apps/repos/chitta-research && git add -A && git commit -m 'fix(kriya): {explanation}'"),
+                &format!("run: cd {codebase} && git add -A && git commit -m 'fix(kriya): {explanation}'"),
                 30
             ).await;
 
@@ -319,7 +353,7 @@ impl Agent for Kriya {
                 let _ = chitta.remember(
                     &format!("[kriya:applied] {claim_text}\nFix: {fix_cmd}"),
                     "wisdom",
-                    &["kriya", "applied-fix", "chitta-research"],
+                    &["kriya", "applied-fix"],
                     0.90,
                 ).await;
             }

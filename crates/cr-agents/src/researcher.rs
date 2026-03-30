@@ -173,7 +173,7 @@ impl Agent for Researcher {
             let _ = chitta.remember(
                 &content,
                 "wisdom",
-                &["web-research", source, "chitta-research"],
+                &["web-research", source],
                 0.70,
             ).await;
             stored += 1;

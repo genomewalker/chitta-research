@@ -262,6 +262,10 @@ async fn main() -> anyhow::Result<()> {
         "~",
         &std::env::var("HOME").unwrap_or_default(),
     );
+    let codebase_path = config.codebase_path
+        .clone()
+        .unwrap_or_default()
+        .replace("~", &std::env::var("HOME").unwrap_or_default());
     let gpu_slots = config.budget.gpu_slots as usize;
     let cpu_workers = config.budget.cpu_workers as usize;
     let total_budget = config.budget.total_usd;
@@ -344,6 +348,17 @@ async fn main() -> anyhow::Result<()> {
 
     let (event_tx, mut event_rx) = mpsc::channel::<AgentEvent>(256);
 
+    let active_program_ids: std::collections::HashSet<cr_types::NodeId> = {
+        let g = graph.read().await;
+        g.all_nodes()
+            .iter()
+            .filter_map(|n| match &n.kind {
+                cr_types::NodeKind::ResearchProgram(_) => Some(n.id),
+                _ => None,
+            })
+            .collect()
+    };
+
     let ctx = Arc::new(AgentContext {
         graph: graph.clone(),
         llm,
@@ -352,6 +367,8 @@ async fn main() -> anyhow::Result<()> {
         resources: resources.clone(),
         event_tx: event_tx.clone(),
         agenda,
+        active_program_ids,
+        codebase_path,
     });
 
     let shutdown = Arc::new(AtomicBool::new(false));

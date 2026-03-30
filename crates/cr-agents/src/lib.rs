@@ -30,6 +30,10 @@ pub struct AgentContext {
     pub resources: Arc<ResourceManager>,
     pub event_tx: tokio::sync::mpsc::Sender<AgentEvent>,
     pub agenda: ResearchAgenda,
+    /// Node IDs of the ResearchProgram nodes belonging to this agenda run.
+    pub active_program_ids: std::collections::HashSet<NodeId>,
+    /// Root path of the codebase being researched (e.g. /path/to/mcaf).
+    pub codebase_path: String,
 }
 
 #[derive(Debug, Clone)]
