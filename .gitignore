@@ -1,3 +1,13 @@
 /target/
 artifacts/
-graph_state.json
+graph_state*.json
+
+# Kriya applied-fix markers
+.applied-*
+
+# Research logs and generated reports
+*.log
+*.html
+
+# Snakemake
+.snakemake/
