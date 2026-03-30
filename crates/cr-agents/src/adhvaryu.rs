@@ -1,8 +1,16 @@
 use async_trait::async_trait;
 use chrono::Utc;
 use cr_types::*;
+use std::collections::HashMap;
+use std::sync::Mutex;
 
 use crate::{Agent, AgentAction, AgentContext};
+
+/// Per-plan failure counter — prevents infinite retry on parse/LLM errors.
+static PLAN_FAILURES: std::sync::LazyLock<Mutex<HashMap<NodeId, u32>>> =
+    std::sync::LazyLock::new(|| Mutex::new(HashMap::new()));
+
+const MAX_PLAN_RETRIES: u32 = 3;
 
 #[derive(Debug, Clone, Copy)]
 pub enum OutputType {
@@ -103,10 +111,16 @@ impl Agent for Adhvaryu {
             })
             .collect();
 
-        let unexecuted: Vec<_> = plans
-            .into_iter()
-            .filter(|(id, _)| !runs.contains(id))
-            .collect();
+        let unexecuted: Vec<_> = {
+            let failure_counts = PLAN_FAILURES.lock().unwrap();
+            plans
+                .into_iter()
+                .filter(|(id, _)| {
+                    !runs.contains(id)
+                        && failure_counts.get(id).copied().unwrap_or(0) < MAX_PLAN_RETRIES
+                })
+                .collect()
+        };
 
         let Some((plan_id, plan)) = unexecuted.first() else {
             return Ok(AgentAction::Noop);
@@ -125,8 +139,15 @@ impl Agent for Adhvaryu {
         // Acquire resources
         let _slot = ctx.resources.acquire(false).await?;
 
-        let exec_result: ExecutionResult =
-            execute_steps_mixed(&plan.steps, &ctx, &hypothesis_text).await?;
+        let exec_result: ExecutionResult = match execute_steps_mixed(&plan.steps, &ctx, &hypothesis_text).await {
+            Ok(r) => r,
+            Err(e) => {
+                // Count failure — after MAX_PLAN_RETRIES the plan is skipped permanently.
+                *PLAN_FAILURES.lock().unwrap().entry(plan_id).or_insert(0) += 1;
+                tracing::warn!(plan = ?plan_id, error = %e, "adhvaryu: execution error (will retry up to {} times)", MAX_PLAN_RETRIES);
+                return Err(e);
+            }
+        };
 
         let status = if exec_result.outcome == "succeeded" {
             RunStatus::Succeeded
@@ -389,8 +410,31 @@ async fn execute_via_llm(
         content
     };
 
-    let mut result: ExecutionResult = serde_json::from_str(json_str)?;
-    result.token_usage = (resp.usage.input, resp.usage.output);
-    result.debate_thread = resp.debate_thread;
-    Ok(result)
+    // Parse leniently — fill missing fields with defaults so a partial LLM response
+    // does not cause an infinite retry loop on the same plan.
+    let v: serde_json::Value = serde_json::from_str(json_str)
+        .map_err(|e| anyhow::anyhow!("LLM returned non-JSON: {e}\nraw: {json_str}"))?;
+
+    let outcome = v.get("outcome")
+        .and_then(|x| x.as_str())
+        .unwrap_or("succeeded")
+        .to_string();
+    let observations = v.get("observations")
+        .and_then(|x| x.as_array())
+        .map(|arr| arr.iter().filter_map(|x| x.as_str().map(str::to_string)).collect())
+        .unwrap_or_default();
+    let metrics = v.get("metrics").cloned().unwrap_or(serde_json::json!({}));
+    let summary = v.get("summary")
+        .and_then(|x| x.as_str())
+        .unwrap_or("(no summary)")
+        .to_string();
+
+    Ok(ExecutionResult {
+        outcome,
+        observations,
+        metrics,
+        summary,
+        token_usage: (resp.usage.input, resp.usage.output),
+        debate_thread: resp.debate_thread,
+    })
 }

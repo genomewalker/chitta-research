@@ -39,17 +39,23 @@ fn dirs_home() -> Option<PathBuf> {
 }
 
 /// Track which questions have already been researched (by text hash) to avoid re-fetching.
-/// Uses a simple file marker in the artifact dir.
-fn already_researched(question: &str, artifacts_dir: &str) -> bool {
+/// Uses a marker file under /var/tmp/cr-target (same vol as the build cache) or /tmp as fallback.
+fn research_marker_path(question: &str) -> std::path::PathBuf {
     let hash = djb2(question);
-    let marker = std::path::Path::new(artifacts_dir).join(format!(".researched-{hash}"));
-    marker.exists()
+    let base = if std::path::Path::new("/var/tmp/cr-target").exists() {
+        std::path::PathBuf::from("/var/tmp/cr-target")
+    } else {
+        std::env::temp_dir()
+    };
+    base.join(format!(".cresearch-{hash}"))
 }
 
-fn mark_researched(question: &str, artifacts_dir: &str) {
-    let hash = djb2(question);
-    let marker = std::path::Path::new(artifacts_dir).join(format!(".researched-{hash}"));
-    let _ = std::fs::write(marker, "");
+fn already_researched(question: &str, _artifacts_dir: &str) -> bool {
+    research_marker_path(question).exists()
+}
+
+fn mark_researched(question: &str, _artifacts_dir: &str) {
+    let _ = std::fs::write(research_marker_path(question), "");
 }
 
 fn djb2(s: &str) -> u32 {
@@ -88,7 +94,6 @@ impl Agent for Researcher {
                     _ => continue,
                 };
                 // Check if already researched
-                let artifacts_str = ctx.agenda.title.clone(); // use title as dir hint
                 if already_researched(&text, "artifacts") {
                     continue;
                 }
