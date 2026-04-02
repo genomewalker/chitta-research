@@ -35,6 +35,41 @@
 .provider-table td { padding: var(--space-3) var(--space-4); color: var(--ash-300); border-bottom: 1px solid rgba(255,255,255,0.04); vertical-align: top; }
 .provider-table td:first-child { font-family: var(--font-mono); color: var(--lotus-200); }
 .cr-badge { background: rgba(157,178,217,0.1); border: 1px solid rgba(157,178,217,0.2); color: var(--aura-300); font-family: var(--font-mono); font-size: var(--text-xs); padding: 4px 10px; border-radius: 20px; letter-spacing: 0.04em; }
+
+/* Architecture diagram */
+.arch-diagram { max-width: 720px; margin: var(--space-6) auto 0; position: relative; }
+.arch-row { display: flex; align-items: center; justify-content: center; gap: var(--space-4); position: relative; }
+.arch-row + .arch-row { margin-top: 0; }
+.arch-node {
+  background: rgba(255,255,255,0.03);
+  border: 1px solid rgba(203,175,134,0.2);
+  border-radius: var(--radius-md);
+  padding: 10px 18px;
+  text-align: center;
+  position: relative;
+  transition: border-color 0.2s, background 0.2s;
+}
+.arch-node:hover { border-color: rgba(203,175,134,0.5); background: rgba(203,175,134,0.05); }
+.arch-node-title { font-family: var(--font-mono); font-size: 0.78rem; color: var(--lotus-200); white-space: nowrap; }
+.arch-node-sub { font-size: 0.68rem; color: var(--ash-300); margin-top: 2px; white-space: nowrap; }
+.arch-node.accent { border-color: rgba(203,175,134,0.4); background: rgba(203,175,134,0.06); }
+.arch-node.aura { border-color: rgba(157,178,217,0.3); background: rgba(157,178,217,0.05); }
+.arch-node.aura .arch-node-title { color: var(--aura-300); }
+.arch-node.dim { border-color: rgba(255,255,255,0.08); }
+.arch-node.dim .arch-node-title { color: var(--ash-300); }
+.arch-connector { display: flex; flex-direction: column; align-items: center; justify-content: center; }
+.arch-arrow-v { width: 1px; background: rgba(203,175,134,0.25); flex: 1; min-height: 18px; position: relative; }
+.arch-arrow-v::after { content: ''; position: absolute; bottom: -1px; left: 50%; transform: translateX(-50%); width: 0; height: 0; border-left: 4px solid transparent; border-right: 4px solid transparent; border-top: 5px solid rgba(203,175,134,0.4); }
+.arch-arrow-h { height: 1px; background: rgba(203,175,134,0.25); flex: 1; min-width: 20px; position: relative; }
+.arch-arrow-h::after { content: ''; position: absolute; right: -1px; top: 50%; transform: translateY(-50%); width: 0; height: 0; border-top: 4px solid transparent; border-bottom: 4px solid transparent; border-left: 5px solid rgba(203,175,134,0.4); }
+.arch-fork { display: flex; align-items: flex-start; justify-content: center; gap: 0; }
+.arch-fork-line { width: 1px; background: rgba(203,175,134,0.2); height: 20px; }
+.arch-fork-h { height: 1px; background: rgba(203,175,134,0.2); }
+.arch-spacer { height: 18px; }
+.arch-label { font-family: var(--font-mono); font-size: 0.65rem; color: rgba(203,175,134,0.5); text-transform: uppercase; letter-spacing: 0.08em; text-align: center; margin-top: 3px; }
+.arch-group { display: flex; align-items: center; gap: 0; }
+.arch-sub-row { display: flex; align-items: flex-start; justify-content: center; gap: var(--space-3); }
+.arch-sub-col { display: flex; flex-direction: column; align-items: center; gap: 0; }
 </style>
 </head>
 <body>
@@ -138,26 +173,7 @@
   <div class="container">
     <div class="reveal"><div class="section-divider"></div><h2 class="heading-section">Architecture</h2></div>
     <p class="section-intro reveal reveal-delay-1">Three Tokio tasks run concurrently, each polling its own <code>step()</code> on a 100 ms loop against a shared belief graph.</p>
-    <div class="code-block reveal reveal-delay-2" style="max-width:640px;margin:0 auto">
-      <pre>agenda.yaml
-    │
-    ▼
-cr-agenda ──▶ BeliefGraph (cr-graph + cr-types)
-                    │
-    ┌───────────────┼───────────────┐
-    ▼               ▼               ▼
- Hotr           Adhvaryu        Udgatr
- (hypotheses)   (executor)      (scorer)
-    │               │               │
-    └───────────────┴───────────────┘
-                    │
-            AgentContext (cr-agents)
-            │       │       │       │
-          LLM   Chitta  Artifacts Resources
-                    │
-          chittad daemon (Unix socket)
-          HNSW + BM25 + SDR cortical index</pre>
-    </div>
+    <div class="arch-diagram reveal reveal-delay-2" id="arch-diagram"></div>
     <p class="section-intro reveal reveal-delay-3" style="margin-top:var(--space-6)">The orchestrator in <code>cr-daemon</code> shuts down when all agents are idle for <code>--max-cycles</code> consecutive cycles, the budget is exhausted, or SIGINT is received. The final graph snapshot is written to <code>graph_state.json</code>.</p>
   </div>
 </section>
@@ -398,6 +414,110 @@ const observer = new IntersectionObserver(function(entries) {
   entries.forEach(e => { if (e.isIntersecting) { e.target.classList.add('visible'); observer.unobserve(e.target); } });
 }, { threshold: 0.08 });
 document.querySelectorAll('.reveal').forEach(el => observer.observe(el));
+
+// Architecture diagram
+(function() {
+  function node(title, sub, cls) {
+    const d = document.createElement('div');
+    d.className = 'arch-node' + (cls ? ' ' + cls : '');
+    d.innerHTML = '<div class="arch-node-title">' + title + '</div>' + (sub ? '<div class="arch-node-sub">' + sub + '</div>' : '');
+    return d;
+  }
+  function arrowV() { const d = document.createElement('div'); d.className = 'arch-arrow-v'; return d; }
+  function arrowH() { const d = document.createElement('div'); d.className = 'arch-arrow-h'; return d; }
+  function connector() { const d = document.createElement('div'); d.className = 'arch-connector'; return d; }
+  function row(...items) { const d = document.createElement('div'); d.className = 'arch-row'; items.forEach(i => d.appendChild(i)); return d; }
+  function spacer() { const d = document.createElement('div'); d.className = 'arch-spacer'; return d; }
+  function label(t) { const d = document.createElement('div'); d.className = 'arch-label'; d.textContent = t; return d; }
+  function col(...items) { const d = document.createElement('div'); d.style.cssText = 'display:flex;flex-direction:column;align-items:center'; items.forEach(i => d.appendChild(i)); return d; }
+  function hline(w) { const d = document.createElement('div'); d.style.cssText = 'height:1px;background:rgba(203,175,134,0.2);width:' + (w||'100%'); return d; }
+  function vline(h) { const d = document.createElement('div'); d.style.cssText = 'width:1px;background:rgba(203,175,134,0.2);height:' + (h||'20px'); return d; }
+  function arrowDown() { const d = document.createElement('div'); d.style.cssText = 'width:0;height:0;border-left:4px solid transparent;border-right:4px solid transparent;border-top:5px solid rgba(203,175,134,0.45)'; return d; }
+
+  const root = document.getElementById('arch-diagram');
+
+  // Row 1: agenda.yaml
+  const agendaNode = node('agenda.yaml', null, 'dim');
+  root.appendChild(col(agendaNode, vline('16px'), arrowDown()));
+
+  // Row 2: cr-agenda → BeliefGraph
+  root.appendChild(spacer());
+  const crAgenda = node('cr-agenda', null, 'dim');
+  const ah1 = document.createElement('div'); ah1.className = 'arch-arrow-h'; ah1.style.minWidth = '32px';
+  const beliefGraph = node('BeliefGraph', 'cr-graph + cr-types', 'accent');
+  root.appendChild(row(crAgenda, ah1, beliefGraph));
+
+  // Connector from BeliefGraph down to fork
+  root.appendChild(col(vline('16px'), arrowDown()));
+
+  // Fork bar + 3 agent columns
+  root.appendChild(spacer());
+  const hotrNode = node('Hotr', 'hypothesis generation', '');
+  const adhvNode = node('Adhvaryu', 'experiment executor', '');
+  const udgNode  = node('Udgatr', 'analyst &amp; scorer', '');
+  const agentRow = document.createElement('div');
+  agentRow.style.cssText = 'display:flex;align-items:flex-start;justify-content:center;gap:0;width:100%';
+
+  function agentBranch(n) {
+    const c = document.createElement('div');
+    c.style.cssText = 'display:flex;flex-direction:column;align-items:center;flex:1';
+    c.appendChild(vline('16px'));
+    c.appendChild(arrowDown());
+    c.appendChild(n);
+    return c;
+  }
+  const sep = document.createElement('div'); sep.style.cssText = 'flex:1;max-width:60px';
+  agentRow.appendChild(agentBranch(hotrNode));
+  agentRow.appendChild(sep.cloneNode());
+  agentRow.appendChild(agentBranch(adhvNode));
+  agentRow.appendChild(sep.cloneNode());
+  agentRow.appendChild(agentBranch(udgNode));
+  root.appendChild(agentRow);
+
+  // Merge line down to AgentContext
+  root.appendChild(col(vline('16px'), arrowDown()));
+  root.appendChild(spacer());
+
+  // AgentContext
+  const agentCtx = node('AgentContext', 'cr-agents', 'accent');
+  root.appendChild(row(agentCtx));
+
+  // Fork bar to 4 sub-components
+  root.appendChild(col(vline('16px'), arrowDown()));
+  root.appendChild(spacer());
+
+  const subRow = document.createElement('div');
+  subRow.style.cssText = 'display:flex;align-items:flex-start;justify-content:center;gap:0;width:100%';
+  const llm       = node('LLM', 'cr-llm', 'dim');
+  const chitta    = node('Chitta', 'cr-chitta', 'aura');
+  const artifacts = node('Artifacts', 'cr-artifacts', 'dim');
+  const resources = node('Resources', 'cr-resources', 'dim');
+
+  function subBranch(n, extraStyle) {
+    const c = document.createElement('div');
+    c.style.cssText = 'display:flex;flex-direction:column;align-items:center;flex:1' + (extraStyle || '');
+    c.appendChild(vline('14px'));
+    c.appendChild(arrowDown());
+    c.appendChild(n);
+    return c;
+  }
+  const sep2 = document.createElement('div'); sep2.style.cssText = 'flex:1;max-width:20px';
+  subRow.appendChild(subBranch(llm));
+  subRow.appendChild(sep2.cloneNode());
+  subRow.appendChild(subBranch(chitta));
+  subRow.appendChild(sep2.cloneNode());
+  subRow.appendChild(subBranch(artifacts));
+  subRow.appendChild(sep2.cloneNode());
+  subRow.appendChild(subBranch(resources));
+  root.appendChild(subRow);
+
+  // From Chitta down to daemon
+  root.appendChild(col(vline('16px'), arrowDown()));
+  root.appendChild(spacer());
+
+  const daemon = node('chittad daemon', 'Unix socket · HNSW + BM25 + SDR', 'aura');
+  root.appendChild(row(daemon));
+})();
 </script>
 </body>
 </html>
