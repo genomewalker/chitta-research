@@ -140,114 +140,128 @@
     <div class="reveal"><div class="section-divider"></div><h2 class="heading-section">Architecture</h2></div>
     <p class="section-intro reveal reveal-delay-1">Three Tokio tasks run concurrently, each polling its own <code>step()</code> on a 100 ms loop against a shared belief graph.</p>
     <div class="reveal reveal-delay-2" style="max-width:700px;margin:var(--space-7) auto 0">
-    <svg viewBox="0 0 700 540" xmlns="http://www.w3.org/2000/svg" style="width:100%;height:auto;display:block" role="img" aria-label="chitta-research architecture diagram">
+    <svg viewBox="0 0 700 470" xmlns="http://www.w3.org/2000/svg" style="width:100%;height:auto;display:block" role="img" aria-label="chitta-research architecture diagram">
       <defs>
-        <marker id="arr" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto">
-          <path d="M0,0 L0,6 L8,3 z" fill="rgba(203,175,134,0.5)"/>
+        <marker id="as" markerWidth="7" markerHeight="7" refX="5" refY="3.5" orient="auto">
+          <path d="M0,0.5 L0,6.5 L7,3.5 z" fill="rgba(203,175,134,0.6)"/>
         </marker>
-        <marker id="arr-aura" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto">
-          <path d="M0,0 L0,6 L8,3 z" fill="rgba(157,178,217,0.5)"/>
+        <marker id="aa" markerWidth="7" markerHeight="7" refX="5" refY="3.5" orient="auto">
+          <path d="M0,0.5 L0,6.5 L7,3.5 z" fill="rgba(157,178,217,0.65)"/>
         </marker>
         <style>
-          .dn { font-family: 'IBM Plex Mono', monospace; font-size: 11px; fill: #E7E2D6; }
-          .ds { font-family: 'IBM Plex Mono', monospace; font-size: 9px; fill: #B9BDC7; }
-          .dl { font-family: 'IBM Plex Mono', monospace; font-size: 8.5px; fill: rgba(203,175,134,0.55); text-transform: uppercase; letter-spacing: 1px; }
-          .da { font-family: 'IBM Plex Mono', monospace; font-size: 11px; fill: #9DB2D9; }
-          .node-box { rx: 8; ry: 8; }
+          .n1 { font-family:'IBM Plex Mono',monospace; font-size:11px; fill:#E7E2D6; }
+          .n2 { font-family:'IBM Plex Mono',monospace; font-size:9px; fill:#B9BDC7; }
+          .na { font-family:'IBM Plex Mono',monospace; font-size:11px; fill:#9DB2D9; }
+          .w  { fill:none; stroke-width:1; stroke-linejoin:round; stroke-linecap:round; }
+          .ws { stroke:rgba(203,175,134,0.38); }
+          .wa { stroke:rgba(157,178,217,0.45); }
         </style>
       </defs>
 
-      <!-- agenda.yaml -->
-      <rect x="270" y="10" width="160" height="38" rx="8" fill="rgba(255,255,255,0.025)" stroke="rgba(255,255,255,0.1)" stroke-width="1"/>
-      <text x="350" y="33" text-anchor="middle" class="dn" opacity="0.7">agenda.yaml</text>
+      <!-- ── NODES ─────────────────────────────────────────── -->
 
-      <!-- arrow down -->
-      <line x1="350" y1="48" x2="350" y2="72" stroke="rgba(203,175,134,0.3)" stroke-width="1" marker-end="url(#arr)"/>
+      <!-- agenda.yaml  center:(350,27) -->
+      <rect x="280" y="10" width="140" height="34" rx="7"
+            fill="rgba(255,255,255,0.025)" stroke="rgba(255,255,255,0.1)" stroke-width="1"/>
+      <text x="350" y="31" text-anchor="middle" class="n1" opacity="0.65">agenda.yaml</text>
 
-      <!-- cr-agenda -->
-      <rect x="235" y="76" width="120" height="38" rx="8" fill="rgba(255,255,255,0.025)" stroke="rgba(255,255,255,0.1)" stroke-width="1"/>
-      <text x="295" y="99" text-anchor="middle" class="dn" opacity="0.7">cr-agenda</text>
+      <!-- cr-agenda  center:(125,97)  right-edge:185 -->
+      <rect x="70" y="80" width="110" height="34" rx="7"
+            fill="rgba(255,255,255,0.025)" stroke="rgba(255,255,255,0.1)" stroke-width="1"/>
+      <text x="125" y="101" text-anchor="middle" class="n1" opacity="0.65">cr-agenda</text>
 
-      <!-- arrow right -->
-      <line x1="355" y1="95" x2="398" y2="95" stroke="rgba(203,175,134,0.3)" stroke-width="1" marker-end="url(#arr)"/>
+      <!-- BeliefGraph  center:(350,97)  left-edge:250  bottom:119 -->
+      <rect x="250" y="75" width="200" height="44" rx="8"
+            fill="rgba(203,175,134,0.07)" stroke="rgba(203,175,134,0.42)" stroke-width="1"/>
+      <text x="350" y="95" text-anchor="middle" class="n1">BeliefGraph</text>
+      <text x="350" y="110" text-anchor="middle" class="n2">cr-graph + cr-types</text>
 
-      <!-- BeliefGraph -->
-      <rect x="400" y="72" width="196" height="46" rx="8" fill="rgba(203,175,134,0.06)" stroke="rgba(203,175,134,0.35)" stroke-width="1"/>
-      <text x="498" y="92" text-anchor="middle" class="dn">BeliefGraph</text>
-      <text x="498" y="108" text-anchor="middle" class="ds">cr-graph + cr-types</text>
+      <!-- Hotr  center:(110,184)  top:162  bottom:206 -->
+      <rect x="20" y="162" width="180" height="44" rx="8"
+            fill="rgba(255,255,255,0.03)" stroke="rgba(203,175,134,0.2)" stroke-width="1"/>
+      <text x="110" y="182" text-anchor="middle" class="n1">Hotr</text>
+      <text x="110" y="197" text-anchor="middle" class="n2">hypothesis generation</text>
 
-      <!-- vertical down from BeliefGraph centre -->
-      <line x1="498" y1="118" x2="498" y2="148" stroke="rgba(203,175,134,0.3)" stroke-width="1"/>
-      <!-- horizontal fork bar -->
-      <line x1="120" y1="148" x2="580" y2="148" stroke="rgba(203,175,134,0.25)" stroke-width="1"/>
+      <!-- Adhvaryu  center:(350,184)  top:162  bottom:206 -->
+      <rect x="260" y="162" width="180" height="44" rx="8"
+            fill="rgba(255,255,255,0.03)" stroke="rgba(203,175,134,0.2)" stroke-width="1"/>
+      <text x="350" y="182" text-anchor="middle" class="n1">Adhvaryu</text>
+      <text x="350" y="197" text-anchor="middle" class="n2">experiment executor</text>
 
-      <!-- Hotr branch -->
-      <line x1="160" y1="148" x2="160" y2="172" stroke="rgba(203,175,134,0.25)" stroke-width="1" marker-end="url(#arr)"/>
-      <rect x="60" y="176" width="200" height="48" rx="8" fill="rgba(255,255,255,0.03)" stroke="rgba(203,175,134,0.2)" stroke-width="1"/>
-      <text x="160" y="197" text-anchor="middle" class="dn">Hotr</text>
-      <text x="160" y="213" text-anchor="middle" class="ds">hypothesis generation</text>
+      <!-- Udgatr  center:(590,184)  top:162  bottom:206 -->
+      <rect x="500" y="162" width="180" height="44" rx="8"
+            fill="rgba(255,255,255,0.03)" stroke="rgba(203,175,134,0.2)" stroke-width="1"/>
+      <text x="590" y="182" text-anchor="middle" class="n1">Udgatr</text>
+      <text x="590" y="197" text-anchor="middle" class="n2">analyst &amp; scorer</text>
 
-      <!-- Adhvaryu branch -->
-      <line x1="350" y1="148" x2="350" y2="172" stroke="rgba(203,175,134,0.25)" stroke-width="1" marker-end="url(#arr)"/>
-      <rect x="255" y="176" width="190" height="48" rx="8" fill="rgba(255,255,255,0.03)" stroke="rgba(203,175,134,0.2)" stroke-width="1"/>
-      <text x="350" y="197" text-anchor="middle" class="dn">Adhvaryu</text>
-      <text x="350" y="213" text-anchor="middle" class="ds">experiment executor</text>
+      <!-- AgentContext  center:(350,276)  top:254  bottom:298 -->
+      <rect x="250" y="254" width="200" height="44" rx="8"
+            fill="rgba(203,175,134,0.07)" stroke="rgba(203,175,134,0.42)" stroke-width="1"/>
+      <text x="350" y="274" text-anchor="middle" class="n1">AgentContext</text>
+      <text x="350" y="289" text-anchor="middle" class="n2">cr-agents</text>
 
-      <!-- Udgatr branch -->
-      <line x1="540" y1="148" x2="540" y2="172" stroke="rgba(203,175,134,0.25)" stroke-width="1" marker-end="url(#arr)"/>
-      <rect x="445" y="176" width="190" height="48" rx="8" fill="rgba(255,255,255,0.03)" stroke="rgba(203,175,134,0.2)" stroke-width="1"/>
-      <text x="540" y="197" text-anchor="middle" class="dn">Udgatr</text>
-      <text x="540" y="213" text-anchor="middle" class="ds">analyst &amp; scorer</text>
+      <!-- LLM  center:(80,348)  top:330  right:132 -->
+      <rect x="28" y="330" width="104" height="36" rx="7"
+            fill="rgba(255,255,255,0.02)" stroke="rgba(255,255,255,0.08)" stroke-width="1"/>
+      <text x="80" y="347" text-anchor="middle" class="n1" opacity="0.55">LLM</text>
+      <text x="80" y="360" text-anchor="middle" class="n2" opacity="0.55">cr-llm</text>
 
-      <!-- merge lines down to AgentContext -->
-      <line x1="160" y1="224" x2="160" y2="256" stroke="rgba(203,175,134,0.2)" stroke-width="1"/>
-      <line x1="350" y1="224" x2="350" y2="256" stroke="rgba(203,175,134,0.2)" stroke-width="1"/>
-      <line x1="540" y1="224" x2="540" y2="256" stroke="rgba(203,175,134,0.2)" stroke-width="1"/>
-      <line x1="160" y1="256" x2="540" y2="256" stroke="rgba(203,175,134,0.2)" stroke-width="1"/>
-      <line x1="350" y1="256" x2="350" y2="274" stroke="rgba(203,175,134,0.3)" stroke-width="1" marker-end="url(#arr)"/>
+      <!-- Chitta  center:(221,348)  top:330  bottom:366  left:162 -->
+      <rect x="162" y="330" width="118" height="36" rx="7"
+            fill="rgba(157,178,217,0.06)" stroke="rgba(157,178,217,0.32)" stroke-width="1"/>
+      <text x="221" y="347" text-anchor="middle" class="na">Chitta</text>
+      <text x="221" y="360" text-anchor="middle" class="n2">cr-chitta</text>
 
-      <!-- AgentContext -->
-      <rect x="235" y="278" width="230" height="46" rx="8" fill="rgba(203,175,134,0.06)" stroke="rgba(203,175,134,0.35)" stroke-width="1"/>
-      <text x="350" y="298" text-anchor="middle" class="dn">AgentContext</text>
-      <text x="350" y="314" text-anchor="middle" class="ds">cr-agents</text>
+      <!-- Artifacts  center:(419,348)  top:330  left:355 -->
+      <rect x="355" y="330" width="128" height="36" rx="7"
+            fill="rgba(255,255,255,0.02)" stroke="rgba(255,255,255,0.08)" stroke-width="1"/>
+      <text x="419" y="347" text-anchor="middle" class="n1" opacity="0.55">Artifacts</text>
+      <text x="419" y="360" text-anchor="middle" class="n2" opacity="0.55">cr-artifacts</text>
 
-      <!-- fork bar from AgentContext -->
-      <line x1="350" y1="324" x2="350" y2="346" stroke="rgba(203,175,134,0.3)" stroke-width="1"/>
-      <line x1="100" y1="346" x2="600" y2="346" stroke="rgba(203,175,134,0.2)" stroke-width="1"/>
+      <!-- Resources  center:(589,348)  top:330  left:520 -->
+      <rect x="520" y="330" width="138" height="36" rx="7"
+            fill="rgba(255,255,255,0.02)" stroke="rgba(255,255,255,0.08)" stroke-width="1"/>
+      <text x="589" y="347" text-anchor="middle" class="n1" opacity="0.55">Resources</text>
+      <text x="589" y="360" text-anchor="middle" class="n2" opacity="0.55">cr-resources</text>
 
-      <!-- LLM -->
-      <line x1="120" y1="346" x2="120" y2="364" stroke="rgba(203,175,134,0.2)" stroke-width="1" marker-end="url(#arr)"/>
-      <rect x="40" y="368" width="160" height="44" rx="8" fill="rgba(255,255,255,0.02)" stroke="rgba(255,255,255,0.08)" stroke-width="1"/>
-      <text x="120" y="386" text-anchor="middle" class="dn" opacity="0.6">LLM</text>
-      <text x="120" y="401" text-anchor="middle" class="ds" opacity="0.6">cr-llm</text>
+      <!-- chittad daemon  center:(350,437)  top:415  left:120  right:580 -->
+      <rect x="120" y="415" width="460" height="44" rx="9"
+            fill="rgba(157,178,217,0.07)" stroke="rgba(157,178,217,0.32)" stroke-width="1"/>
+      <text x="350" y="435" text-anchor="middle" class="na">chittad daemon</text>
+      <text x="350" y="450" text-anchor="middle" class="n2">Unix socket · HNSW + BM25 + SDR cortical index</text>
 
-      <!-- Chitta -->
-      <line x1="283" y1="346" x2="283" y2="364" stroke="rgba(157,178,217,0.35)" stroke-width="1" marker-end="url(#arr-aura)"/>
-      <rect x="213" y="368" width="140" height="44" rx="8" fill="rgba(157,178,217,0.05)" stroke="rgba(157,178,217,0.3)" stroke-width="1"/>
-      <text x="283" y="386" text-anchor="middle" class="da">Chitta</text>
-      <text x="283" y="401" text-anchor="middle" class="ds">cr-chitta</text>
+      <!-- ── CONNECTORS ─────────────────────────────────────── -->
 
-      <!-- Artifacts -->
-      <line x1="420" y1="346" x2="420" y2="364" stroke="rgba(203,175,134,0.2)" stroke-width="1" marker-end="url(#arr)"/>
-      <rect x="357" y="368" width="126" height="44" rx="8" fill="rgba(255,255,255,0.02)" stroke="rgba(255,255,255,0.08)" stroke-width="1"/>
-      <text x="420" y="386" text-anchor="middle" class="dn" opacity="0.6">Artifacts</text>
-      <text x="420" y="401" text-anchor="middle" class="ds" opacity="0.6">cr-artifacts</text>
+      <!-- 1. agenda(bottom:44) → L → cr-agenda(top:80)  via elbow at y=62 -->
+      <path d="M350,44 L350,62 L125,62 L125,80" class="w ws" marker-end="url(#as)"/>
 
-      <!-- Resources -->
-      <line x1="565" y1="346" x2="565" y2="364" stroke="rgba(203,175,134,0.2)" stroke-width="1" marker-end="url(#arr)"/>
-      <rect x="490" y="368" width="150" height="44" rx="8" fill="rgba(255,255,255,0.02)" stroke="rgba(255,255,255,0.08)" stroke-width="1"/>
-      <text x="565" y="386" text-anchor="middle" class="dn" opacity="0.6">Resources</text>
-      <text x="565" y="401" text-anchor="middle" class="ds" opacity="0.6">cr-resources</text>
+      <!-- 2. cr-agenda(right:180) → BeliefGraph(left:250) -->
+      <line x1="180" y1="97" x2="250" y2="97" class="w ws" marker-end="url(#as)"/>
 
-      <!-- chitta down to daemon -->
-      <line x1="283" y1="412" x2="283" y2="434" stroke="rgba(157,178,217,0.35)" stroke-width="1"/>
-      <line x1="283" y1="434" x2="350" y2="434" stroke="rgba(157,178,217,0.3)" stroke-width="1" marker-end="url(#arr-aura)"/>
+      <!-- 3. BeliefGraph(bottom:119) → fork bar(y=140) → agents(top:162) -->
+      <line x1="350" y1="119" x2="350" y2="140" class="w ws"/>
+      <line x1="110" y1="140" x2="590" y2="140" class="w ws"/>
+      <line x1="110" y1="140" x2="110" y2="162" class="w ws" marker-end="url(#as)"/>
+      <line x1="350" y1="140" x2="350" y2="162" class="w ws" marker-end="url(#as)"/>
+      <line x1="590" y1="140" x2="590" y2="162" class="w ws" marker-end="url(#as)"/>
 
-      <!-- chittad daemon -->
-      <rect x="110" y="460" width="480" height="60" rx="10" fill="rgba(157,178,217,0.06)" stroke="rgba(157,178,217,0.3)" stroke-width="1"/>
-      <text x="350" y="484" text-anchor="middle" class="da">chittad daemon</text>
-      <text x="350" y="501" text-anchor="middle" class="ds">Unix socket · HNSW + BM25 + SDR cortical index</text>
-      <line x1="350" y1="438" x2="350" y2="460" stroke="rgba(157,178,217,0.35)" stroke-width="1" marker-end="url(#arr-aura)"/>
+      <!-- 4. agents(bottom:206) → merge bar(y=228) → AgentContext(top:254) -->
+      <line x1="110" y1="206" x2="110" y2="228" class="w ws"/>
+      <line x1="350" y1="206" x2="350" y2="228" class="w ws"/>
+      <line x1="590" y1="206" x2="590" y2="228" class="w ws"/>
+      <line x1="110" y1="228" x2="590" y2="228" class="w ws"/>
+      <line x1="350" y1="228" x2="350" y2="254" class="w ws" marker-end="url(#as)"/>
+
+      <!-- 5. AgentContext(bottom:298) → fork bar(y=316) → sub-nodes(top:330) -->
+      <line x1="350" y1="298" x2="350" y2="316" class="w ws"/>
+      <line x1="80"  y1="316" x2="589" y2="316" class="w ws"/>
+      <line x1="80"  y1="316" x2="80"  y2="330" class="w ws" marker-end="url(#as)"/>
+      <line x1="221" y1="316" x2="221" y2="330" class="w wa" marker-end="url(#aa)"/>
+      <line x1="419" y1="316" x2="419" y2="330" class="w ws" marker-end="url(#as)"/>
+      <line x1="589" y1="316" x2="589" y2="330" class="w ws" marker-end="url(#as)"/>
+
+      <!-- 6. Chitta(bottom:366) → L → chittad(top:415) via elbow at y=395 -->
+      <path d="M221,366 L221,395 L350,395 L350,415" class="w wa" marker-end="url(#aa)"/>
     </svg>
     </div>
     <p class="section-intro reveal reveal-delay-3" style="margin-top:var(--space-6)">The orchestrator in <code>cr-daemon</code> shuts down when all agents are idle for <code>--max-cycles</code> consecutive cycles, the budget is exhausted, or SIGINT is received. The final graph snapshot is written to <code>graph_state.json</code>.</p>
