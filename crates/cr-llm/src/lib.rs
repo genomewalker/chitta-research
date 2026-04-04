@@ -575,6 +575,112 @@ impl LlmClient for ChittaBridgeClient {
     }
 }
 
+/// Ollama client with automatic endpoint discovery.
+/// Discovery chain:
+/// 1. `/tmp/ollama-server-*.url` cached files (written by chitta-gpu start)
+/// 2. `CHITTA_GPU_URL` environment variable
+/// 3. SLURM job URL files in `~/.chitta-gpu/jobs/`
+/// 4. `http://localhost:11434` (local Ollama)
+/// Returns an error if no endpoint is reachable.
+pub struct OllamaClient {
+    client: reqwest::Client,
+    pub model: String,
+}
+
+impl OllamaClient {
+    pub fn new(model: impl Into<String>) -> Self {
+        Self { client: reqwest::Client::new(), model: model.into() }
+    }
+
+    async fn discover_endpoint(&self) -> Option<String> {
+        // 1. Cached URL files
+        if let Ok(entries) = std::fs::read_dir("/tmp") {
+            for entry in entries.flatten() {
+                let name = entry.file_name();
+                let name = name.to_string_lossy();
+                if name.starts_with("ollama-server-") && name.ends_with(".url") {
+                    if let Ok(url) = std::fs::read_to_string(entry.path()) {
+                        let url = url.trim().to_string();
+                        if self.probe(&url).await { return Some(url); }
+                    }
+                }
+            }
+        }
+        // 2. Environment variable
+        if let Ok(url) = std::env::var("CHITTA_GPU_URL") {
+            if self.probe(&url).await { return Some(url); }
+        }
+        // 3. SLURM job URL files
+        if let Some(home) = std::env::var("HOME").ok() {
+            let jobs_dir = format!("{home}/.chitta-gpu/jobs");
+            if let Ok(entries) = std::fs::read_dir(&jobs_dir) {
+                for entry in entries.flatten() {
+                    if let Ok(url) = std::fs::read_to_string(entry.path()) {
+                        let url = url.trim().to_string();
+                        if self.probe(&url).await { return Some(url); }
+                    }
+                }
+            }
+        }
+        // 4. Local Ollama
+        let local = "http://localhost:11434".to_string();
+        if self.probe(&local).await { return Some(local); }
+        None
+    }
+
+    async fn probe(&self, base_url: &str) -> bool {
+        let url = format!("{base_url}/v1/models");
+        self.client.get(&url)
+            .timeout(Duration::from_secs(2))
+            .send().await
+            .map(|r| r.status().is_success())
+            .unwrap_or(false)
+    }
+}
+
+#[async_trait]
+impl LlmClient for OllamaClient {
+    async fn complete(&self, req: CompletionRequest) -> Result<CompletionResponse, LlmError> {
+        let base_url = self.discover_endpoint().await
+            .ok_or_else(|| LlmError::Process("No Ollama endpoint reachable (tried cache, env, SLURM, localhost:11434)".into()))?;
+
+        let mut messages = Vec::with_capacity(req.messages.len() + 1);
+        if !req.system.is_empty() {
+            messages.push(serde_json::json!({"role": "system", "content": req.system}));
+        }
+        for m in &req.messages {
+            messages.push(serde_json::json!({"role": m.role, "content": m.content}));
+        }
+
+        let body = serde_json::json!({
+            "model": self.model,
+            "messages": messages,
+            "stream": false,
+        });
+
+        let resp = self.client
+            .post(format!("{base_url}/v1/chat/completions"))
+            .header("content-type", "application/json")
+            .json(&body)
+            .send().await?;
+
+        if !resp.status().is_success() {
+            let status = resp.status().as_u16();
+            let body = resp.text().await.unwrap_or_default();
+            return Err(LlmError::Api { status, body });
+        }
+
+        let data: serde_json::Value = resp.json().await?;
+        let content = data["choices"][0]["message"]["content"]
+            .as_str().unwrap_or("").to_string();
+        let usage = TokenUsage {
+            input: data["usage"]["prompt_tokens"].as_u64().unwrap_or(0),
+            output: data["usage"]["completion_tokens"].as_u64().unwrap_or(0),
+        };
+        Ok(CompletionResponse { content, usage, debate_thread: vec![] })
+    }
+}
+
 /// Mock LLM client for testing — returns deterministic structured responses
 /// so the full pipeline (graph → agents → artifacts) can be tested without
 /// any external calls or subprocess spawning.

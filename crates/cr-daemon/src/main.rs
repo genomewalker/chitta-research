@@ -18,7 +18,7 @@ use cr_agents::brahman::Brahman;
 use cr_artifacts::ArtifactStore;
 use cr_chitta::ChittaClient;
 
-use cr_llm::{AnthropicClient, ChittaBridgeClient, ClaudeCliClient, CodexClient, GeminiClient, LlmClient, MockLlmClient, OpenAiClient, mock_room, standard_room};
+use cr_llm::{AnthropicClient, ChittaBridgeClient, ClaudeCliClient, CodexClient, GeminiClient, LlmClient, MockLlmClient, OllamaClient, OpenAiClient, mock_room, standard_room};
 use cr_resources::ResourceManager;
 
 #[derive(Parser)]
@@ -89,8 +89,8 @@ fn build_participant_client(p: &cr_agenda::ParticipantConfig) -> Arc<dyn LlmClie
             Arc::new(ChittaBridgeClient::with_local(model, endpoint))
         }
         other => {
-            warn!("Unknown participant backend '{}' for '{}', falling back to claude-cli", other, p.name);
-            Arc::new(ClaudeCliClient::new())
+            warn!("Unknown participant backend '{}' for '{}', falling back to local ollama", other, p.name);
+            Arc::new(OllamaClient::new("gemma4:26b"))
         }
     }
 }
@@ -130,14 +130,19 @@ fn build_llm_client(config: &cr_agenda::LlmConfig) -> Arc<dyn LlmClient> {
             return Arc::new(builder.build());
         }
         // No room block — fall through to the built-in preset
-        info!("using standard room (claude-cli + codex, 2 rounds)");
+        info!("using standard room (local ollama, 2 rounds)");
         return Arc::new(standard_room(config.model.clone()).build());
     }
 
     match config.provider.as_str() {
         "claude-cli" => {
-            info!("using claude -p (no API key needed)");
+            info!("using claude -p");
             Arc::new(ClaudeCliClient::new())
+        }
+        "local" | "ollama" => {
+            let model = if config.model.is_empty() { "gemma4:26b".to_string() } else { config.model.clone() };
+            info!("using local ollama (model: {model}, auto-discovering endpoint)");
+            Arc::new(OllamaClient::new(model))
         }
         "anthropic" => {
             let api_key = std::env::var(config.api_key_env.as_deref().unwrap_or("ANTHROPIC_API_KEY"))
@@ -168,8 +173,8 @@ fn build_llm_client(config: &cr_agenda::LlmConfig) -> Arc<dyn LlmClient> {
             Arc::new(OpenAiClient::new(api_key, base_url))
         }
         other => {
-            warn!("Unknown provider '{}', defaulting to claude-cli", other);
-            Arc::new(ClaudeCliClient::new())
+            warn!("Unknown provider '{}', defaulting to local ollama", other);
+            Arc::new(OllamaClient::new("gemma4:26b"))
         }
     }
 }

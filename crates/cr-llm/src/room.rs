@@ -129,7 +129,7 @@ pub fn mock_room(topic: impl Into<String>) -> DiscussionRoomBuilder {
         )
 }
 
-/// Preset: build a room with two claude-cli participants + chitta-bridge synthesizer.
+/// Preset: build a room with two local Ollama participants.
 /// Each gets a distinct analytical role so the debate is genuinely divergent.
 pub fn standard_room(topic: impl Into<String>) -> DiscussionRoomBuilder {
     let topic = topic.into();
@@ -138,14 +138,14 @@ pub fn standard_room(topic: impl Into<String>) -> DiscussionRoomBuilder {
             "Critic",
             "You are a scientific critic. Find every flaw, untested assumption, \
              and confound in the hypothesis or plan. Be specific and brief.",
-            Arc::new(crate::ClaudeCliClient::new()),
+            Arc::new(crate::OllamaClient::new("gemma4:26b")),
         )
         .add(
             "Empiricist",
             "You are an empiricist. Focus on testability: is the experiment \
              actually measurable, reproducible, and falsifiable? Propose concrete \
              improvements to the experimental design.",
-            Arc::new(ChittaBridgeClient::new("opencode")),
+            Arc::new(crate::OllamaClient::new("gemma4:12b")),
         )
         .rounds(2)
         .synthesizer(
@@ -154,7 +154,7 @@ pub fn standard_room(topic: impl Into<String>) -> DiscussionRoomBuilder {
              CRITICAL: Respond with ONLY raw JSON — no prose, no explanation, no \
              [brackets], no markdown fences. Start your response with the first \
              character of the JSON literal (either { or [).",
-            Arc::new(crate::ClaudeCliClient::new()),
+            Arc::new(crate::OllamaClient::new("gemma4:26b")),
         )
 }
 
@@ -172,14 +172,14 @@ pub fn three_way_room(
             "Critic",
             "You are a scientific critic. Find every flaw, untested assumption, \
              and confound in the hypothesis or plan. Be specific and brief.",
-            Arc::new(crate::ClaudeCliClient::new()),
+            Arc::new(crate::OllamaClient::new("gemma4:26b")),
         )
         .add(
             "Empiricist",
             "You are an empiricist. Focus on testability: is the experiment \
              actually measurable, reproducible, and falsifiable? Propose concrete \
              improvements to the experimental design.",
-            Arc::new(crate::CodexClient::new()),
+            Arc::new(crate::OllamaClient::new("gemma4:12b")),
         )
         .add(
             "Architect",
@@ -195,7 +195,7 @@ pub fn three_way_room(
              final answer the original prompt requested. Incorporate valid criticisms \
              from all three. \
              CRITICAL: Respond with ONLY raw JSON — no prose, no markdown fences.",
-            Arc::new(crate::ClaudeCliClient::new()),
+            Arc::new(crate::OllamaClient::new("gemma4:26b")),
         )
 }
 
