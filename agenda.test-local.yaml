@@ -1,0 +1,52 @@
+programs:
+  - title: "Compression codec selection for ancient metagenomics FASTQ archives"
+    domain: bioinformatics / data_compression
+    questions:
+      - "Does zstd-19 outperform bzip2 on typical aDNA FASTQ data, given that ancient reads have lower complexity and higher damage rates — what is the expected compression ratio difference and why?"
+      - "Is it worth reordering FASTQ reads by mapping position before compression (i.e. position-sorted vs name-sorted) for a 2x coverage aDNA dataset — does locality improve the ratio enough to justify the sort cost?"
+    methods:
+      - "Assume a 1GB aDNA FASTQ with 30% GC, 5% C→T deamination, mean read length 50bp"
+      - "Estimate zstd-19 vs bzip2 ratio from first principles (entropy of damaged reads)"
+      - "Estimate sort benefit: for 2x coverage, reads are sparse — does positional clustering add compressible structure?"
+    priority: 1.0
+    max_budget_usd: 1.0
+
+budget:
+  total_usd: 1.0
+  gpu_slots: 0
+  cpu_workers: 2
+
+llm:
+  provider: room
+  model: "aDNA FASTQ compression codec selection"
+  room:
+    rounds: 1
+    participants:
+      - name: Critic
+        backend: claude-cli
+        system: "You are a bioinformatics critic. Challenge every assumption in the hypothesis — what edge cases break it, what benchmarks are missing, what is being oversimplified about aDNA data properties?"
+
+      - name: Empiricist
+        backend: openai-compat
+        model: gemma4:26b
+        base_url: http://dandygpun01fl:11434/v1
+        system: "You are an empiricist. Focus on measurable outcomes: what exact experiment would test this, what data is needed, what result would falsify the hypothesis? Propose concrete commands (zstd, bzip2, samtools)."
+
+      - name: Theorist
+        backend: openai-compat
+        model: deepseek-r1:32b
+        base_url: http://dandygpun01fl:11434/v1
+        system: "You are an information theorist. Analyze the entropy properties of ancient DNA reads: damage patterns, low-complexity regions, adapter contamination. Compute theoretical compression limits and compare codecs from an entropy perspective."
+
+      - name: Engineer
+        backend: codex
+        model: gpt-5.4
+        system: "You are a systems engineer. Focus on practical implementation: pipeline latency, parallelism (pigz vs pbzip2 vs zstd -T), storage layout, and tradeoffs for HPC archive systems."
+
+    synthesizer:
+      name: Synthesizer
+      backend: claude-cli
+      system: "You are a JSON synthesizer. Read the four-way debate — Critic (flaws), Empiricist (measurements), Theorist (entropy bounds), Engineer (implementation). Resolve any contradictions between participants, then produce the final structured answer. CRITICAL: Respond with ONLY raw JSON — no prose, no markdown fences. Start with {."
+
+chitta:
+  mind_path: ~/.claude/mind

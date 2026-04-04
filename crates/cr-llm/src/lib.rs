@@ -478,6 +478,103 @@ impl LlmClient for GeminiClient {
     }
 }
 
+// ── chitta-bridge exec ────────────────────────────────────────────────────
+
+/// LLM client that delegates to `chitta-bridge --exec`.
+///
+/// Accepts any backend supported by chitta-bridge: "opencode", "claude", "codex".
+/// Optionally reuses a named session for context persistence across calls.
+pub struct ChittaBridgeClient {
+    pub backend: String,
+    pub model: Option<String>,
+    pub session_id: Option<String>,
+    pub base_url: Option<String>,
+}
+
+impl ChittaBridgeClient {
+    pub fn new(backend: impl Into<String>) -> Self {
+        Self { backend: backend.into(), model: None, session_id: None, base_url: None }
+    }
+
+    pub fn with_model(backend: impl Into<String>, model: impl Into<String>) -> Self {
+        Self { backend: backend.into(), model: Some(model.into()), session_id: None, base_url: None }
+    }
+
+    pub fn with_local(model: impl Into<String>, base_url: impl Into<String>) -> Self {
+        Self {
+            backend: "local".into(),
+            model: Some(model.into()),
+            session_id: None,
+            base_url: Some(base_url.into()),
+        }
+    }
+
+    pub fn with_session(mut self, session_id: impl Into<String>) -> Self {
+        self.session_id = Some(session_id.into());
+        self
+    }
+}
+
+#[async_trait]
+impl LlmClient for ChittaBridgeClient {
+    async fn complete(&self, req: CompletionRequest) -> Result<CompletionResponse, LlmError> {
+        let message = req.messages.iter()
+            .filter(|m| m.role == "user")
+            .map(|m| m.content.as_str())
+            .collect::<Vec<_>>()
+            .join("\n\n");
+
+        let mut payload = serde_json::json!({
+            "backend": self.backend,
+            "system": req.system,
+            "message": message,
+        });
+        if let Some(m) = &self.model {
+            payload["model"] = serde_json::Value::String(m.clone());
+        }
+        if let Some(sid) = &self.session_id {
+            payload["session_id"] = serde_json::Value::String(sid.clone());
+        }
+        if let Some(url) = &self.base_url {
+            payload["base_url"] = serde_json::Value::String(url.clone());
+        }
+
+        let mut cmd = tokio::process::Command::new("chitta-bridge");
+        cmd.arg("--exec")
+           .stdin(std::process::Stdio::piped())
+           .stdout(std::process::Stdio::piped())
+           .stderr(std::process::Stdio::piped());
+
+        let mut child = cmd.spawn()
+            .map_err(|e| LlmError::Process(e.to_string()))?;
+
+        if let Some(stdin) = child.stdin.take() {
+            use tokio::io::AsyncWriteExt;
+            let mut stdin = stdin;
+            stdin.write_all(payload.to_string().as_bytes()).await
+                .map_err(|e| LlmError::Process(e.to_string()))?;
+        }
+
+        let output = child.wait_with_output().await
+            .map_err(|e| LlmError::Process(e.to_string()))?;
+
+        if !output.status.success() {
+            let stderr = String::from_utf8_lossy(&output.stderr).to_string();
+            return Err(LlmError::Process(format!("chitta-bridge --exec failed: {stderr}")));
+        }
+
+        let data: serde_json::Value = serde_json::from_slice(&output.stdout)
+            .map_err(|e| LlmError::Process(format!("invalid JSON from chitta-bridge: {e}")))?;
+
+        if let Some(err) = data["error"].as_str().filter(|s| !s.is_empty()) {
+            return Err(LlmError::Process(err.to_string()));
+        }
+
+        let content = data["content"].as_str().unwrap_or("").to_string();
+        Ok(CompletionResponse { content, usage: TokenUsage::default(), debate_thread: vec![] })
+    }
+}
+
 /// Mock LLM client for testing — returns deterministic structured responses
 /// so the full pipeline (graph → agents → artifacts) can be tested without
 /// any external calls or subprocess spawning.

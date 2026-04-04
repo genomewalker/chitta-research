@@ -34,6 +34,8 @@ pub struct AgentContext {
     pub active_program_ids: std::collections::HashSet<NodeId>,
     /// Root path of the codebase being researched (e.g. /path/to/mcaf).
     pub codebase_path: String,
+    /// Model name to pass in CompletionRequest (empty = let client decide).
+    pub llm_model: String,
 }
 
 #[derive(Debug, Clone)]

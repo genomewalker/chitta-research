@@ -64,32 +64,34 @@ budget:
   cpu_workers: 4
 
 llm:
-  provider: room
-  model: "MCAF ultra-lossless and ultra-speed compression research"
+  provider: openai-compat
+  model: llama3.3:70b
   room:
     rounds: 2
     participants:
       - name: Critic
-        # Swapped to claude-cli while 2-GPU ollama job (15814349) waits for jmn549's A100
-        # Switch back: llama3.3:70b via openai-compat at http://dandygpun01fl:11434/v1
-        backend: claude-cli
+        backend: openai-compat
+        model: llama3.3:70b
+        base_url: http://dandygpun01fl:11434/v1
         system: "You are a compression algorithm expert and scientific critic. Find every flaw in the hypothesis — what assumptions about data distribution are wrong, what benchmarks are missing, what edge cases break the approach. Focus on genomic data specifics: reads are variable-length, coverage is uneven, paired-end reads have structured correlation."
 
       - name: Empiricist
-        # Swapped to claude-cli while GPU unavailable
-        # Switch back: qwen3:30b-a3b via openai-compat at http://dandygpun01fl:11434/v1
-        backend: claude-cli
+        backend: openai-compat
+        model: qwen3:30b-a3b
+        base_url: http://dandygpun01fl:11434/v1
         system: "You are an empiricist focused on measurable outcomes. For each compression hypothesis: what is the exact experiment, what data do you need, what is the measurement protocol, and what result would falsify the hypothesis? Be concrete about tools (zstd, python3 zstandard, /proc/cpuinfo, samtools view) and exact commands."
 
       - name: Information-Theorist
-        # Swapped to claude-cli while GPU unavailable
-        # Switch back: deepseek-r1:32b via openai-compat at http://dandygpun01fl:11434/v1
-        backend: claude-cli
+        backend: openai-compat
+        model: deepseek-r1:32b
+        base_url: http://dandygpun01fl:11434/v1
         system: "You are an information theorist and systems programmer expert in genomic compression. For each compression hypothesis: (1) compute the theoretical entropy bound citing relevant coding theory, (2) assess implementation feasibility in C++ bam2mcaf.cpp, (3) propose the minimal code change. Current measured state: 342M alignments of 1.74M unique reads (avg 196 aligns/read). FRAME_CORE=2.49GB(1.8x), BLOCK_LAYOUT_COLUMN already active. Key finding: gc_frac/dust_score/seq_len stored per-alignment instead of per-read — 342M×3 bytes vs 1.74M×4 bytes. NM stored as u16 not u8. Repos: /maps/projects/fernandezguerra/apps/repos/mcaf/"
 
     synthesizer:
       name: Synthesizer
-      backend: claude-cli
+      backend: openai-compat
+      model: llama3.3:70b
+      base_url: http://dandygpun01fl:11434/v1
       system: "You are a JSON synthesizer. Read the three-way debate above — Critic (flaws), Empiricist (measurements), Information-Theorist (entropy+implementation). Synthesize the best testable hypotheses for the research question. CRITICAL: Respond with ONLY a raw JSON array — no prose, no markdown fences. Each element must have exactly these fields: {\"statement\": \"specific testable hypothesis string\", \"prior_confidence\": 0.65, \"experiment_plan\": {\"description\": \"how to test\", \"steps\": [\"step1\", \"step2\"]}}. Output 1-3 hypotheses. Start with [."
 
 chitta:

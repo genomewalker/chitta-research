@@ -18,7 +18,7 @@ use cr_agents::brahman::Brahman;
 use cr_artifacts::ArtifactStore;
 use cr_chitta::ChittaClient;
 
-use cr_llm::{AnthropicClient, ClaudeCliClient, CodexClient, GeminiClient, LlmClient, MockLlmClient, OpenAiClient, OpenCodeClient, mock_room, standard_room};
+use cr_llm::{AnthropicClient, ChittaBridgeClient, ClaudeCliClient, CodexClient, GeminiClient, LlmClient, MockLlmClient, OpenAiClient, mock_room, standard_room};
 use cr_resources::ResourceManager;
 
 #[derive(Parser)]
@@ -73,13 +73,20 @@ fn build_participant_client(p: &cr_agenda::ParticipantConfig) -> Arc<dyn LlmClie
             let base = p.base_url.clone().unwrap_or_else(|| "http://localhost:11434/v1".to_string());
             Arc::new(OpenAiClient::new(key, base))
         }
-        "opencode" => {
-            // opencode -p [--model <model>]: run any OpenCode-supported model non-interactively.
-            // Multiple participants can use different models by specifying `model:` in the agenda.
+        "chitta-bridge" | "opencode" => {
+            // Route through chitta-bridge --exec for session management.
+            // "opencode" is kept as an alias for backwards compatibility.
             match &p.model {
-                Some(m) => Arc::new(OpenCodeClient::with_model(m.clone())),
-                None => Arc::new(OpenCodeClient::new()),
+                Some(m) => Arc::new(ChittaBridgeClient::with_model("opencode", m.clone())),
+                None => Arc::new(ChittaBridgeClient::new("opencode")),
             }
+        }
+        "local" => {
+            // Local model via chitta-bridge --exec (Ollama / LM Studio endpoint).
+            let endpoint = p.base_url.clone()
+                .unwrap_or_else(|| "http://localhost:11434/v1".to_string());
+            let model = p.model.clone().unwrap_or_else(|| "default".to_string());
+            Arc::new(ChittaBridgeClient::with_local(model, endpoint))
         }
         other => {
             warn!("Unknown participant backend '{}' for '{}', falling back to claude-cli", other, p.name);
@@ -266,6 +273,7 @@ async fn main() -> anyhow::Result<()> {
         .clone()
         .unwrap_or_default()
         .replace("~", &std::env::var("HOME").unwrap_or_default());
+    let llm_model = config.llm.model.clone();
     let gpu_slots = config.budget.gpu_slots as usize;
     let cpu_workers = config.budget.cpu_workers as usize;
     let total_budget = config.budget.total_usd;
@@ -369,6 +377,7 @@ async fn main() -> anyhow::Result<()> {
         agenda,
         active_program_ids,
         codebase_path,
+        llm_model,
     });
 
     let shutdown = Arc::new(AtomicBool::new(false));

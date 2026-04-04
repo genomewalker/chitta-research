@@ -12,7 +12,7 @@ use std::sync::Arc;
 use async_trait::async_trait;
 use tracing::debug;
 
-use crate::{CompletionRequest, CompletionResponse, LlmClient, LlmError, Message, TokenUsage};
+use crate::{ChittaBridgeClient, CompletionRequest, CompletionResponse, LlmClient, LlmError, Message, TokenUsage};
 
 /// One participant in a discussion room.
 pub struct Participant {
@@ -129,7 +129,7 @@ pub fn mock_room(topic: impl Into<String>) -> DiscussionRoomBuilder {
         )
 }
 
-/// Preset: build a room with the standard claude-cli / codex participants.
+/// Preset: build a room with two claude-cli participants + chitta-bridge synthesizer.
 /// Each gets a distinct analytical role so the debate is genuinely divergent.
 pub fn standard_room(topic: impl Into<String>) -> DiscussionRoomBuilder {
     let topic = topic.into();
@@ -145,7 +145,7 @@ pub fn standard_room(topic: impl Into<String>) -> DiscussionRoomBuilder {
             "You are an empiricist. Focus on testability: is the experiment \
              actually measurable, reproducible, and falsifiable? Propose concrete \
              improvements to the experimental design.",
-            Arc::new(crate::CodexClient::new()),
+            Arc::new(ChittaBridgeClient::new("opencode")),
         )
         .rounds(2)
         .synthesizer(

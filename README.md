@@ -166,8 +166,17 @@ budget:
   cpu_workers: 4     # concurrency limit for CPU-bound steps
 
 llm:
-  provider: claude-cli       # claude-cli | anthropic | openai | codex
+  # Single backend (claude-cli | anthropic | openai | codex | chitta-bridge)
+  provider: claude-cli
   model: claude-sonnet-4-6
+
+  # Or a multi-model room (see "Multi-model discussion rooms" section)
+  # provider: room
+  # model: "topic label"
+  # room:
+  #   rounds: 1
+  #   participants: [...]
+  #   synthesizer: {...}
 
 chitta:
   mind_path: ~/.claude/mind  # path passed to chittad for socket resolution
@@ -187,9 +196,80 @@ Hotr then generates `Hypothesis` + `ExperimentPlan` nodes for unanswered questio
 | `anthropic` | `anthropic` | Direct HTTP to `api.anthropic.com`. Requires `ANTHROPIC_API_KEY`. |
 | `openai` | `openai` | OpenAI-compatible HTTP. Requires `OPENAI_API_KEY`. |
 | `codex` | `codex` | Spawns `codex exec -`. Model set via `--config model=`. |
+| `chitta-bridge` | `chitta-bridge` | Routes through `chitta-bridge --exec`; supports opencode, codex, and local backends. |
+| `openai-compat` | `openai-compat` + `base_url` | Direct OpenAI-compatible HTTP to any Ollama or vLLM endpoint. No API key. |
 | mock | `--mock` flag | Deterministic stub. For testing without any external process. |
 
 All API providers implement exponential back-off with 3 retries on 429/503.
+
+### chitta-bridge backend
+
+`chitta-bridge` is the recommended backend for multi-model and local-model rooms. It
+delegates LLM calls to the chitta-bridge MCP server via `chitta-bridge --exec`, which
+handles session management, model routing, and history across opencode, codex, and
+Ollama-hosted models from a single interface.
+
+```yaml
+llm:
+  provider: chitta-bridge
+  model: claude-sonnet-4-6
+```
+
+### Local models via openai-compat
+
+Use any Ollama or vLLM server directly, without the chitta-bridge layer. The
+`base_url` field must point to an OpenAI-compatible `/v1` endpoint:
+
+```yaml
+  - name: Theorist
+    backend: openai-compat
+    model: deepseek-r1:32b
+    base_url: http://your-gpu-node:11434/v1
+    system: "You are an information theorist..."
+```
+
+### Multi-model discussion rooms
+
+The `room` provider runs a structured multi-participant debate before producing a
+synthesized answer. Each participant can use a different backend and model:
+
+```yaml
+llm:
+  provider: room
+  model: "topic label"
+  room:
+    rounds: 1
+    participants:
+      - name: Critic
+        backend: claude-cli
+        system: "You are a bioinformatics critic..."
+
+      - name: Empiricist
+        backend: openai-compat
+        model: gemma4:26b
+        base_url: http://gpu-node:11434/v1
+        system: "You are an empiricist..."
+
+      - name: Theorist
+        backend: openai-compat
+        model: deepseek-r1:32b
+        base_url: http://gpu-node:11434/v1
+        system: "You are an information theorist..."
+
+      - name: Engineer
+        backend: codex
+        model: gpt-5.4
+        system: "You are a systems engineer..."
+
+    synthesizer:
+      name: Synthesizer
+      backend: claude-cli
+      system: "You are a JSON synthesizer. Resolve contradictions. Output raw JSON only."
+```
+
+All participants run in parallel per round. The synthesizer runs once at the end and
+its structured output is returned as the final LLM response to the requesting agent.
+See `agenda.test-local.yaml` for a complete working example.
 
 ---
 
@@ -217,9 +297,9 @@ enhancement, not a hard dependency.
 |---|---|
 | `cr-types` | Core type definitions: `NodeKind`, `EdgeKind`, `FitnessVector`, `RunStatus`, `ResourceUsage`. All `serde`-serializable. |
 | `cr-graph` | `BeliefGraph` — `petgraph`-backed stable directed graph with typed lookup, evidence queries, and JSON snapshot I/O. |
-| `cr-agents` | `Agent` trait + `AgentContext` + three implementations: `Hotr`, `Adhvaryu`, `Udgatr`. |
+| `cr-agents` | `Agent` trait + `AgentContext` + four implementations: `Hotr`, `Adhvaryu`, `Udgatr`, `Brahman`. |
 | `cr-fitness` | Pareto frontier computation over `FitnessVector` arrays. |
-| `cr-llm` | `LlmClient` trait + four backends: `ClaudeCliClient`, `AnthropicClient`, `OpenAiClient`, `CodexClient`, `MockLlmClient`. |
+| `cr-llm` | `LlmClient` trait + backends: `ClaudeCliClient`, `AnthropicClient`, `OpenAiClient`, `CodexClient`, `ChittaBridgeClient`, `OpenAiCompatClient`, `MockLlmClient`. Also `DiscussionRoom` for multi-model debates. |
 | `cr-chitta` | Async Unix socket client for the chittad daemon. |
 | `cr-reconsolidation` | Downstream confidence propagation on belief correction. |
 | `cr-artifacts` | `git2`-backed artifact store — commits experiment result files to a local repo. |
