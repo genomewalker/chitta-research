@@ -1,0 +1,487 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>chitta-research</title>
+  <style>
+    :root {
+      --bg: #0d0d0f;
+      --surface: #141418;
+      --border: #1e1e24;
+      --text: #c8c8d0;
+      --text-dim: #666670;
+      --accent: #7b6ee8;
+      --accent-dim: #3d3580;
+      --green: #4ade80;
+      --yellow: #fbbf24;
+      --red: #f87171;
+      --mono: 'JetBrains Mono', 'Fira Code', 'Cascadia Code', monospace;
+      --sans: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: var(--sans);
+      font-size: 15px;
+      line-height: 1.65;
+      padding: 0 1rem;
+    }
+
+    a { color: var(--accent); text-decoration: none; }
+    a:hover { text-decoration: underline; }
+
+    .wrap { max-width: 820px; margin: 0 auto; padding: 4rem 0 6rem; }
+
+    header { margin-bottom: 3.5rem; }
+
+    .badge-row { display: flex; gap: 0.5rem; flex-wrap: wrap; margin-bottom: 1.5rem; }
+    .badge {
+      font-family: var(--mono);
+      font-size: 11px;
+      padding: 2px 8px;
+      border-radius: 3px;
+      border: 1px solid var(--border);
+      color: var(--text-dim);
+    }
+    .badge.lang { border-color: #b04010; color: #f06030; }
+    .badge.ver  { border-color: var(--accent-dim); color: var(--accent); }
+
+    h1 {
+      font-family: var(--mono);
+      font-size: 2.2rem;
+      font-weight: 700;
+      letter-spacing: -0.02em;
+      color: #fff;
+      margin-bottom: 0.5rem;
+    }
+
+    .tagline {
+      color: var(--text-dim);
+      font-size: 1rem;
+      max-width: 560px;
+    }
+
+    h2 {
+      font-family: var(--mono);
+      font-size: 0.8rem;
+      text-transform: uppercase;
+      letter-spacing: 0.12em;
+      color: var(--accent);
+      margin: 2.8rem 0 1rem;
+    }
+
+    p { color: var(--text); margin-bottom: 0.9rem; }
+
+    .prop-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+      gap: 1rem;
+      margin-bottom: 1rem;
+    }
+
+    .prop {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 1rem 1.1rem;
+    }
+
+    .prop-title {
+      font-family: var(--mono);
+      font-size: 0.78rem;
+      color: var(--accent);
+      margin-bottom: 0.4rem;
+      font-weight: 600;
+    }
+
+    .prop p { font-size: 0.88rem; color: var(--text-dim); margin: 0; }
+
+    .agent-row {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 1rem;
+      margin-bottom: 1rem;
+    }
+
+    @media (max-width: 600px) {
+      .agent-row { grid-template-columns: 1fr; }
+      .prop-grid  { grid-template-columns: 1fr; }
+    }
+
+    .agent {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 1rem 1.1rem;
+    }
+
+    .agent-name {
+      font-family: var(--mono);
+      font-size: 1rem;
+      font-weight: 700;
+      color: #fff;
+      margin-bottom: 0.25rem;
+    }
+
+    .agent-role {
+      font-size: 0.78rem;
+      color: var(--accent);
+      margin-bottom: 0.5rem;
+    }
+
+    .agent p { font-size: 0.85rem; color: var(--text-dim); margin: 0; }
+
+    pre, code {
+      font-family: var(--mono);
+      font-size: 0.83rem;
+    }
+
+    pre {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 1.1rem 1.3rem;
+      overflow-x: auto;
+      color: var(--text);
+      margin-bottom: 1rem;
+      line-height: 1.6;
+    }
+
+    code { color: var(--accent); }
+
+    .provider-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.85rem;
+      margin-bottom: 1rem;
+    }
+
+    .provider-table th {
+      text-align: left;
+      font-family: var(--mono);
+      font-size: 0.72rem;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: var(--text-dim);
+      border-bottom: 1px solid var(--border);
+      padding: 0.4rem 0.7rem 0.5rem;
+    }
+
+    .provider-table td {
+      padding: 0.45rem 0.7rem;
+      border-bottom: 1px solid var(--border);
+      color: var(--text);
+      vertical-align: top;
+    }
+
+    .provider-table td:first-child {
+      font-family: var(--mono);
+      color: var(--accent);
+      white-space: nowrap;
+    }
+
+    .provider-table tr:last-child td { border-bottom: none; }
+
+    .crate-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.85rem;
+      margin-bottom: 1rem;
+    }
+
+    .crate-table th {
+      text-align: left;
+      font-family: var(--mono);
+      font-size: 0.72rem;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: var(--text-dim);
+      border-bottom: 1px solid var(--border);
+      padding: 0.4rem 0.7rem 0.5rem;
+    }
+
+    .crate-table td {
+      padding: 0.45rem 0.7rem;
+      border-bottom: 1px solid var(--border);
+      color: var(--text-dim);
+      font-size: 0.83rem;
+      vertical-align: top;
+    }
+
+    .crate-table td:first-child {
+      font-family: var(--mono);
+      color: var(--text);
+      white-space: nowrap;
+    }
+
+    .crate-table tr:last-child td { border-bottom: none; }
+
+    .note {
+      background: var(--surface);
+      border-left: 3px solid var(--accent-dim);
+      border-radius: 0 6px 6px 0;
+      padding: 0.8rem 1rem;
+      font-size: 0.88rem;
+      color: var(--text-dim);
+      margin-bottom: 1rem;
+    }
+
+    footer {
+      margin-top: 4rem;
+      padding-top: 1.5rem;
+      border-top: 1px solid var(--border);
+      color: var(--text-dim);
+      font-size: 0.82rem;
+      display: flex;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 0.5rem;
+    }
+
+    .ascii-arch {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 1.1rem 1.3rem;
+      overflow-x: auto;
+      font-family: var(--mono);
+      font-size: 0.78rem;
+      line-height: 1.55;
+      color: var(--text-dim);
+      margin-bottom: 1rem;
+      white-space: pre;
+    }
+
+    .dim { color: var(--text-dim); }
+  </style>
+</head>
+<body>
+<div class="wrap">
+
+  <header>
+    <div class="badge-row">
+      <span class="badge lang">Rust</span>
+      <span class="badge ver">v1.2.0</span>
+      <span class="badge">requires cc-soul ≥ 5.0.1</span>
+    </div>
+    <h1>chitta-research</h1>
+    <p class="tagline">An autonomous research operating system. Three agents run a closed loop — generate hypotheses, execute experiments, score results — against a persistent typed belief graph.</p>
+  </header>
+
+  <h2>What makes this different</h2>
+  <div class="prop-grid">
+    <div class="prop">
+      <div class="prop-title">Typed belief graph</div>
+      <p>Eight node types, five epistemic edge kinds. Every hypothesis carries prior and posterior confidence. Serialized to JSON and restored across sessions — nothing is discarded.</p>
+    </div>
+    <div class="prop">
+      <div class="prop-title">6D Pareto fitness</div>
+      <p>Novelty, empirical gain, reproducibility, cost efficiency, transfer potential, calibration improvement. No single weighting imposed; the Pareto frontier is maintained continuously.</p>
+    </div>
+    <div class="prop">
+      <div class="prop-title">Reconsolidation</div>
+      <p>When a belief is corrected, confidence reductions cascade immediately to all downstream nodes via DerivedFrom traversal. BlockedBy edges are inserted in the same cycle.</p>
+    </div>
+    <div class="prop">
+      <div class="prop-title">chitta-field native</div>
+      <p>Agents write memories, triplets, and observations to the chittad daemon over Unix socket. HNSW + BM25 + SDR cortical index stores research events durably.</p>
+    </div>
+    <div class="prop">
+      <div class="prop-title">Multi-model rooms</div>
+      <p>Run a structured parallel debate across Claude, local Ollama models (gemma4, deepseek-r1), and Codex before producing a synthesized structured answer.</p>
+    </div>
+    <div class="prop">
+      <div class="prop-title">No API key required</div>
+      <p>The claude-cli provider delegates to <code>claude -p</code>, reusing the authenticated Claude Code session. Local models via Ollama need no credentials at all.</p>
+    </div>
+  </div>
+
+  <h2>Architecture</h2>
+  <div class="ascii-arch">agenda.yaml
+    |
+    v
+cr-agenda ──> BeliefGraph (cr-graph + cr-types)
+                    |
+    ┌───────────────┼───────────────┐
+    v               v               v
+ Hotr           Adhvaryu        Udgatr
+ (hypotheses)   (executor)      (scorer)
+    |               |               |
+    +───────────────+───────────────+
+                    |
+            AgentContext (cr-agents)
+            |       |       |       |
+          LLM   Chitta  Artifacts Resources
+         (cr-llm)(cr-chitta)(cr-artifacts)(cr-resources)
+                    |
+          chittad daemon (Unix socket)
+          HNSW + BM25 + SDR cortical index
+
+ Brahman  -- portfolio arbiter + cross-domain transfer
+ cr-fitness           -- Pareto frontier computation
+ cr-reconsolidation   -- downstream confidence propagation</div>
+
+  <p>Three Tokio tasks run concurrently, each polling its own <code>step()</code> on a 100 ms loop. Brahman runs in a fourth task evaluating portfolio quality and injecting cross-domain transfer memories. The orchestrator shuts down when all agents are idle or the budget is exhausted.</p>
+
+  <h2>The four agents</h2>
+  <div class="agent-row">
+    <div class="agent">
+      <div class="agent-name">Hotr</div>
+      <div class="agent-role">Hypothesis generation</div>
+      <p>Reads the belief graph, finds unanswered questions, sends context to the LLM. Adds Hypothesis and ExperimentPlan nodes with prior confidence.</p>
+    </div>
+    <div class="agent">
+      <div class="agent-name">Adhvaryu</div>
+      <div class="agent-role">Experiment executor</div>
+      <p>Finds ExperimentPlans with no Run child. Sends steps to the LLM. Adds Run nodes with status, token accounting, and a git SHA for the committed artifact.</p>
+    </div>
+    <div class="agent">
+      <div class="agent-name">Udgatr</div>
+      <div class="agent-role">Analyst &amp; scorer</div>
+      <p>Finds succeeded Runs without fitness scores. Scores on all six fitness dimensions. Updates posterior confidence. Adds Claim nodes for strong results.</p>
+    </div>
+  </div>
+  <div class="agent" style="margin-bottom:1rem">
+    <div class="agent-name">Brahman</div>
+    <div class="agent-role">Portfolio arbiter</div>
+    <p>Monitors convergence across all participants in a multi-model room. Detects stagnation, scores novelty, stores cross-domain transfer opportunities in chitta memory for future sessions.</p>
+  </div>
+
+  <h2>Quickstart</h2>
+  <pre><span class="dim"># Build</span>
+./build.sh build --release
+
+<span class="dim"># Mock run (no external calls, full pipeline)</span>
+./build.sh run --release --bin chitta-research -- \
+    --agenda agenda.example.yaml \
+    --mock --max-cycles 5
+
+<span class="dim"># Real run with claude-cli (no API key needed)</span>
+./build.sh run --release --bin chitta-research -- \
+    --agenda agenda.example.yaml --max-cycles 20</pre>
+
+  <h2>LLM providers</h2>
+  <table class="provider-table">
+    <thead>
+      <tr><th>Key</th><th>Description</th></tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td>claude-cli</td>
+        <td>Spawns <code>claude -p --output-format text</code>. No API key. Default.</td>
+      </tr>
+      <tr>
+        <td>anthropic</td>
+        <td>Direct HTTP to <code>api.anthropic.com</code>. Requires <code>ANTHROPIC_API_KEY</code>.</td>
+      </tr>
+      <tr>
+        <td>openai</td>
+        <td>OpenAI-compatible HTTP. Requires <code>OPENAI_API_KEY</code>.</td>
+      </tr>
+      <tr>
+        <td>codex</td>
+        <td>Spawns <code>codex exec -</code>. Model set via <code>model:</code> field.</td>
+      </tr>
+      <tr>
+        <td>chitta-bridge</td>
+        <td>Routes through <code>chitta-bridge --exec</code>. Supports opencode, codex, and local backends via a single interface.</td>
+      </tr>
+      <tr>
+        <td>openai-compat</td>
+        <td>Direct HTTP to any Ollama or vLLM <code>/v1</code> endpoint. Requires <code>base_url:</code>. No credentials.</td>
+      </tr>
+      <tr>
+        <td>room</td>
+        <td>Multi-participant parallel debate with a synthesizer step. Mix backends per participant.</td>
+      </tr>
+      <tr>
+        <td><em>--mock flag</em></td>
+        <td>Deterministic stub for offline testing.</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <h2>Multi-model rooms</h2>
+  <p>Run a structured parallel debate. Each participant can be a different model and backend. All participants respond to the same prompt in parallel; the synthesizer produces the final structured answer.</p>
+  <pre><span class="dim"># agenda.yaml snippet</span>
+llm:
+  provider: room
+  model: "aDNA compression codec selection"
+  room:
+    rounds: 1
+    participants:
+      - name: Critic
+        backend: claude-cli
+        system: "You are a bioinformatics critic..."
+
+      - name: Empiricist
+        backend: openai-compat
+        model: gemma4:26b
+        base_url: http://gpu-node:11434/v1
+        system: "You are an empiricist..."
+
+      - name: Theorist
+        backend: openai-compat
+        model: deepseek-r1:32b
+        base_url: http://gpu-node:11434/v1
+        system: "You are an information theorist..."
+
+      - name: Engineer
+        backend: codex
+        model: gpt-5.4
+        system: "You are a systems engineer..."
+
+    synthesizer:
+      name: Synthesizer
+      backend: claude-cli
+      system: "You are a JSON synthesizer. Resolve any contradictions.
+               Output raw JSON only — no prose, no markdown."</pre>
+
+  <div class="note">See <code>agenda.test-local.yaml</code> in the repo for a complete working room example covering aDNA FASTQ compression (Claude + gemma4:26b + deepseek-r1:32b + gpt-5.4).</div>
+
+  <h2>Crate structure</h2>
+  <table class="crate-table">
+    <thead>
+      <tr><th>Crate</th><th>Role</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>cr-types</td><td>NodeKind, EdgeKind, FitnessVector, RunStatus, ResourceUsage. All serde-serializable.</td></tr>
+      <tr><td>cr-graph</td><td>BeliefGraph — petgraph-backed stable directed graph with typed lookup and JSON snapshot I/O.</td></tr>
+      <tr><td>cr-agents</td><td>Agent trait + AgentContext + Hotr, Adhvaryu, Udgatr, Brahman implementations.</td></tr>
+      <tr><td>cr-fitness</td><td>Pareto frontier computation over FitnessVector arrays.</td></tr>
+      <tr><td>cr-llm</td><td>LlmClient trait + all backends including ChittaBridgeClient, OpenAiCompatClient. DiscussionRoom for multi-model debates.</td></tr>
+      <tr><td>cr-chitta</td><td>Async Unix socket client for the chittad daemon.</td></tr>
+      <tr><td>cr-reconsolidation</td><td>Downstream confidence propagation on belief correction.</td></tr>
+      <tr><td>cr-artifacts</td><td>git2-backed artifact store — commits experiment result files to a local repo.</td></tr>
+      <tr><td>cr-resources</td><td>Semaphore-based GPU/CPU slot manager + budget accounting.</td></tr>
+      <tr><td>cr-agenda</td><td>YAML agenda parser — converts programs + questions into the initial BeliefGraph.</td></tr>
+      <tr><td>cr-daemon</td><td>Binary entry point. Parses CLI, builds context, spawns agent tasks, runs event loop.</td></tr>
+    </tbody>
+  </table>
+
+  <h2>chitta integration</h2>
+  <p>The <code>cr-chitta</code> crate connects to chittad over a Unix socket using the JSON-RPC MCP protocol. Three operations are used:</p>
+  <ul style="padding-left:1.5rem;color:var(--text-dim);font-size:0.88rem;margin-bottom:1rem">
+    <li style="margin-bottom:0.4rem"><strong style="color:var(--text)">remember</strong> — Hotr records hypothesis events; Adhvaryu records experiment outcomes.</li>
+    <li style="margin-bottom:0.4rem"><strong style="color:var(--text)">observe</strong> — Reconsolidation writes structured observations for the daemon's subconscious.</li>
+    <li><strong style="color:var(--text)">triplet</strong> — Udgatr writes <code>hypothesis:ID confirmed_by run:ID</code> with posterior confidence as weight.</li>
+  </ul>
+  <div class="note">The daemon is optional. If the socket is unavailable, all agent logic continues without it — chitta is an enhancement, not a hard dependency.</div>
+
+  <h2>Design notes</h2>
+  <p>The three agent names — Hotr, Adhvaryu, Udgatr — are the three primary priests of the Vedic yajna (ritual fire). Hotr recites invocations; Adhvaryu performs the physical ritual actions; Udgatr chants the responses. The research loop mirrors this structure: invocation (hypothesis), execution (experiment), evaluation (scoring).</p>
+  <p>The fitness vector's six dimensions were chosen to avoid optimizing for novelty alone. Calibration improvement specifically rewards experiments that update the system's confidence in proportion to actual evidence.</p>
+  <p>chitta-research was designed in a three-model room debate (GPT-5.4 + Gemini-2.5-Pro + Claude Sonnet) to stress-test the architecture against adversarial critique before a line of code was written.</p>
+
+  <footer>
+    <span>chitta-research — research.vaklab.dev</span>
+    <span><a href="https://github.com/genomewalker/chitta-research">github</a> · requires <a href="https://github.com/genomewalker/cc-soul">cc-soul</a> ≥ 5.0.1</span>
+  </footer>
+
+</div>
+</body>
+</html>

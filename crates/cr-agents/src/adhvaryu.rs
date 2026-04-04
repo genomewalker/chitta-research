@@ -392,7 +392,7 @@ async fn execute_via_llm(
     );
 
     let resp = ctx.llm.complete(CompletionRequest {
-        model: String::new(),
+        model: ctx.llm_model.clone(),
         system: SYSTEM_PROMPT.to_string(),
         messages: vec![cr_llm::Message { role: "user".into(), content: user_msg }],
         max_tokens: 2048,

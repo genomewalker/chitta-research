@@ -254,7 +254,7 @@ impl Agent for Kriya {
         );
 
         let resp = ctx.llm.complete(CompletionRequest {
-            model: String::new(),
+            model: ctx.llm_model.clone(),
             system: SYSTEM_PROMPT.to_string(),
             messages: vec![Message { role: "user".into(), content: user_msg }],
             max_tokens: 512,
