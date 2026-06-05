@@ -1,7 +1,8 @@
 use std::collections::HashMap;
 
+use petgraph::algo::is_cyclic_directed;
 use petgraph::stable_graph::{NodeIndex, StableDiGraph};
-use petgraph::visit::EdgeRef;
+use petgraph::visit::{EdgeFiltered, EdgeRef};
 use petgraph::Direction;
 use serde::{Deserialize, Serialize};
 
@@ -17,6 +18,10 @@ pub enum GraphError {
     DuplicateNode(NodeId),
     #[error("json error: {0}")]
     Json(#[from] serde_json::Error),
+    #[error("cycle detected: {0} -> {1}")]
+    CycleDetected(NodeId, NodeId),
+    #[error("contradiction: {0} supports and refutes {1}")]
+    Contradiction(NodeId, NodeId),
 }
 
 pub struct BeliefGraph {
@@ -50,7 +55,42 @@ impl BeliefGraph {
     ) -> Result<(), GraphError> {
         let from_idx = *self.index.get(&from).ok_or(GraphError::NodeNotFound(from))?;
         let to_idx = *self.index.get(&to).ok_or(GraphError::NodeNotFound(to))?;
-        self.graph.add_edge(from_idx, to_idx, edge);
+        let edge_idx = self.graph.add_edge(from_idx, to_idx, edge);
+        if let Err(e) = self.section_check(from, to, from_idx, to_idx) {
+            self.graph.remove_edge(edge_idx);
+            return Err(e);
+        }
+        Ok(())
+    }
+
+    fn section_check(
+        &self,
+        from: NodeId,
+        to: NodeId,
+        from_idx: NodeIndex,
+        to_idx: NodeIndex,
+    ) -> Result<(), GraphError> {
+        // (a) Acyclic check: DerivedFrom edges must not form cycles.
+        let filtered = EdgeFiltered::from_fn(&self.graph, |e| {
+            e.weight().kind == EdgeKind::DerivedFrom
+        });
+        if is_cyclic_directed(&filtered) {
+            return Err(GraphError::CycleDetected(from, to));
+        }
+
+        // (b) Single-source contradiction: same src must not both Support and Refute same dst.
+        let has_supports = self
+            .graph
+            .edges_directed(from_idx, Direction::Outgoing)
+            .any(|e| e.target() == to_idx && e.weight().kind == EdgeKind::Supports);
+        let has_refutes = self
+            .graph
+            .edges_directed(from_idx, Direction::Outgoing)
+            .any(|e| e.target() == to_idx && e.weight().kind == EdgeKind::Refutes);
+        if has_supports && has_refutes {
+            return Err(GraphError::Contradiction(from, to));
+        }
+
         Ok(())
     }
 
@@ -74,11 +114,11 @@ impl BeliefGraph {
     }
 
     pub fn children(&self, id: NodeId, edge_kind: EdgeKind) -> Vec<&TypedNode> {
-        self.edges_by_kind(id, edge_kind, Direction::Incoming)
+        self.edges_by_kind(id, &edge_kind, Direction::Incoming)
     }
 
     pub fn parents(&self, id: NodeId, edge_kind: EdgeKind) -> Vec<&TypedNode> {
-        self.edges_by_kind(id, edge_kind, Direction::Outgoing)
+        self.edges_by_kind(id, &edge_kind, Direction::Outgoing)
     }
 
     pub fn descendants(&self, id: NodeId, edge_kind: EdgeKind) -> Vec<NodeId> {
@@ -88,7 +128,7 @@ impl BeliefGraph {
         queue.push_back(id);
         visited.insert(id);
         while let Some(current) = queue.pop_front() {
-            for child in self.children(current, edge_kind) {
+            for child in self.edges_by_kind(current, &edge_kind, Direction::Incoming) {
                 if visited.insert(child.id) {
                     result.push(child.id);
                     queue.push_back(child.id);
@@ -112,17 +152,17 @@ impl BeliefGraph {
     }
 
     pub fn supporting_evidence(&self, node_id: NodeId) -> Vec<&TypedNode> {
-        self.edges_by_kind(node_id, EdgeKind::Supports, Direction::Incoming)
+        self.edges_by_kind(node_id, &EdgeKind::Supports, Direction::Incoming)
     }
 
     pub fn refuting_evidence(&self, node_id: NodeId) -> Vec<&TypedNode> {
-        self.edges_by_kind(node_id, EdgeKind::Refutes, Direction::Incoming)
+        self.edges_by_kind(node_id, &EdgeKind::Refutes, Direction::Incoming)
     }
 
     fn edges_by_kind(
         &self,
         node_id: NodeId,
-        kind: EdgeKind,
+        kind: &EdgeKind,
         direction: Direction,
     ) -> Vec<&TypedNode> {
         let Some(&idx) = self.index.get(&node_id) else {
@@ -130,7 +170,7 @@ impl BeliefGraph {
         };
         self.graph
             .edges_directed(idx, direction)
-            .filter(|e| e.weight().kind == kind)
+            .filter(|e| &e.weight().kind == kind)
             .filter_map(|e| {
                 let other = match direction {
                     Direction::Incoming => e.source(),

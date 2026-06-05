@@ -205,6 +205,8 @@ async fn agent_loop(
                     cr_agents::AgentAction::RequestRun { plan_id } => format!("ran plan {}", plan_id),
                     cr_agents::AgentAction::ScoreFitness { node_id, .. } => format!("scored {}", node_id),
                     cr_agents::AgentAction::TriggerReconsolidation { node_id } => format!("reconsolidated {}", node_id),
+                    cr_agents::AgentAction::TriggerSchemaProposal { .. } => "schema-proposal".to_string(),
+                    cr_agents::AgentAction::ApplySchemaChange { .. } => "schema-change".to_string(),
                     cr_agents::AgentAction::Noop => "noop".to_string(),
                 };
                 let is_noop = summary == "noop";

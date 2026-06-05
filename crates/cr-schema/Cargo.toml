@@ -1,12 +1,11 @@
 [package]
-name = "cr-graph"
+name = "cr-schema"
 version = "0.1.0"
 edition = "2021"
 
 [dependencies]
 cr-types = { path = "../cr-types" }
-cr-fitness = { path = "../cr-fitness" }
-petgraph = { workspace = true }
 serde = { workspace = true }
 serde_json = { workspace = true }
 thiserror = { workspace = true }
+tracing = { workspace = true }

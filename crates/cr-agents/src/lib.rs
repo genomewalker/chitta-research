@@ -57,6 +57,8 @@ pub enum AgentAction {
     RequestRun { plan_id: NodeId },
     ScoreFitness { node_id: NodeId, fitness: FitnessVector },
     TriggerReconsolidation { node_id: NodeId },
+    TriggerSchemaProposal { cue: cr_types::FitnessCue },
+    ApplySchemaChange { morphism_json: String },  // serialized SchemaMorphism
     Noop,
 }
 

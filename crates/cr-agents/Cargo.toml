@@ -5,6 +5,7 @@ edition = "2021"
 
 [dependencies]
 cr-types = { path = "../cr-types" }
+cr-schema = { path = "../cr-schema" }
 cr-graph = { path = "../cr-graph" }
 cr-llm = { path = "../cr-llm" }
 cr-chitta = { path = "../cr-chitta" }

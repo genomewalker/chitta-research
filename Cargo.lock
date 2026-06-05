@@ -299,6 +299,7 @@ dependencies = [
  "cr-graph",
  "cr-llm",
  "cr-resources",
+ "cr-schema",
  "cr-types",
  "serde",
  "serde_json",
@@ -361,14 +362,12 @@ dependencies = [
 name = "cr-graph"
 version = "0.1.0"
 dependencies = [
- "chrono",
  "cr-fitness",
  "cr-types",
  "petgraph",
  "serde",
  "serde_json",
  "thiserror",
- "uuid",
 ]
 
 [[package]]
@@ -396,6 +395,16 @@ dependencies = [
 ]
 
 [[package]]
+name = "cr-regime"
+version = "0.1.0"
+dependencies = [
+ "cr-types",
+ "serde",
+ "serde_json",
+ "tracing",
+]
+
+[[package]]
 name = "cr-report"
 version = "0.1.0"
 dependencies = [
@@ -412,6 +421,17 @@ dependencies = [
  "rusqlite",
  "thiserror",
  "tokio",
+ "tracing",
+]
+
+[[package]]
+name = "cr-schema"
+version = "0.1.0"
+dependencies = [
+ "cr-types",
+ "serde",
+ "serde_json",
+ "thiserror",
  "tracing",
 ]
 

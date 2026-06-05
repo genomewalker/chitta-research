@@ -244,6 +244,16 @@ impl Agent for Udgatr {
             "udgatr: scored run"
         );
 
+        if fitness.novelty > 0.70 && fitness.calibration_improvement < 0.30 {
+            let cue = cr_types::FitnessCue {
+                run_id: run_id,
+                novelty: fitness.novelty,
+                calibration_improvement: fitness.calibration_improvement,
+            };
+            tracing::info!(cue = ?cue, "schema trigger: high novelty, low calibration");
+            // TODO: send cue to SchemaGate via event channel (future wiring)
+        }
+
         Ok(AgentAction::ScoreFitness { node_id: run_id, fitness })
     }
 }
