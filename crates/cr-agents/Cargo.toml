@@ -19,3 +19,4 @@ serde_json = { workspace = true }
 anyhow = { workspace = true }
 chrono = { workspace = true }
 tracing = "0.1"
+uuid = { workspace = true }

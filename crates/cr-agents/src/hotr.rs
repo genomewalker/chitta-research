@@ -8,6 +8,21 @@ use crate::{Agent, AgentAction, AgentContext};
 
 pub struct Hotr;
 
+impl Hotr {
+    fn slot_impl(&self) -> cr_types::SlotKind { cr_types::SlotKind::Hypothesis }
+    fn bid_impl(&self, snap: &cr_types::ContextSnapshot, genome: &cr_types::Genome) -> Option<cr_types::Bid> {
+        let backlog_pressure = (snap.untested_backlog as f64 / genome.brahman_backlog_limit as f64).min(1.0);
+        let price = (1.0 - backlog_pressure) * 50.0 + 5.0;
+        Some(cr_types::Bid {
+            lineage_id: cr_types::LineageId::nil(),
+            slot: cr_types::SlotKind::Hypothesis,
+            price,
+            expected_value: price * 1.2,
+            parent_action_ids: vec![],
+        })
+    }
+}
+
 const SYSTEM_PROMPT: &str = r#"You are a scientific hypothesis generator. Given a research question and context, generate 2-3 specific, testable hypotheses with concrete experiment plans.
 
 CRITICAL CONSTRAINTS FOR EXPERIMENT PLANS — read carefully before generating steps:
@@ -75,9 +90,9 @@ fn cmp_program_priority_desc(a: f32, b: f32) -> Ordering {
 
 #[async_trait]
 impl Agent for Hotr {
-    fn name(&self) -> &str {
-        "hotr"
-    }
+    fn name(&self) -> &str { "hotr" }
+    fn slot(&self) -> cr_types::SlotKind { self.slot_impl() }
+    fn bid(&self, snap: &cr_types::ContextSnapshot, genome: &cr_types::Genome) -> Option<cr_types::Bid> { self.bid_impl(snap, genome) }
 
     async fn step(&self, ctx: &AgentContext) -> Result<AgentAction, anyhow::Error> {
         let (prog_title, prog_domain, q_text, q_id) = {

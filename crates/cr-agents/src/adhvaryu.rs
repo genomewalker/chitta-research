@@ -13,6 +13,22 @@ static PLAN_FAILURES: std::sync::LazyLock<Mutex<HashMap<NodeId, u32>>> =
 const MAX_PLAN_RETRIES: u32 = 3;
 
 #[derive(Debug, Clone, Copy)]
+pub struct AdhvaryuEcon;
+impl AdhvaryuEcon {
+    pub fn slot() -> cr_types::SlotKind { cr_types::SlotKind::Experiment }
+    pub fn bid(snap: &cr_types::ContextSnapshot, _genome: &cr_types::Genome) -> Option<cr_types::Bid> {
+        let pressure = (snap.untested_backlog as f64 / 10.0).min(1.0);
+        let price = pressure * 60.0 + 10.0;
+        Some(cr_types::Bid {
+            lineage_id: cr_types::LineageId::nil(),
+            slot: cr_types::SlotKind::Experiment,
+            price,
+            expected_value: price * 1.1,
+            parent_action_ids: vec![],
+        })
+    }
+}
+
 pub enum OutputType {
     TestResults,
     BuildOutput,
@@ -86,9 +102,9 @@ struct ExecutionResult {
 
 #[async_trait]
 impl Agent for Adhvaryu {
-    fn name(&self) -> &str {
-        "adhvaryu"
-    }
+    fn name(&self) -> &str { "adhvaryu" }
+    fn slot(&self) -> cr_types::SlotKind { AdhvaryuEcon::slot() }
+    fn bid(&self, snap: &cr_types::ContextSnapshot, genome: &cr_types::Genome) -> Option<cr_types::Bid> { AdhvaryuEcon::bid(snap, genome) }
 
     async fn step(&self, ctx: &AgentContext) -> Result<AgentAction, anyhow::Error> {
         let graph = ctx.graph.read().await;

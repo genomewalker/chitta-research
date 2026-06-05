@@ -1,4 +1,5 @@
 pub mod hotr;
+pub mod economy;
 pub mod adhvaryu;
 pub mod udgatr;
 pub mod researcher;
@@ -20,6 +21,8 @@ use cr_types::{EpistemicEdge, FitnessVector, NodeId, NodeKind, VerifierSpec};
 #[async_trait]
 pub trait Agent: Send + Sync {
     fn name(&self) -> &str;
+    fn slot(&self) -> cr_types::SlotKind { cr_types::SlotKind::Scoring }
+    fn bid(&self, _snap: &cr_types::ContextSnapshot, _genome: &cr_types::Genome) -> Option<cr_types::Bid> { None }
     async fn step(&self, ctx: &AgentContext) -> Result<AgentAction, anyhow::Error>;
 }
 

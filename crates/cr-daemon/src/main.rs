@@ -8,6 +8,8 @@ use tracing::{error, info, warn};
 
 use cr_agenda::AgendaConfig;
 use cr_agents::{Agent, AgentContext, AgentEvent, ResearchAgenda};
+use cr_agents::economy::AuctionScheduler;
+use cr_types::{ContextSnapshot, Genome, RewardEvent};
 use cr_agents::hotr::Hotr;
 use cr_agents::adhvaryu::Adhvaryu;
 use cr_agents::udgatr::Udgatr;
@@ -390,6 +392,69 @@ async fn main() -> anyhow::Result<()> {
         llm_model,
         schema_registry,
     });
+
+    // Shadow auction scheduler — Economy of Minds (arXiv:2606.02859).
+    // Runs alongside fixed dispatch, computes hypothetical winners, logs to artifact dir.
+    // Does not alter control flow until shadow=false.
+    let economy = Arc::new(tokio::sync::Mutex::new(AuctionScheduler::new(true)));
+    let economy_log = cli.artifact_dir.join("shadow_auction.json");
+    {
+        let economy = economy.clone();
+        let graph = graph.clone();
+        let resources = resources.clone();
+        let log_path = economy_log.clone();
+        tokio::spawn(async move {
+            let default_genome = Genome::default();
+            let mut cycle: u64 = 0;
+            loop {
+                tokio::time::sleep(std::time::Duration::from_secs(15)).await;
+                cycle += 1;
+                let snap = {
+                    let g = graph.read().await;
+                    let untested = g.all_nodes().iter().filter(|n| {
+                        matches!(n.kind, cr_types::NodeKind::Hypothesis(_)) &&
+                        n.fitness.is_none()
+                    }).count();
+                    let confirmed = g.all_nodes().iter().filter(|n| {
+                        n.fitness.map(|f| f.empirical_gain > 0.5).unwrap_or(false)
+                    }).count();
+                    ContextSnapshot {
+                        untested_backlog: untested,
+                        confirmed_count: confirmed,
+                        store_density: g.node_count() as f64 / 1000.0,
+                        budget_remaining_usd: resources.remaining_budget() as f32,
+                        cycle,
+                    }
+                };
+                let mut sched = economy.lock().await;
+                // Collect bids from all population agents
+                let agents: Vec<Box<dyn cr_agents::Agent>> = vec![
+                    Box::new(cr_agents::hotr::Hotr),
+                    Box::new(cr_agents::adhvaryu::Adhvaryu),
+                    Box::new(cr_agents::kriya::Kriya),
+                ];
+                for slot in [cr_types::SlotKind::Hypothesis, cr_types::SlotKind::Experiment, cr_types::SlotKind::Fix] {
+                    let bids: Vec<_> = agents.iter()
+                        .filter(|a| a.slot() == slot)
+                        .filter_map(|a| {
+                            let mut bid = a.bid(&snap, &default_genome)?;
+                            bid.lineage_id = uuid::Uuid::now_v7(); // placeholder in shadow
+                            Some(bid)
+                        })
+                        .collect();
+                    sched.clear_slot(slot, &snap, bids);
+                }
+                sched.tick_free_runs();
+                sched.settle_tick();
+                if cycle % 20 == 0 {
+                    sched.bankruptcy_pass();
+                }
+                if let Err(e) = sched.dump_shadow_log(log_path.to_str().unwrap_or("shadow_auction.json")) {
+                    tracing::warn!(error = %e, "shadow auction log write failed");
+                }
+            }
+        });
+    }
 
     let shutdown = Arc::new(AtomicBool::new(false));
     let shutdown_flag = shutdown.clone();

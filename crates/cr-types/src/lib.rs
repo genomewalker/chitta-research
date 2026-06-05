@@ -541,6 +541,91 @@ pub enum ConsistencyViolationKind {
     StructuralInvariant,
 }
 
+// ── Economy of Minds types ─────────────────────────────────────────────────────
+
+pub type LineageId = Uuid;
+pub type ActionId = Uuid;
+
+/// The mutable genome of an agent lineage — encodes the miscalibrated thresholds
+/// the research findings identified. Mutation acts only on this struct.
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct Genome {
+    pub kriya_confidence_threshold: f64,
+    pub udgatr_gain_threshold: f64,
+    pub brahman_backlog_limit: usize,
+    pub credit_decay_gamma: f64,
+    pub hotr_min_events: usize,
+}
+
+impl Default for Genome {
+    fn default() -> Self {
+        Self {
+            kriya_confidence_threshold: 0.7,
+            udgatr_gain_threshold: 0.35,
+            brahman_backlog_limit: 10,
+            credit_decay_gamma: 0.7,
+            hotr_min_events: 10,
+        }
+    }
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
+pub enum SlotKind { Hypothesis, Experiment, Fix, Synthesis, Schema, Scoring }
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+pub enum LineageStatus { Live, RetiredPendingSettlement }
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct Account {
+    pub cash: f64,
+    pub reserved: f64,
+    pub genome: Genome,
+    pub lineage_id: LineageId,
+    pub status: LineageStatus,
+    pub free_runs_left: u32,
+}
+
+impl Account {
+    pub fn new(genome: Genome, lineage_id: LineageId, initial_cash: f64) -> Self {
+        Self { cash: initial_cash, reserved: 0.0, genome, lineage_id, status: LineageStatus::Live, free_runs_left: 3 }
+    }
+    pub fn available(&self) -> f64 { (self.cash - self.reserved).max(0.0) }
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct Bid {
+    pub lineage_id: LineageId,
+    pub slot: SlotKind,
+    pub price: f64,
+    pub expected_value: f64,
+    pub parent_action_ids: Vec<ActionId>,
+}
+
+/// Cheap snapshot of system state for pure bid() computation.
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct ContextSnapshot {
+    pub untested_backlog: usize,
+    pub confirmed_count: usize,
+    pub store_density: f64,
+    pub budget_remaining_usd: f32,
+    pub cycle: u64,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct ActionReceipt {
+    pub action_id: ActionId,
+    pub lineage_id: LineageId,
+    pub slot: SlotKind,
+    pub parent_action_ids: Vec<ActionId>,
+    pub clearing_price: f64,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct RewardEvent {
+    pub action_id: ActionId,
+    pub empirical_gain: f64,
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;

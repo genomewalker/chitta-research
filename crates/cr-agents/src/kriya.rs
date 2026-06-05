@@ -195,6 +195,18 @@ pub struct Kriya;
 #[async_trait]
 impl Agent for Kriya {
     fn name(&self) -> &str { "kriya" }
+    fn slot(&self) -> cr_types::SlotKind { cr_types::SlotKind::Fix }
+    fn bid(&self, snap: &cr_types::ContextSnapshot, genome: &cr_types::Genome) -> Option<cr_types::Bid> {
+        if snap.confirmed_count == 0 { return None; }
+        let price = 30.0 * genome.kriya_confidence_threshold;
+        Some(cr_types::Bid {
+            lineage_id: cr_types::LineageId::nil(),
+            slot: cr_types::SlotKind::Fix,
+            price,
+            expected_value: price * 1.3,
+            parent_action_ids: vec![],
+        })
+    }
 
     async fn step(&self, ctx: &AgentContext) -> Result<AgentAction, anyhow::Error> {
         let (claim_id, claim_text, claim_conf) = {

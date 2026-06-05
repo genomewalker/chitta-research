@@ -24,5 +24,6 @@ anyhow = { workspace = true }
 chrono = { workspace = true }
 tracing = "0.1"
 tracing-subscriber = { version = "0.3", features = ["env-filter"] }
+uuid = { workspace = true }
 clap = { version = "4", features = ["derive"] }
 ctrlc = { version = "3", features = ["termination"] }
