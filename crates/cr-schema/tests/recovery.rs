@@ -50,7 +50,7 @@ fn resurrection_at_scale() {
             name: "motif:Supports_DerivedFrom".to_string(),
             algebra: EdgeAlgebra {
                 acyclic: false, transitive: false, symmetric: false,
-                sign: EdgeSign::None, contradicts: None,
+                sign: EdgeSign::None, contradicts: None, rollback_count: 0,
             },
         }],
         rationale: "test".to_string(),

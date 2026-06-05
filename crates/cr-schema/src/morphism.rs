@@ -29,7 +29,7 @@ pub fn migrate(m: &SchemaMorphism, registry: &SchemaRegistry) -> Result<SchemaRe
     for op in &m.ops {
         match op {
             SchemaOp::AddEdgeType { name, algebra } => {
-                r.register(name.clone(), algebra.clone());
+                r.register_algebra(name.clone(), algebra.clone());
             }
             SchemaOp::AddNodeType { name: _ } => {}
             SchemaOp::MergeEdgeTypes { keep, drop } => {

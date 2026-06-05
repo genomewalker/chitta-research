@@ -429,6 +429,9 @@ dependencies = [
 name = "cr-schema"
 version = "0.1.0"
 dependencies = [
+ "anyhow",
+ "async-trait",
+ "cr-graph",
  "cr-types",
  "serde",
  "serde_json",

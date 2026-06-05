@@ -2,7 +2,7 @@ use std::collections::HashSet;
 use std::sync::Arc;
 
 use async_trait::async_trait;
-use cr_schema::{MotifMiner, Proposer, SchemaGate, SwitchKT};
+use cr_schema::{make_edge_type_spec, propose_merge, propose_retirements, MotifMiner, Proposer, SchemaGate, SwitchKT};
 use cr_regime::RegimeDetector;
 use cr_types::{FitnessCue, NodeId, NodeKind, SchemaRegistry};
 use tokio::sync::Mutex;
@@ -65,12 +65,64 @@ impl Agent for Svayambhu {
                 let mut reg = ctx.schema_registry.write().await;
                 for op in &v.morphism.ops {
                     if let cr_schema::SchemaOp::AddEdgeType { name, algebra } = op {
-                        reg.register(name.clone(), algebra.clone());
+                        reg.register_algebra(name.clone(), algebra.clone());
                     }
                 }
                 return Ok(AgentAction::ApplySchemaChange {
                     morphism_json: serde_json::to_string(&v.morphism)?,
                 });
+            }
+        }
+
+        // Contraction: check for types to merge or retire
+        if step % (self.resweep_every * 3) == 0 && !events.is_empty() {
+            // Retirement proposals: types absent from recent 200 events
+            let retirement_props = propose_retirements(&events, &schema, 200);
+            for m in retirement_props {
+                let verdict = gate.evaluate(m, &events, &schema);
+                if verdict.accepted {
+                    for op in &verdict.morphism.ops {
+                        if let cr_schema::SchemaOp::RetireEdgeType { name } = op {
+                            let mut reg = ctx.schema_registry.write().await;
+                            reg.retire(name, step);
+                            tracing::info!(name = %name, "svayambhu: retired edge type");
+                        }
+                    }
+                    return Ok(AgentAction::ApplySchemaChange { morphism_json: serde_json::to_string(&verdict.morphism)? });
+                }
+            }
+            // Merge proposals: pairs of custom types with converging conditional context
+            let custom_names: Vec<String> = schema.custom_edge_specs().iter().map(|s| s.name.clone()).collect();
+            for i in 0..custom_names.len() {
+                for j in i+1..custom_names.len() {
+                    if let Some(merge_m) = propose_merge(&custom_names[i], &custom_names[j], &events, &schema, 0.5) {
+                        let verdict = gate.evaluate(merge_m, &events, &schema);
+                        if verdict.accepted {
+                            for op in &verdict.morphism.ops {
+                                if let cr_schema::SchemaOp::MergeEdgeTypes { keep, drop } = op {
+                                    let mut reg = ctx.schema_registry.write().await;
+                                    reg.remove(drop);
+                                    tracing::info!(keep = %keep, drop = %drop, "svayambhu: merged edge types");
+                                }
+                            }
+                            return Ok(AgentAction::ApplySchemaChange { morphism_json: serde_json::to_string(&verdict.morphism)? });
+                        }
+                    }
+                }
+            }
+            // RelaxAlgebra: check for types with high rollback rates
+            let graph = ctx.graph.read().await;
+            let custom_names2: Vec<String> = schema.custom_edge_specs().iter().map(|s| s.name.clone()).collect();
+            for name in &custom_names2 {
+                let rollbacks = graph.custom_rollback_count(name);
+                if rollbacks >= 3 {
+                    tracing::info!(name = %name, rollbacks, "svayambhu: emitting RelaxAlgebra signal");
+                    let mut reg = ctx.schema_registry.write().await;
+                    if let Some(spec) = reg.get_spec_mut(name) {
+                        spec.enforced.acyclic = false;
+                        spec.enforced.transitive = false;
+                    }
+                }
             }
         }
 
@@ -129,8 +181,11 @@ impl Agent for Svayambhu {
                 );
                 let mut reg = ctx.schema_registry.write().await;
                 for op in &verdict.morphism.ops {
-                    if let cr_schema::SchemaOp::AddEdgeType { name, algebra } = op {
-                        reg.register(name.clone(), algebra.clone());
+                    if let cr_schema::SchemaOp::AddEdgeType { name, .. } = op {
+                        let graph_read = ctx.graph.read().await;
+                        let spec = make_edge_type_spec(name.clone(), &graph_read);
+                        drop(graph_read);
+                        reg.register(spec);
                     }
                 }
                 return Ok(AgentAction::ApplySchemaChange {

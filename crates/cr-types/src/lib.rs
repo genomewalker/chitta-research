@@ -321,26 +321,78 @@ pub struct EdgeAlgebra {
     /// An edge of this type and another of `contradicts` on the same (src, dst)
     /// pair from the same source node constitute a single-source contradiction.
     pub contradicts: Option<String>,
+    /// Number of times enforced algebra has been rolled back for this type.
+    #[serde(default)]
+    pub rollback_count: u32,
 }
 
 impl EdgeAlgebra {
     pub fn for_builtin(kind: &EdgeKind) -> Self {
         match kind {
-            EdgeKind::Supports     => Self { acyclic: false, transitive: true,  symmetric: false, sign: EdgeSign::Up,   contradicts: Some("Refutes".into()) },
-            EdgeKind::Refutes      => Self { acyclic: false, transitive: false, symmetric: false, sign: EdgeSign::Down, contradicts: Some("Supports".into()) },
-            EdgeKind::DerivedFrom  => Self { acyclic: true,  transitive: true,  symmetric: false, sign: EdgeSign::Eq,   contradicts: None },
-            EdgeKind::GeneralizesTo=> Self { acyclic: false, transitive: true,  symmetric: false, sign: EdgeSign::None, contradicts: None },
-            EdgeKind::BlockedBy    => Self { acyclic: false, transitive: false, symmetric: false, sign: EdgeSign::None, contradicts: None },
-            EdgeKind::Custom(_)    => Self { acyclic: false, transitive: false, symmetric: false, sign: EdgeSign::None, contradicts: None },
+            EdgeKind::Supports     => Self { acyclic: false, transitive: true,  symmetric: false, sign: EdgeSign::Up,   contradicts: Some("Refutes".into()),  rollback_count: 0 },
+            EdgeKind::Refutes      => Self { acyclic: false, transitive: false, symmetric: false, sign: EdgeSign::Down, contradicts: Some("Supports".into()), rollback_count: 0 },
+            EdgeKind::DerivedFrom  => Self { acyclic: true,  transitive: true,  symmetric: false, sign: EdgeSign::Eq,   contradicts: None,                    rollback_count: 0 },
+            EdgeKind::GeneralizesTo=> Self { acyclic: false, transitive: true,  symmetric: false, sign: EdgeSign::None, contradicts: None,                    rollback_count: 0 },
+            EdgeKind::BlockedBy    => Self { acyclic: false, transitive: false, symmetric: false, sign: EdgeSign::None, contradicts: None,                    rollback_count: 0 },
+            EdgeKind::Custom(_)    => Self { acyclic: false, transitive: false, symmetric: false, sign: EdgeSign::None, contradicts: None,                    rollback_count: 0 },
         }
     }
 }
 
-/// Maps edge type names → algebra. Built-ins are pre-populated; custom types
+/// Empirical evidence that informed the enforced algebra for a custom edge type.
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct AlgebraEvidence {
+    /// Number of observed instances of this edge type.
+    pub support: usize,
+    /// Whether a cycle was observed in the corpus.
+    pub cycle_observed: bool,
+    /// Fraction of (a→b, b→a) pairs relative to total directed pairs.
+    pub sym_ratio: f32,
+    /// Fraction of (a→b, b→c) ⇒ (a→c) triples that close in the corpus.
+    pub trans_closure: f32,
+    /// Model confidence that the enforced algebra is correct.
+    pub confidence: f64,
+}
+
+/// Lifecycle state for a registered edge type.
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+pub enum EdgeLifecycle {
+    Active,
+    Inactive { since_turn: u64 },
+    Dead,
+}
+
+impl Default for EdgeLifecycle {
+    fn default() -> Self { Self::Active }
+}
+
+/// Full live certificate for a custom edge type: declared intent vs enforced policy.
+/// section_check uses `enforced`; `declared` is the original LLM-proposed algebra.
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct EdgeTypeSpec {
+    pub name: String,
+    /// Algebra as declared by the proposing model.
+    pub declared: EdgeAlgebra,
+    /// Algebra actually enforced by section_check (may be relaxed from declared).
+    pub enforced: EdgeAlgebra,
+    pub evidence: AlgebraEvidence,
+    #[serde(default)]
+    pub lifecycle: EdgeLifecycle,
+}
+
+/// Which algebra field to mutate in a RelaxAlgebra schema op.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+pub enum AlgebraField {
+    Acyclic,
+    Transitive,
+    Symmetric,
+}
+
+/// Maps edge type names → EdgeTypeSpec. Built-ins are pre-populated; custom types
 /// are inserted when SchemaGate accepts a morphism.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct SchemaRegistry {
-    algebras: std::collections::HashMap<String, EdgeAlgebra>,
+    algebras: std::collections::HashMap<String, EdgeTypeSpec>,
 }
 
 impl SchemaRegistry {
@@ -350,21 +402,93 @@ impl SchemaRegistry {
             EdgeKind::Supports, EdgeKind::Refutes, EdgeKind::DerivedFrom,
             EdgeKind::GeneralizesTo, EdgeKind::BlockedBy,
         ] {
-            algebras.insert(kind.to_string(), EdgeAlgebra::for_builtin(&kind));
+            let algebra = EdgeAlgebra::for_builtin(&kind);
+            let spec = EdgeTypeSpec {
+                name: kind.to_string(),
+                declared: algebra.clone(),
+                enforced: algebra,
+                evidence: AlgebraEvidence {
+                    support: 0,
+                    cycle_observed: false,
+                    sym_ratio: 0.0,
+                    trans_closure: 0.0,
+                    confidence: 1.0,
+                },
+                lifecycle: EdgeLifecycle::Active,
+            };
+            algebras.insert(kind.to_string(), spec);
         }
         Self { algebras }
     }
 
-    pub fn get(&self, kind: &EdgeKind) -> Option<&EdgeAlgebra> {
+    /// Returns the full spec for a given edge kind.
+    pub fn get(&self, kind: &EdgeKind) -> Option<&EdgeTypeSpec> {
         self.algebras.get(&kind.to_string())
     }
 
-    pub fn register(&mut self, name: String, algebra: EdgeAlgebra) {
-        self.algebras.insert(name, algebra);
+    /// Returns only the enforced algebra — use this in section_check, not declared.
+    pub fn get_enforced(&self, kind: &EdgeKind) -> Option<&EdgeAlgebra> {
+        self.algebras.get(&kind.to_string()).map(|s| &s.enforced)
     }
 
-    pub fn remove(&mut self, name: &str) { self.algebras.remove(name); }
+    /// Register a full EdgeTypeSpec (used when SchemaGate accepts a morphism).
+    pub fn register(&mut self, spec: EdgeTypeSpec) {
+        self.algebras.insert(spec.name.clone(), spec);
+    }
 
+    /// Convenience: register a custom type with declared algebra and permissive
+    /// enforced defaults (all structural constraints false). Evidence starts empty.
+    pub fn register_algebra(&mut self, name: String, declared: EdgeAlgebra) {
+        let enforced = EdgeAlgebra {
+            acyclic: false,
+            transitive: false,
+            symmetric: false,
+            sign: declared.sign,
+            contradicts: declared.contradicts.clone(),
+            rollback_count: 0,
+        };
+        let spec = EdgeTypeSpec {
+            name: name.clone(),
+            declared,
+            enforced,
+            evidence: AlgebraEvidence {
+                support: 0,
+                cycle_observed: false,
+                sym_ratio: 0.0,
+                trans_closure: 0.0,
+                confidence: 0.0,
+            },
+            lifecycle: EdgeLifecycle::Active,
+        };
+        self.algebras.insert(name, spec);
+    }
+
+    /// Soft-delete: marks lifecycle as Dead but keeps the spec for provenance.
+    pub fn remove(&mut self, name: &str) {
+        if let Some(spec) = self.algebras.get_mut(name) {
+            spec.lifecycle = EdgeLifecycle::Dead;
+        }
+    }
+
+    /// Mark as temporarily inactive at `turn` (e.g. not seen in recent corpus window).
+    pub fn get_spec_mut(&mut self, name: &str) -> Option<&mut EdgeTypeSpec> {
+        self.algebras.get_mut(name)
+    }
+
+    pub fn retire(&mut self, name: &str, turn: u64) {
+        if let Some(spec) = self.algebras.get_mut(name) {
+            spec.lifecycle = EdgeLifecycle::Inactive { since_turn: turn };
+        }
+    }
+
+    /// Returns specs for Active custom types only (excludes built-ins and Dead/Inactive).
+    pub fn custom_edge_specs(&self) -> Vec<&EdgeTypeSpec> {
+        self.algebras.values()
+            .filter(|s| s.name.starts_with("custom:") && s.lifecycle == EdgeLifecycle::Active)
+            .collect()
+    }
+
+    /// Legacy helper — names of all registered custom types regardless of lifecycle.
     pub fn known_custom_types(&self) -> Vec<&str> {
         self.algebras.keys()
             .filter(|k| k.starts_with("custom:"))
@@ -405,6 +529,9 @@ pub enum SchemaEvent {
     TypeRetired  { name: String },
     TypesMerged  { kept: String, dropped: String },
     ConsistencyViolation { kind: ConsistencyViolationKind, description: String },
+    /// Relax a single structural constraint on the enforced algebra after evidence
+    /// shows the declared constraint cannot be maintained without rollback.
+    RelaxAlgebra { edge_type: String, field: AlgebraField, new_value: bool },
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]

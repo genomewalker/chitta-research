@@ -168,9 +168,33 @@ impl Agent for Hotr {
             (String::new(), String::new())
         };
 
+        let custom_types_context: String = {
+            let registry = ctx.schema_registry.read().await;
+            let specs = registry.custom_edge_specs();
+            if specs.is_empty() {
+                String::new()
+            } else {
+                let mut s = String::from(
+                    "\n\nRECENTLY DISCOVERED EPISTEMIC RELATIONS (custom edge types found by schema mining):\n",
+                );
+                for spec in specs {
+                    s.push_str(&format!(
+                        "- {}: empirically measured as acyclic={}, symmetric={}, support={} instances. \
+                         Generate at least one hypothesis that tests WHEN and WHY this relation holds \
+                         between concepts in this domain.\n",
+                        spec.name,
+                        spec.enforced.acyclic,
+                        spec.enforced.symmetric,
+                        spec.evidence.support,
+                    ));
+                }
+                s
+            }
+        };
+
         let user_msg = format!(
             "Research program: {prog_title}\nDomain: {prog_domain}\n\nQuestion: {q_text}\
-             {code_context}{web_refs}\n\n\
+             {code_context}{web_refs}{custom_types_context}\n\n\
              REQUIRED OUTPUT FORMAT — respond with ONLY this JSON array structure, \
              no other text before or after:\n\
              [\n  {{\n    \"statement\": \"specific testable hypothesis\",\n\

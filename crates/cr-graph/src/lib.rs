@@ -27,6 +27,7 @@ pub enum GraphError {
 pub struct BeliefGraph {
     graph: StableDiGraph<TypedNode, EpistemicEdge>,
     index: HashMap<NodeId, NodeIndex>,
+    custom_rollbacks: HashMap<String, u32>,
 }
 
 impl BeliefGraph {
@@ -34,6 +35,7 @@ impl BeliefGraph {
         Self {
             graph: StableDiGraph::new(),
             index: HashMap::new(),
+            custom_rollbacks: HashMap::new(),
         }
     }
 
@@ -57,7 +59,10 @@ impl BeliefGraph {
         let to_idx = *self.index.get(&to).ok_or(GraphError::NodeNotFound(to))?;
         let edge_idx = self.graph.add_edge(from_idx, to_idx, edge);
         if let Err(e) = self.section_check(from, to, from_idx, to_idx) {
-            self.graph.remove_edge(edge_idx);
+            let rolled_back_kind = self.graph.remove_edge(edge_idx).map(|e| e.kind);
+            if let Some(EdgeKind::Custom(name)) = rolled_back_kind {
+                self.custom_rollbacks.entry(name).and_modify(|c| *c += 1).or_insert(1);
+            }
             return Err(e);
         }
         Ok(())
@@ -200,6 +205,15 @@ impl BeliefGraph {
         self.graph.edge_weights().map(|e| e.kind.to_string()).collect()
     }
 
+    pub fn increment_custom_rollback(&mut self, type_name: &str) -> u32 {
+        let count = self.custom_rollbacks.entry(type_name.to_string()).and_modify(|c| *c += 1).or_insert(1);
+        *count
+    }
+
+    pub fn custom_rollback_count(&self, type_name: &str) -> u32 {
+        *self.custom_rollbacks.get(type_name).unwrap_or(&0)
+    }
+
     pub fn node_count(&self) -> usize {
         self.graph.node_count()
     }
@@ -229,6 +243,8 @@ impl Default for BeliefGraph {
 struct GraphSnapshot {
     nodes: Vec<TypedNode>,
     edges: Vec<SnapshotEdge>,
+    #[serde(default)]
+    custom_rollbacks: HashMap<String, u32>,
 }
 
 #[derive(Serialize, Deserialize)]
@@ -262,7 +278,7 @@ impl GraphSnapshot {
             })
             .collect();
 
-        Self { nodes, edges }
+        Self { nodes, edges, custom_rollbacks: g.custom_rollbacks.clone() }
     }
 
     fn into_graph(self) -> BeliefGraph {
@@ -273,6 +289,7 @@ impl GraphSnapshot {
         for se in self.edges {
             let _ = g.add_edge(se.from, se.to, se.edge);
         }
+        g.custom_rollbacks = self.custom_rollbacks;
         g
     }
 }
