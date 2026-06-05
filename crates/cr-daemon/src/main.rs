@@ -15,6 +15,7 @@ use cr_agents::researcher::Researcher;
 use cr_agents::scout::Scout;
 use cr_agents::kriya::Kriya;
 use cr_agents::brahman::Brahman;
+use cr_agents::svayambhu::Svayambhu;
 use cr_artifacts::ArtifactStore;
 use cr_chitta::ChittaClient;
 
@@ -374,6 +375,8 @@ async fn main() -> anyhow::Result<()> {
             .collect()
     };
 
+    let schema_registry = Arc::new(RwLock::new(cr_types::SchemaRegistry::new()));
+
     let ctx = Arc::new(AgentContext {
         graph: graph.clone(),
         llm,
@@ -385,6 +388,7 @@ async fn main() -> anyhow::Result<()> {
         active_program_ids,
         codebase_path,
         llm_model,
+        schema_registry,
     });
 
     let shutdown = Arc::new(AtomicBool::new(false));
@@ -404,6 +408,8 @@ async fn main() -> anyhow::Result<()> {
     let kriya_handle      = tokio::spawn(agent_loop(Box::new(Kriya),             ctx.clone(), shutdown.clone()));
     // Brahman: meta-controller — monitors portfolio, detects stagnation, generates next agendas
     let brahman_handle    = tokio::spawn(agent_loop(Box::new(Brahman::new()),    ctx.clone(), shutdown.clone()));
+    // Svayambhu: schema revision gate — mines motifs, accepts new edge types via MDL
+    let svayambhu_handle  = tokio::spawn(agent_loop(Box::new(Svayambhu::new()),  ctx.clone(), shutdown.clone()));
     // Scout: auto-discover compute OR load from --resources file.
     // If --resources is provided, skip auto-discovery and store the file contents in chitta.
     let scout_handle = if let Some(ref res_path) = cli.resources {
@@ -483,6 +489,7 @@ async fn main() -> anyhow::Result<()> {
     let _ = researcher_handle.await;
     let _ = kriya_handle.await;
     let _ = brahman_handle.await;
+    let _ = svayambhu_handle.await;
     let _ = scout_handle.await;
 
     // Save graph snapshot

@@ -298,6 +298,7 @@ dependencies = [
  "cr-chitta",
  "cr-graph",
  "cr-llm",
+ "cr-regime",
  "cr-resources",
  "cr-schema",
  "cr-types",

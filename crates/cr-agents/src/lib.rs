@@ -5,6 +5,7 @@ pub mod researcher;
 pub mod scout;
 pub mod kriya;
 pub mod brahman;
+pub mod svayambhu;
 
 use std::sync::Arc;
 
@@ -36,6 +37,8 @@ pub struct AgentContext {
     pub codebase_path: String,
     /// Model name to pass in CompletionRequest (empty = let client decide).
     pub llm_model: String,
+    /// Shared schema registry — updated by Svayambhu when new edge types are accepted.
+    pub schema_registry: Arc<tokio::sync::RwLock<cr_types::SchemaRegistry>>,
 }
 
 #[derive(Debug, Clone)]

@@ -194,6 +194,12 @@ impl BeliefGraph {
         cr_fitness::pareto_frontier_from_pairs(&with_fitness)
     }
 
+    /// Returns the edge-type label stream (all edge kinds in graph insertion order).
+    /// Used by MotifMiner as the event sequence for MDL-based motif discovery.
+    pub fn all_edge_kinds(&self) -> Vec<String> {
+        self.graph.edge_weights().map(|e| e.kind.to_string()).collect()
+    }
+
     pub fn node_count(&self) -> usize {
         self.graph.node_count()
     }
