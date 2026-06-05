@@ -214,7 +214,13 @@ impl Agent for Kriya {
             let mut best: Option<(NodeId, String, f32)> = None;
             for n in graph.all_nodes() {
                 if let NodeKind::Claim(c) = &n.kind {
-                    if c.confidence < 0.7 { continue; }
+                    // Lower threshold for code sessions: incremental grep/read evidence
+                    // accumulates at 0.5–0.69, which the hard 0.7 cutoff was silently dropping.
+                    let code_session = ctx.agenda.domain.contains("code") ||
+                        ctx.agenda.domain.contains("software") ||
+                        ctx.agenda.domain.contains("memory-system");
+                    let min_conf = if code_session { 0.55 } else { 0.7 };
+                    if c.confidence < min_conf { continue; }
                     if is_applied(&n.id) { continue; }
                     if best.as_ref().map(|(_, _, bc)| c.confidence > *bc).unwrap_or(true) {
                         best = Some((n.id, c.statement.clone(), c.confidence));

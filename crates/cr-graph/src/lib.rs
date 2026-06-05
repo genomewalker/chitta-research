@@ -214,6 +214,16 @@ impl BeliefGraph {
         *self.custom_rollbacks.get(type_name).unwrap_or(&0)
     }
 
+    /// Decay all custom rollback counters by half (floor 0).
+    /// Call periodically (e.g. every 30 steps in Svayambhu) so that transient
+    /// algebra violations don't permanently trigger RelaxAlgebra.
+    pub fn decay_custom_rollbacks(&mut self) {
+        for count in self.custom_rollbacks.values_mut() {
+            *count = *count / 2;
+        }
+        self.custom_rollbacks.retain(|_, v| *v > 0);
+    }
+
     pub fn node_count(&self) -> usize {
         self.graph.node_count()
     }

@@ -76,6 +76,8 @@ impl Agent for Svayambhu {
 
         // Contraction: check for types to merge or retire
         if step % (self.resweep_every * 3) == 0 && !events.is_empty() {
+            // Decay rollback counters so transient violations don't permanently relax algebra.
+            ctx.graph.write().await.decay_custom_rollbacks();
             // Retirement proposals: types absent from recent 200 events
             let retirement_props = propose_retirements(&events, &schema, 200);
             for m in retirement_props {

@@ -140,14 +140,21 @@ impl Agent for Udgatr {
         // ── Revert-if-not-improved (teeny-tiny discipline) ────────────────
         // Runs that do not clear the empirical gain threshold are marked Reverted.
         // The artifact is retained for provenance but the hypothesis is not updated.
-        // Threshold: 0.35 — below this the evidence is too weak to shift beliefs.
-        const MIN_EMPIRICAL_GAIN: f32 = 0.35;
-        let reverted = analysis.empirical_gain < MIN_EMPIRICAL_GAIN;
+        // Threshold: 0.35 default; lowered to 0.15 for code-analysis sessions where
+        // evidence accumulates incrementally across many small grep/read tool calls.
+        let code_session = ctx.agenda.domain.contains("code") ||
+            ctx.agenda.domain.contains("software") ||
+            ctx.agenda.domain.contains("memory-system") ||
+            ctx.agenda.questions.iter().any(|q| {
+                q.contains(".rs") || q.contains(".cpp") || q.contains("fn ") || q.contains("crate")
+            });
+        let min_empirical_gain: f32 = if code_session { 0.15 } else { 0.35 };
+        let reverted = analysis.empirical_gain < min_empirical_gain;
         if reverted {
             tracing::info!(
                 run = %run_id,
                 empirical_gain = analysis.empirical_gain,
-                threshold = MIN_EMPIRICAL_GAIN,
+                threshold = min_empirical_gain,
                 "udgatr: run reverted (below gain threshold)"
             );
             // Update run status to Failed to signal low-value result
